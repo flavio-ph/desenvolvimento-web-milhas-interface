@@ -1,0 +1,7 @@
+{
+  "name": "MilhasPro - Gestão Inteligente",
+  "description": "Uma plataforma moderna e minimalista para gestão de milhas e pontos de cartões de crédito, com acompanhamento de extratos, promoções e cálculos automáticos.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
