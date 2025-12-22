@@ -60,7 +60,7 @@ const Dashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: 'Total Acumulado', value: '259.600', icon: <Wallet className="text-indigo-600" />, trend: '+12%', color: 'border-indigo-500' },
+          { label: 'Total Acumulado', value: '259.600', icon: <Wallet className="text-indigo-600" />, trend: '+12%', color: 'border-iigo-500' },
           { label: 'Pontos Pendentes', value: '12.450', icon: <Clock className="text-emerald-600" />, trend: '+5%', color: 'border-emerald-500' },
           { label: 'Cartões Ativos', value: '03', icon: <CardIcon className="text-amber-600" />, trend: 'Estável', color: 'border-amber-500' },
           { label: 'Vencendo em 30d', value: '1.200', icon: <TrendingUp className="text-rose-600" />, trend: '-2%', color: 'border-rose-500' },
