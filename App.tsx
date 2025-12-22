@@ -7,12 +7,13 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import CardsPage from './pages/CardsPage';
 import RegisterPurchase from './pages/RegisterPurchase';
-import HistoryPage from './pages/HisotoryPage.tsx';
-import ProfilePage from './pages/ProfilePage.tsx';
-import NotificationsPage from './pages/NotificationsPage.tsx';
-import AdminBrands from './pages/AdminBrands.tsx';
-import AdminPrograms from './pages/AdminPrograms.tsx';
-import AdminPromotions from './pages/AdminPromotions.tsx';
+import HistoryPage from './pages/HisotoryPage';
+import ProfilePage from './pages/ProfilePage';
+import NotificationsPage from './pages/NotificationsPage';
+import PromotionsPage from './pages/PromotionsPage';
+import AdminBrands from './pages/AdminBrands';
+import AdminPrograms from './pages/AdminPrograms';
+import AdminPromotions from './pages/AdminPromotions';
 import { ThemeProvider } from './context/ThemeContext';
 
 const App: React.FC = () => {
@@ -29,7 +30,7 @@ const App: React.FC = () => {
           <Route path="/cards" element={<Layout><CardsPage /></Layout>} />
           <Route path="/new-purchase" element={<Layout><RegisterPurchase /></Layout>} />
           <Route path="/history" element={<Layout><HistoryPage /></Layout>} />
-          <Route path="/promotions" element={<Layout><Dashboard /></Layout>} /> {/* Using Dashboard as placeholder */}
+          <Route path="/promotions" element={<Layout><PromotionsPage /></Layout>} />
           <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
           <Route path="/notifications" element={<Layout><NotificationsPage /></Layout>} />
           

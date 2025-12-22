@@ -113,11 +113,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
             <div className="flex items-center gap-3 ml-2 cursor-pointer group" onClick={() => navigate('/profile')}>
               <div className="hidden lg:block text-right">
-                <p className="text-sm font-semibold dark:text-white">Tatiane Fabiana</p>
+                <p className="text-sm font-semibold dark:text-white">Naruto Uzumaki</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">Plano Premium</p>
               </div>
               <img 
-                src="https://picsum.photos/seed/user123/100/100" 
+                src="https://i.pinimg.com/1200x/ee/61/37/ee61374e60f036d0d605c37b3a7bee8a.jpg" 
                 alt="Profile" 
                 className="w-10 h-10 rounded-full object-cover ring-2 ring-transparent group-hover:ring-indigo-500 transition-all"
               />
