@@ -41,7 +41,7 @@ const Dashboard: React.FC = () => {
     <div className="space-y-8 animate-fadeIn">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold dark:text-white">Olá, Tatiane Fabiana! 👋</h1>
+          <h1 className="text-3xl font-bold dark:text-white">Olá, Naruto Uzumaki! 👋</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Bem-vinda de volta à sua central de milhas e pontos.</p>
         </div>
         <div className="flex items-center gap-3">
