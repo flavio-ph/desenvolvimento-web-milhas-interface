@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   TrendingUp, 
   CreditCard as CardIcon, 
@@ -20,10 +19,29 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { MOCK_PROGRAMS, MOCK_TRANSACTIONS } from '../constants';
+import api from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 
-const chartData = [
+// --- Interfaces (Tipos) baseados no seu Backend ---
+
+interface PontosPorCartaoDTO {
+  cartaoId: number;
+  nomeCartao: string;
+  totalPontos: number;
+}
+
+interface PrazoMedioRecebimentoDTO {
+  diasMedios: number;
+}
+
+interface DashboardResponseDTO {
+  pontosPorCartao: PontosPorCartaoDTO[];
+  prazoMedio: PrazoMedioRecebimentoDTO;
+}
+
+// --- Dados Mockados (Simulados) para partes que o Backend ainda não fornece ---
+
+const MOCK_HISTORY_CHART = [
   { month: 'Jul', points: 4000 },
   { month: 'Ago', points: 3000 },
   { month: 'Set', points: 5000 },
@@ -32,68 +50,152 @@ const chartData = [
   { month: 'Dez', points: 12000 },
 ];
 
-const COLORS = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444'];
+const MOCK_TRANSACTIONS = [
+  { id: 1, description: 'Compra Amazon', amount: 350.00, points: 525, status: 'CREDITED', date: '2024-02-10' },
+  { id: 2, description: 'Uber Trip', amount: 45.90, points: 68, status: 'PENDING', date: '2024-02-12' },
+  { id: 3, description: 'Supermercado', amount: 890.50, points: 1335, status: 'PROCESSING', date: '2024-02-13' },
+];
+
+const PIE_COLORS = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+
+// --- Componente Principal ---
 
 const Dashboard: React.FC = () => {
   const { isDarkMode } = useTheme();
+  
+  // Estado para armazenar os dados vindos do backend
+  const [dashboardData, setDashboardData] = useState<DashboardResponseDTO | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Busca os dados ao carregar a página
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const response = await api.get('/dashboard');
+        setDashboardData(response.data);
+      } catch (error) {
+        console.error('Erro ao buscar dados do dashboard:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  // --- Processamento dos Dados ---
+
+  // Calcula o total de pontos somando todos os cartões
+  const totalPontos = dashboardData?.pontosPorCartao.reduce((acc, curr) => acc + curr.totalPontos, 0) || 0;
+
+  // Prepara os dados para o gráfico de pizza
+  const pieChartData = dashboardData?.pontosPorCartao.map((item) => ({
+    name: item.nomeCartao,
+    points: item.totalPontos
+  })) || [];
+
+  // Pega o prazo médio (ou 0 se não existir)
+  const prazoMedio = dashboardData?.prazoMedio?.diasMedios || 0;
+  
+  // Conta quantos cartões existem na lista
+  const qtdCartoes = dashboardData?.pontosPorCartao.length || 0;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="space-y-8 animate-fadeIn pb-10">
+      {/* Cabeçalho */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold dark:text-white">Olá, Naruto Uzumaki! 👋</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Bem-vinda de volta à sua central de milhas e pontos.</p>
+          <h1 className="text-3xl font-bold dark:text-white">Dashboard</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">Visão geral dos seus pontos e milhas.</p>
         </div>
         <div className="flex items-center gap-3">
           <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm font-medium dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm">
             <Download size={18} className="text-slate-500" />
-            Exportar Relatórios
+            Exportar
           </button>
           <div className="relative group">
             <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none">
               <Clock size={18} />
-              2024
+              2025
             </button>
           </div>
         </div>
       </div>
 
+      {/* Cards de Estatísticas (Cards Superiores) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { label: 'Total Acumulado', value: '259.600', icon: <Wallet className="text-indigo-600" />, trend: '+12%', color: 'border-iigo-500' },
-          { label: 'Pontos Pendentes', value: '12.450', icon: <Clock className="text-emerald-600" />, trend: '+5%', color: 'border-emerald-500' },
-          { label: 'Cartões Ativos', value: '03', icon: <CardIcon className="text-amber-600" />, trend: 'Estável', color: 'border-amber-500' },
-          { label: 'Vencendo em 30d', value: '1.200', icon: <TrendingUp className="text-rose-600" />, trend: '-2%', color: 'border-rose-500' },
-        ].map((stat, i) => (
-          <div key={i} className={`bg-white dark:bg-slate-900 p-6 rounded-2xl border-l-4 ${stat.color} shadow-sm dark:shadow-none hover:translate-y-[-4px] transition-all duration-300 border-slate-100 dark:border-y-slate-800 dark:border-r-slate-800`}>
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl">
-                {stat.icon}
-              </div>
-              <span className={`text-xs font-bold px-2 py-1 rounded-full ${stat.trend.startsWith('+') ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30' : 'bg-slate-50 text-slate-500 dark:bg-slate-800'}`}>
-                {stat.trend}
-              </span>
+        
+        {/* Card 1: Total Acumulado (DADO REAL) */}
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border-l-4 border-indigo-500 shadow-sm dark:shadow-none hover:translate-y-[-4px] transition-all duration-300 border-slate-100 dark:border-y-slate-800 dark:border-r-slate-800">
+          <div className="flex justify-between items-start mb-4">
+            <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl">
+              <Wallet className="text-indigo-600" />
             </div>
-            <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">{stat.label}</p>
-            <h3 className="text-2xl font-bold dark:text-white mt-1">{stat.value}</h3>
+            <span className="text-xs font-bold px-2 py-1 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30">
+              Atual
+            </span>
           </div>
-        ))}
+          <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Total Acumulado</p>
+          <h3 className="text-2xl font-bold dark:text-white mt-1">{totalPontos.toLocaleString('pt-BR')}</h3>
+        </div>
+
+        {/* Card 2: Prazo Médio (DADO REAL) */}
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border-l-4 border-emerald-500 shadow-sm dark:shadow-none hover:translate-y-[-4px] transition-all duration-300 border-slate-100 dark:border-y-slate-800 dark:border-r-slate-800">
+          <div className="flex justify-between items-start mb-4">
+            <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl">
+              <Clock className="text-emerald-600" />
+            </div>
+          </div>
+          <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Prazo Médio</p>
+          <h3 className="text-2xl font-bold dark:text-white mt-1">{prazoMedio.toFixed(0)} dias</h3>
+        </div>
+
+        {/* Card 3: Cartões Ativos (DADO REAL - Contagem) */}
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border-l-4 border-amber-500 shadow-sm dark:shadow-none hover:translate-y-[-4px] transition-all duration-300 border-slate-100 dark:border-y-slate-800 dark:border-r-slate-800">
+          <div className="flex justify-between items-start mb-4">
+            <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl">
+              <CardIcon className="text-amber-600" />
+            </div>
+          </div>
+          <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Cartões Ativos</p>
+          <h3 className="text-2xl font-bold dark:text-white mt-1">{qtdCartoes.toString().padStart(2, '0')}</h3>
+        </div>
+
+        {/* Card 4: Vencendo em 30d (MOCK - Backend ainda não fornece) */}
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border-l-4 border-rose-500 shadow-sm dark:shadow-none hover:translate-y-[-4px] transition-all duration-300 border-slate-100 dark:border-y-slate-800 dark:border-r-slate-800">
+          <div className="flex justify-between items-start mb-4">
+            <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl">
+              <TrendingUp className="text-rose-600" />
+            </div>
+            <span className="text-xs font-bold px-2 py-1 rounded-full bg-slate-50 text-slate-500 dark:bg-slate-800">
+              Estável
+            </span>
+          </div>
+          <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Vencendo em 30d</p>
+          <h3 className="text-2xl font-bold dark:text-white mt-1">0</h3>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Gráfico de Histórico (MOCKADO - Backend ainda não fornece histórico) */}
         <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm dark:shadow-none border border-slate-100 dark:border-slate-800">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h3 className="text-lg font-bold dark:text-white">Histórico de Acúmulo</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Evolução mensal dos seus pontos</p>
-            </div>
-            <div className="flex gap-2">
-              <span className="text-xs font-bold text-rose-500 bg-rose-50 dark:bg-rose-900/20 px-2 py-1 rounded">Crítico em Jan</span>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Evolução mensal dos seus pontos (Simulado)</p>
             </div>
           </div>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData}>
+              <AreaChart data={MOCK_HISTORY_CHART}>
                 <defs>
                   <linearGradient id="colorPoints" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.1}/>
@@ -128,14 +230,15 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
+        {/* Gráfico de Pizza (DADOS REAIS - Pontos por Cartão) */}
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm dark:shadow-none border border-slate-100 dark:border-slate-800">
-          <h3 className="text-lg font-bold dark:text-white mb-1">Pontos por Programa</h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">Distribuição total da sua carteira</p>
+          <h3 className="text-lg font-bold dark:text-white mb-1">Pontos por Cartão</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">Distribuição da sua carteira</p>
           <div className="h-[250px] w-full relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={MOCK_PROGRAMS}
+                  data={pieChartData}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -144,8 +247,8 @@ const Dashboard: React.FC = () => {
                   dataKey="points"
                   stroke="none"
                 >
-                  {MOCK_PROGRAMS.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  {pieChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip 
@@ -159,27 +262,33 @@ const Dashboard: React.FC = () => {
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-2xl font-bold dark:text-white">259.6k</span>
+              <span className="text-2xl font-bold dark:text-white">
+                {totalPontos > 1000 ? `${(totalPontos / 1000).toFixed(1)}k` : totalPontos}
+              </span>
               <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-bold">Total</span>
             </div>
           </div>
           <div className="space-y-3 mt-4">
-            {MOCK_PROGRAMS.map((program, i) => (
-              <div key={program.id} className="flex items-center justify-between">
+            {pieChartData.map((item, i) => (
+              <div key={i} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }}></div>
-                  <span className="text-sm text-slate-600 dark:text-slate-400">{program.name}</span>
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }}></div>
+                  <span className="text-sm text-slate-600 dark:text-slate-400">{item.name}</span>
                 </div>
-                <span className="text-sm font-semibold dark:text-white">{(program.points / 1000).toFixed(1)}k</span>
+                <span className="text-sm font-semibold dark:text-white">{item.points.toLocaleString('pt-BR')}</span>
               </div>
             ))}
+            {pieChartData.length === 0 && (
+              <p className="text-center text-sm text-slate-400">Nenhum cartão cadastrado</p>
+            )}
           </div>
         </div>
       </div>
 
+      {/* Tabela de Transações (MOCKADO - Backend ainda não fornece) */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden">
         <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-          <h3 className="text-lg font-bold dark:text-white">Movimentações Recentes</h3>
+          <h3 className="text-lg font-bold dark:text-white">Movimentações Recentes (Simulado)</h3>
           <button className="text-indigo-600 dark:text-indigo-400 text-sm font-semibold hover:underline">Ver todas</button>
         </div>
         <div className="overflow-x-auto">

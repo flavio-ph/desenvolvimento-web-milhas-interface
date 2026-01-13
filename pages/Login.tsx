@@ -1,18 +1,40 @@
 
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Shield, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Shield, Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
+import api from '../services/api';
 
 const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('demo@milhaspro.com');
-  const [password, setPassword] = useState('********');
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState(''); // Mudei de password para senha para alinhar com DTO
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate JWT Auth
-    navigate('/');
+    setLoading(true);
+    setError('');
+
+    try {
+      // 1. Chama o Backend
+      const response = await api.post('/auth/login', { email, senha });
+      
+      // 2. Pega o Token da resposta
+      const { token } = response.data;
+      
+      // 3. Salva no navegador
+      localStorage.setItem('token', token);
+      
+      // 4. Redireciona
+      navigate('/');
+    } catch (err) {
+      setError('Email ou senha inválidos.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -41,8 +63,8 @@ const Login: React.FC = () => {
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
               <input 
                 type={showPassword ? 'text' : 'password'} 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
                 placeholder="Senha" 
                 className="w-full pl-12 pr-12 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-900 font-medium"
                 required
