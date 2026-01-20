@@ -275,6 +275,10 @@ const ProfilePage: React.FC = () => {
               <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Total Acumulado</p>
               <p className="text-lg font-bold dark:text-white">{totalPontos.toLocaleString('pt-BR')}</p>
             </div>
+            <div className="text-center px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl">
+              <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Resgates Feitos</p>
+              <p className="text-lg font-bold dark:text-white">0</p>
+            </div>
           </div>
         </div>
         
@@ -312,22 +316,41 @@ const ProfilePage: React.FC = () => {
                   <input type="email" value={formData.email} disabled className="w-full pl-11 pr-4 py-3 bg-slate-100 dark:bg-slate-800/50 border-none rounded-xl text-slate-500 cursor-not-allowed" />
                 </div>
               </div>
+              {/* CAMPO TELEFONE (Opcional) */}
+               <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
+                  Telefone <span className="text-slate-400 font-normal text-xs">(Opcional)</span>
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <input 
+                      type="text" 
+                      placeholder="(00) 00000-0000"
+                      value={formData.telefone}
+                      onChange={e => setFormData({...formData, telefone: e.target.value})}
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all" 
+                            />
+                  </div>
+                 </div>
+              {/* CAMPO CPF (Opcional) */}
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Telefone</label>
-                <div className="relative">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <input type="text" value={formData.telefone} onChange={e => setFormData({...formData, telefone: e.target.value})} className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">CPF</label>
+                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
+                  CPF <span className="text-slate-400 font-normal text-xs">(Opcional)</span>
+                </label>
                 <div className="relative">
                   <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <input type="text" value={formData.cpf} onChange={e => setFormData({...formData, cpf: e.target.value})} className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white" />
-                </div>
+                    <input 
+                    type="text" 
+                    placeholder="000.000.000-00"
+                    value={formData.cpf} 
+                    onChange={e => setFormData({...formData, cpf: e.target.value})}
+                    className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all" 
+                    />
+                  </div>
               </div>
             </div>
           </div>
+           
 
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm">
             <h3 className="text-lg font-bold dark:text-white mb-6 flex items-center gap-2">
@@ -398,14 +421,21 @@ const ProfilePage: React.FC = () => {
             <h3 className="text-lg font-bold dark:text-white mb-6 flex items-center gap-2"><Bell size={20} className="text-indigo-600" /> Notificações</h3>
             <div className="space-y-6">
               {[
-                { id: 'email', label: 'E-mails de Alerta' },
-                { id: 'push', label: 'Notificações Push' },
-                { id: 'promotions', label: 'Novas Promoções' },
+                { id: 'email', label: 'E-mails de Alerta', desc: 'Resumos semanais e novidades' },
+                { id: 'push', label: 'Notificações Push', desc: 'Alertas em tempo real no app' },
+                { id: 'promotions', label: 'Novas Promoções', desc: 'Sempre que surgir 100% bônus' },
+                { id: 'expiry', label: 'Vencimento de Pontos', desc: 'Avisar 30 dias antes de expirar' },
               ].map((item) => (
                 <div key={item.id} className="flex items-center justify-between">
-                  <p className="text-sm font-bold dark:text-white">{item.label}</p>
-                  <button onClick={() => toggleNotification(item.id as any)} className={`w-12 h-6 rounded-full relative transition-colors ${notifications[item.id as keyof typeof notifications] ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}>
-                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${notifications[item.id as keyof typeof notifications] ? 'left-7' : 'left-1'}`}></div>
+                  <div>
+                    <p className="text-sm font-bold dark:text-white">{item.label}</p>
+                    <p className="text-xs text-slate-500">{item.desc}</p>
+                  </div>
+                  <button 
+                    onClick={() => toggleNotification(item.id as any)}
+                    className={`w-12 h-6 rounded-full relative transition-colors duration-200 ${notifications[item.id as keyof typeof notifications] ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${notifications[item.id as keyof typeof notifications] ? 'left-7' : 'left-1'}`}></div>
                   </button>
                 </div>
               ))}
