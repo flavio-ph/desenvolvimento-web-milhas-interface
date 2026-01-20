@@ -12,7 +12,7 @@ import {
   Phone,
   FileText
 } from 'lucide-react';
-import api from '../services/api';
+import api from '../../services/api';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();

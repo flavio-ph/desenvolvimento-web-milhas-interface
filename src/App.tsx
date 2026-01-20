@@ -2,18 +2,18 @@
 import React from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
-import Dashboard from './pages/Dashboard';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import CardsPage from './pages/CardsPage';
-import RegisterPurchase from './pages/RegisterPurchase';
-import HistoryPage from './pages/HisotoryPage';
-import ProfilePage from './pages/ProfilePage';
-import NotificationsPage from './pages/NotificationsPage';
-import PromotionsPage from './pages/PromotionsPage';
-import AdminBrands from './pages/AdminBrands';
-import AdminPrograms from './pages/AdminPrograms';
-import AdminPromotions from './pages/AdminPromotions';
+import Dashboard from '../src/pages/app/Dashboard';
+import Login from '../src/pages/auth/Login';
+import Register from '../src/pages/auth/Register';
+import CardsPage from '../src/pages/app/Cards';
+import RegisterPurchase from '../src/pages/app/RegisterPurchase';
+import HistoryPage from '../src/pages/app/History';
+import ProfilePage from '../src/pages/app/Profile';
+import NotificationsPage from '../src/pages/app/Notifications';
+import PromotionsPage from '../src/pages/app/Promotions';
+import AdminBrands from '../src/pages/admin/Brands';
+import AdminPrograms from '../src/pages/admin/Programs';
+import AdminPromotions from '../src/pages/admin/Promotions';
 import { ThemeProvider } from './context/ThemeContext';
 
 const App: React.FC = () => {

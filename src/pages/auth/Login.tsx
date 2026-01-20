@@ -9,7 +9,7 @@ import {
   Loader2, 
   AlertCircle 
 } from 'lucide-react';
-import api from '../services/api';
+import api from '../../services/api';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
