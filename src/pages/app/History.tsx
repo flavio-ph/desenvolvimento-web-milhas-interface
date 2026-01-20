@@ -12,8 +12,8 @@ import {
   CheckCircle2,
   AlertTriangle
 } from 'lucide-react';
-import { MOCK_TRANSACTIONS, MOCK_PROGRAMS } from '../constants';
-import { useTheme } from '../context/ThemeContext';
+import { MOCK_TRANSACTIONS, MOCK_PROGRAMS } from '../../constants/constants';
+import { useTheme } from '../../context/ThemeContext';
 
 const HistoryPage: React.FC = () => {
   const { isDarkMode } = useTheme();

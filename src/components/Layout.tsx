@@ -9,7 +9,7 @@ import {
   LogOut, 
   Search
 } from 'lucide-react';
-import { MENU_ITEMS, ADMIN_MENU_ITEMS } from '../constants';
+import { MENU_ITEMS, ADMIN_MENU_ITEMS } from '../constants/constants';
 import { useTheme } from '../context/ThemeContext';
 
 interface LayoutProps {

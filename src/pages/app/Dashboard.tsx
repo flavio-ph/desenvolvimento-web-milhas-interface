@@ -19,8 +19,8 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import api from '../services/api';
-import { useTheme } from '../context/ThemeContext';
+import api from '../../services/api';
+import { useTheme } from '../../context/ThemeContext';
 
 // --- Interfaces (Tipos) baseados no seu Backend ---
 

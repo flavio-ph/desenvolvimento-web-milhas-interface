@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, CreditCard, Trash2, X, Check, Loader2, Coins } from 'lucide-react';
-import api from '../services/api';
+import api from '../../services/api';
 
 // Interfaces baseadas no seu Backend
 interface Cartao {

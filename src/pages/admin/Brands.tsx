@@ -12,7 +12,7 @@ import {
   Palette,
   Eye
 } from 'lucide-react';
-import { CardBrand } from '../types';
+import { CardBrand } from '../../types/types';
 
 const PRESET_COLORS = [
   { name: 'Indigo', class: 'bg-indigo-600', hex: '#4f46e5' },

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calculator, AlertCircle, CheckCircle2, Upload, Loader2 } from 'lucide-react';
-import api from '../services/api'; // Sua API
+import api from '../../services/api'; // Sua API
 
 // Tipos para TypeScript não reclamar
 interface Cartao {

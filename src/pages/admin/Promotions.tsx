@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Tag, Plus, Calendar, Percent, Trash2, Edit3, CheckCircle, Clock } from 'lucide-react';
-import { MOCK_PROMOTIONS, MOCK_PROGRAMS } from '../constants';
+import { MOCK_PROMOTIONS, MOCK_PROGRAMS } from '../../constants/constants';
 
 const AdminPromotions: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'NEW' | 'HISTORY'>('NEW');

@@ -11,7 +11,7 @@ import {
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
-import { MOCK_PROMOTIONS, MOCK_PROGRAMS } from '../constants';
+import { MOCK_PROMOTIONS, MOCK_PROGRAMS } from '../../constants/constants';
 
 const PromotionsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');

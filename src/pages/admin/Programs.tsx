@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Globe, Plus, Settings2, Trash2, ExternalLink, TrendingUp, X } from 'lucide-react';
-import { MOCK_PROGRAMS } from '../constants';
+import { MOCK_PROGRAMS } from '../../constants/constants';
 
 const AdminPrograms: React.FC = () => {
   // Estado para controlar a visibilidade do Popup

@@ -13,7 +13,7 @@ import {
   Globe,
   LogOut
 } from 'lucide-react';
-import { CardBrand, LoyaltyProgram, CreditCard as CreditCardType, Transaction, Promotion } from './types';
+import { CardBrand, LoyaltyProgram, CreditCard as CreditCardType, Transaction, Promotion } from '../types/types';
 
 export const MENU_ITEMS = [
   { label: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/' },
