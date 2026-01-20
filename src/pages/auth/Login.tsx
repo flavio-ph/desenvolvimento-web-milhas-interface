@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
   Mail, 
@@ -9,24 +8,67 @@ import {
   ArrowRight, 
   Github, 
   Chrome,
-  CheckCircle2,
   TrendingUp,
-  Zap
+  Zap,
+  Loader2,      // Importado para o loading
+  AlertCircle   // Importado para o erro
 } from 'lucide-react';
+import api from '../../services/api';
 
 const Login: React.FC = () => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('demo@milhaspro.com');
-  const [password, setPassword] = useState('********');
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Estados
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState(''); 
+
+  // Limpa token antigo ao abrir a tela (Evita erro 403 por token expirado)
+  useEffect(() => {
+    localStorage.removeItem('token');
+  }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate('/');
+    setLoading(true);
+    setError('');
+
+    try {
+      // 1. Chama o Backend
+      const response = await api.post('/auth/login', { email, senha });
+      
+      // 2. Salva o Token
+      const { token } = response.data;
+      localStorage.setItem('token', token);
+      
+      // 3. Redireciona
+      navigate('/');
+    } catch (err: any) {
+      console.error(err);
+      
+      // Tratamento de erros
+      if (err.response) {
+        if (err.response.status === 401 || err.response.status === 403) {
+          setError('E-mail ou senha incorretos.');
+        } else if (err.response.status === 404) {
+          setError('Usuário não encontrado.');
+        } else {
+          setError('Erro no sistema. Tente mais tarde.');
+        }
+      } else {
+        setError('Sem conexão com o servidor.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex bg-white dark:bg-slate-950 font-sans overflow-hidden">
+      
       {/* Visual Side Panel - Hidden on Mobile */}
       <div className="hidden lg:flex lg:w-1/2 bg-indigo-600 relative overflow-hidden items-center justify-center p-12">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 via-indigo-600 to-indigo-500"></div>
@@ -78,6 +120,17 @@ const Login: React.FC = () => {
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
+            
+            {/* Caixa de Erro */}
+            {error && (
+              <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl flex items-center gap-3">
+                <AlertCircle className="text-red-600 dark:text-red-400 shrink-0" size={20} />
+                <p className="text-sm font-bold text-red-600 dark:text-red-400 leading-tight">
+                  {error}
+                </p>
+              </div>
+            )}
+
             <div className="space-y-4">
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
@@ -94,8 +147,8 @@ const Login: React.FC = () => {
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
                 <input 
                   type={showPassword ? 'text' : 'password'} 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
                   placeholder="Sua senha" 
                   className="w-full pl-12 pr-12 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-900 dark:text-white font-medium shadow-sm transition-all"
                   required
@@ -120,10 +173,20 @@ const Login: React.FC = () => {
 
             <button 
               type="submit"
-              className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl hover:bg-indigo-700 transition-all transform hover:scale-[1.01] active:scale-95 shadow-xl shadow-indigo-200 dark:shadow-none flex items-center justify-center gap-2"
+              disabled={loading}
+              className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl hover:bg-indigo-700 transition-all transform hover:scale-[1.01] active:scale-95 shadow-xl shadow-indigo-200 dark:shadow-none flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              Entrar na conta
-              <ArrowRight size={20} />
+              {loading ? (
+                <>
+                  <Loader2 className="animate-spin" size={20} />
+                  Entrando...
+                </>
+              ) : (
+                <>
+                  Entrar na conta
+                  <ArrowRight size={20} />
+                </>
+              )}
             </button>
           </form>
 
