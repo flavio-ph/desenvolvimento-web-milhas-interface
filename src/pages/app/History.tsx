@@ -1,33 +1,128 @@
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, 
   Filter, 
   ArrowUpRight, 
   ArrowDownRight, 
-  Calendar, 
-  ChevronDown,
   Download,
   Clock,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  Loader2,
+  Calendar as CalendarIcon,
+  FileSpreadsheet // Ícone para o Excel
 } from 'lucide-react';
-import { MOCK_TRANSACTIONS, MOCK_PROGRAMS } from '../../constants/constants';
 import { useTheme } from '../../context/ThemeContext';
+import api from '../../services/api';
+
+interface Transaction {
+  id: number;
+  tipo: 'ACUMULO' | 'RESGATE' | 'BONUS' | 'EXPIRACAO' | 'TRANSFERENCIA'; 
+  quantidadePontos: number;
+  dataMovimentacao: string;
+  descricao: string;
+  nomePrograma: string;
+}
 
 const HistoryPage: React.FC = () => {
   const { isDarkMode } = useTheme();
+  
+  // Estados
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Estado para o Mês Selecionado (Formato YYYY-MM)
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  
+  // Filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [programFilter, setProgramFilter] = useState('ALL');
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get('/movimentacoes'); 
+        setTransactions(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar histórico:", error);
+        setTransactions([]); 
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const uniquePrograms = useMemo(() => {
+    const programs = new Set(transactions.map(t => t.nomePrograma));
+    return Array.from(programs);
+  }, [transactions]);
+
+  // --- LÓGICA DE FILTRO ---
   const filteredTransactions = useMemo(() => {
-    return MOCK_TRANSACTIONS.filter(tx => {
-      const matchesSearch = tx.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter === 'ALL' || tx.status === statusFilter;
-      return matchesSearch && matchesStatus;
+    return transactions.filter(tx => {
+      const matchesSearch = tx.descricao.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesProgram = programFilter === 'ALL' || tx.nomePrograma === programFilter;
+      
+      const txDate = new Date(tx.dataMovimentacao);
+      const [selYear, selMonth] = selectedMonth.split('-').map(Number);
+      const matchesDate = txDate.getFullYear() === selYear && (txDate.getMonth() + 1) === selMonth;
+
+      return matchesSearch && matchesProgram && matchesDate;
     });
-  }, [searchTerm, statusFilter]);
+  }, [searchTerm, programFilter, selectedMonth, transactions]);
+
+  const acumuladoMes = useMemo(() => {
+    return filteredTransactions
+      .filter(t => ['ACUMULO', 'BONUS', 'TRANSFERENCIA_ENTRADA'].includes(t.tipo || 'ACUMULO'))
+      .reduce((acc, curr) => acc + curr.quantidadePontos, 0);
+  }, [filteredTransactions]);
+
+  // --- FUNÇÕES DE EXPORTAÇÃO ---
+  
+  const handleExportPdf = async () => {
+    try {
+      const response = await api.get('/relatorios/movimentacoes/pdf', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'extrato_milhas.pdf');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Erro ao baixar PDF", error);
+      alert("Erro ao gerar relatório PDF.");
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      // Chama o endpoint CSV que abre no Excel
+      const response = await api.get('/relatorios/movimentacoes/csv', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'extrato_milhas.csv');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Erro ao baixar Excel", error);
+      alert("Erro ao gerar planilha Excel.");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <Loader2 className="animate-spin text-indigo-600" size={40} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-fadeIn">
@@ -37,21 +132,36 @@ const HistoryPage: React.FC = () => {
           <h1 className="text-3xl font-bold dark:text-white text-slate-900">Extrato de Pontos</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Acompanhe detalhadamente suas entradas e saídas.</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-semibold dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm">
-          <Download size={18} />
-          Exportar PDF
-        </button>
+        
+        {/* Botões de Ação */}
+        <div className="flex gap-3">
+          <button 
+            onClick={handleExportExcel}
+            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-xl text-sm font-bold hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all shadow-sm"
+          >
+            <FileSpreadsheet size={18} />
+            Exportar Excel
+          </button>
+          
+          <button 
+            onClick={handleExportPdf}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-semibold dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm"
+          >
+            <Download size={18} />
+            Exportar PDF
+          </button>
+        </div>
       </div>
 
-      {/* Quick Summary */}
+      {/* Cards de Resumo */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-indigo-600 p-6 rounded-2xl text-white shadow-lg shadow-indigo-200 dark:shadow-none relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <ArrowUpRight size={80} />
           </div>
-          <p className="text-sm font-medium opacity-80 mb-1">Acumulado no Mês</p>
-          <h3 className="text-3xl font-bold">+18.540 pts</h3>
-          <p className="text-xs mt-2 bg-white/20 inline-block px-2 py-1 rounded-full">+12% vs mês anterior</p>
+          <p className="text-sm font-medium opacity-80 mb-1">Entradas em {selectedMonth.split('-').reverse().join('/')}</p>
+          <h3 className="text-3xl font-bold">+{acumuladoMes.toLocaleString('pt-BR')} pts</h3>
+          <p className="text-xs mt-2 bg-white/20 inline-block px-2 py-1 rounded-full">Filtrado por data</p>
         </div>
         
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
@@ -61,8 +171,8 @@ const HistoryPage: React.FC = () => {
             </div>
             <span className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Aguardando Crédito</span>
           </div>
-          <h3 className="text-2xl font-bold dark:text-white">4.200 pts</h3>
-          <p className="text-xs text-slate-500 mt-1">Previsão para os próximos 15 dias</p>
+          <h3 className="text-2xl font-bold dark:text-white">0 pts</h3>
+          <p className="text-xs text-slate-500 mt-1">Sem lançamentos pendentes</p>
         </div>
 
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
@@ -72,18 +182,18 @@ const HistoryPage: React.FC = () => {
             </div>
             <span className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Expirando em Breve</span>
           </div>
-          <h3 className="text-2xl font-bold dark:text-white">850 pts</h3>
-          <p className="text-xs text-slate-500 mt-1">Pontos com validade até 30/11</p>
+          <h3 className="text-2xl font-bold dark:text-white">0 pts</h3>
+          <p className="text-xs text-slate-500 mt-1">Nenhum ponto expirando</p>
         </div>
       </div>
 
-      {/* Filters Bar */}
+      {/* Barra de Filtros */}
       <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col lg:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
           <input 
             type="text" 
-            placeholder="Buscar por estabelecimento..." 
+            placeholder="Buscar por descrição..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all"
@@ -97,8 +207,8 @@ const HistoryPage: React.FC = () => {
             className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm font-medium dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
           >
             <option value="ALL">Todos os Programas</option>
-            {MOCK_PROGRAMS.map(p => (
-              <option key={p.id} value={p.id}>{p.name}</option>
+            {uniquePrograms.map(prog => (
+              <option key={prog} value={prog}>{prog}</option>
             ))}
           </select>
 
@@ -109,19 +219,23 @@ const HistoryPage: React.FC = () => {
           >
             <option value="ALL">Status: Todos</option>
             <option value="CREDITED">Creditados</option>
-            <option value="PENDING">Pendentes</option>
-            <option value="EXPIRED">Expirados</option>
           </select>
 
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-colors">
-            <Calendar size={18} />
-            Outubro/2023
-            <ChevronDown size={16} />
-          </button>
+          <div className="relative">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-600 dark:text-indigo-400 pointer-events-none">
+              <CalendarIcon size={18} />
+            </div>
+            <input 
+              type="month" 
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="pl-10 pr-4 py-2.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-colors border-none outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+            />
+          </div>
         </div>
       </div>
 
-      {/* Transactions Table */}
+      {/* Tabela de Transações */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
@@ -137,57 +251,56 @@ const HistoryPage: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {filteredTransactions.length > 0 ? (
-                filteredTransactions.map((tx) => (
-                  <tr key={tx.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-default">
-                    <td className="px-6 py-5 whitespace-nowrap">
-                      <div className="flex flex-col">
-                        <span className="text-sm font-semibold dark:text-white">
-                          {new Date(tx.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
-                        </span>
-                        <span className="text-[10px] text-slate-400 uppercase">2023</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${
-                          tx.points > 0 ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600'
-                        }`}>
-                          {tx.points > 0 ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
+                filteredTransactions.map((tx) => {
+                  const isNegative = ['RESGATE', 'EXPIRACAO', 'TRANSFERENCIA_SAIDA'].includes(tx.tipo);
+                  
+                  return (
+                    <tr key={tx.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-default">
+                      <td className="px-6 py-5 whitespace-nowrap">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-semibold dark:text-white">
+                            {new Date(tx.dataMovimentacao).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                          </span>
+                          <span className="text-[10px] text-slate-400 uppercase">
+                            {new Date(tx.dataMovimentacao).getFullYear()}
+                          </span>
                         </div>
-                        <span className="text-sm font-medium dark:text-white">{tx.description}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-2">
-                        {/* Simulating program mapping */}
-                        <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-                        <span className="text-sm text-slate-600 dark:text-slate-400">Smiles</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <span className={`text-sm font-bold ${tx.points > 0 ? 'text-indigo-600 dark:text-indigo-400' : 'text-rose-500'}`}>
-                        {tx.points > 0 ? `+${tx.points}` : tx.points} pts
-                      </span>
-                    </td>
-                    <td className="px-6 py-5">
-                      <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tight ${
-                        tx.status === 'CREDITED' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30' :
-                        tx.status === 'PENDING' ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/30' :
-                        'bg-rose-50 text-rose-600 dark:bg-rose-900/30'
-                      }`}>
-                        {tx.status === 'CREDITED' && <CheckCircle2 size={10} />}
-                        {tx.status === 'PENDING' && <Clock size={10} />}
-                        {tx.status === 'EXPIRED' && <AlertTriangle size={10} />}
-                        {tx.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-5 text-right">
-                      <button className="text-slate-400 hover:text-indigo-600 transition-colors p-1">
-                        Ver detalhes
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-lg ${
+                            !isNegative ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600'
+                          }`}>
+                            {!isNegative ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
+                          </div>
+                          <span className="text-sm font-medium dark:text-white">{tx.descricao}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                          <span className="text-sm text-slate-600 dark:text-slate-400">{tx.nomePrograma}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className={`text-sm font-bold ${!isNegative ? 'text-indigo-600 dark:text-indigo-400' : 'text-rose-500'}`}>
+                          {!isNegative ? '+' : ''}{tx.quantidadePontos.toLocaleString('pt-BR')} pts
+                        </span>
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tight bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30">
+                          <CheckCircle2 size={10} />
+                          Processado
+                        </span>
+                      </td>
+                      <td className="px-6 py-5 text-right">
+                        <button className="text-slate-400 hover:text-indigo-600 transition-colors p-1">
+                          Ver detalhes
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan={6} className="px-6 py-20 text-center">
@@ -195,7 +308,9 @@ const HistoryPage: React.FC = () => {
                       <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-300 dark:text-slate-700 mb-4">
                         <Filter size={32} />
                       </div>
-                      <p className="text-slate-500 dark:text-slate-400 font-medium">Nenhuma transação encontrada com esses filtros.</p>
+                      <p className="text-slate-500 dark:text-slate-400 font-medium">
+                        Nenhuma transação encontrada em <span className="font-bold text-slate-700 dark:text-white">{selectedMonth.split('-').reverse().join('/')}</span>.
+                      </p>
                     </div>
                   </td>
                 </tr>
@@ -204,12 +319,12 @@ const HistoryPage: React.FC = () => {
           </table>
         </div>
         
-        {/* Pagination Placeholder */}
+        {/* Pagination (Visual) */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-          <p className="text-xs text-slate-500">Mostrando {filteredTransactions.length} de {MOCK_TRANSACTIONS.length} movimentações</p>
+          <p className="text-xs text-slate-500">Mostrando {filteredTransactions.length} movimentações</p>
           <div className="flex gap-2">
             <button disabled className="px-3 py-1 bg-slate-50 dark:bg-slate-800 text-slate-400 rounded-lg text-xs font-bold cursor-not-allowed">Anterior</button>
-            <button className="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-colors">Próxima</button>
+            <button disabled className="px-3 py-1 bg-slate-50 dark:bg-slate-800 text-slate-400 rounded-lg text-xs font-bold cursor-not-allowed">Próxima</button>
           </div>
         </div>
       </div>

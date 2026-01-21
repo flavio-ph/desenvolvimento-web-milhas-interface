@@ -5,6 +5,7 @@ import Layout from './components/Layout';
 import Dashboard from '../src/pages/app/Dashboard';
 import Login from '../src/pages/auth/Login';
 import Register from '../src/pages/auth/Register';
+import RecoverPassword from '../src/pages/auth/RecoverPassword';
 import CardsPage from '../src/pages/app/Cards';
 import RegisterPurchase from '../src/pages/app/RegisterPurchase';
 import HistoryPage from '../src/pages/app/History';
@@ -23,8 +24,7 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/recover" element={<Login />} /> {/* Placeholder for recover */}
-          <Route path="/reset-password" element={<Login />} /> {/* Placeholder for reset */}
+          <Route path="/recover" element={<RecoverPassword />} />
 
           <Route path="/" element={<Layout><Dashboard /></Layout>} />
           <Route path="/cards" element={<Layout><CardsPage /></Layout>} />
