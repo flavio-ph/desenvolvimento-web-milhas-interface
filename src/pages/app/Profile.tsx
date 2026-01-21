@@ -170,7 +170,7 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  // 3. Alterar Senha
+// 3. Alterar Senha
   const handleUpdatePassword = async () => {
     if (!passwordForm.nova || !passwordForm.confirmacao) {
       alert("Preencha todos os campos.");
@@ -182,17 +182,25 @@ const ProfilePage: React.FC = () => {
     }
     setPasswordLoading(true);
     try {
-      await api.put('/usuarios/me', { senha: passwordForm.nova });
+      // CORREÇÃO: Enviamos 'nome' (do formData) junto com a 'senha'.
+      // Isso evita o erro 400 Bad Request se o backend exigir o nome.
+      await api.put('/usuarios/me', { 
+        nome: formData.nome, 
+        senha: passwordForm.nova 
+      });
+      
       alert("Senha alterada com sucesso!");
       setShowPasswordModal(false);
       setPasswordForm({ nova: '', confirmacao: '' });
-    } catch (error) {
-      alert("Erro ao alterar senha.");
+    } catch (error: any) {
+      console.error(error);
+      // Dica visual do erro real
+      const msg = error.response?.data?.message || "Erro ao alterar senha.";
+      alert(msg);
     } finally {
       setPasswordLoading(false);
     }
   };
-
   // 4. Lógica de 2FA
   const handleToggle2FA = () => {
     if (is2FAEnabled) {
