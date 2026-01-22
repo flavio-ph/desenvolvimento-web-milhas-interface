@@ -8,6 +8,7 @@ import {
   CreditCard, 
   Camera, 
   Check,
+  CheckCircle,
   Lock,
   Smartphone,
   ChevronRight,
@@ -211,22 +212,34 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  const handleVerifyOTP = () => {
+  const handleVerifyOTP = async () => {
     if (otpCode.length < 6) return;
     setFaLoading(true);
-    setTimeout(() => {
-      setFaLoading(false);
-      if (otpCode === '123456') {
+    
+    try {
+        await api.post('/usuarios/me/2fa/verify', { code: parseInt(otpCode) });
         setIs2FAEnabled(true);
         setShow2FAModal(false);
         setOtpCode('');
-        alert("2FA Ativado!");
-      } else {
-        alert("Código inválido (use 123456).");
-      }
-    }, 1000);
+        alert("Autenticação de Dois Fatores ativada com sucesso!");
+    } catch (e) {
+        alert("Código incorreto ou expirado.");
+    } finally {
+        setFaLoading(false);
+    }
   };
-
+  const handleStartSetup = async () => {
+      setFaLoading(true);
+      try {
+          // Solicita a geração do código (que vai aparecer no terminal do Java)
+          await api.get('/usuarios/me/2fa/generate');
+          setStep2FA('verify'); // Avança para a tela de input
+      } catch (error) {
+          alert("Erro ao solicitar código. Verifique o console do backend.");
+      } finally {
+          setFaLoading(false);
+      }
+  };
   // 5. Lógica de Assinatura (NOVO)
   const handleChangePlan = (planId: string) => {
     if (planId === currentPlan) return;
@@ -520,79 +533,84 @@ const ProfilePage: React.FC = () => {
 
       {/* --- MODAL DE 2FA (SIMULAÇÃO) (MOVIDO PARA FORA) --- */}
       {show2FAModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-100 dark:border-slate-800 animate-fadeIn">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold dark:text-white flex items-center gap-2">
-                <Smartphone className="text-indigo-600" size={24} />
-                Autenticação de 2 Fatores
-              </h3>
-              <button onClick={() => setShow2FAModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                <X size={24} />
-              </button>
-            </div>
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-md w-full p-6 relative">
+      <button 
+        onClick={() => setShow2FAModal(false)}
+        className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+      >
+        ✕
+      </button>
 
-            {step2FA === 'intro' && (
-              <div className="space-y-4 text-center">
-                <div className="bg-indigo-50 dark:bg-indigo-900/20 p-6 rounded-2xl inline-block mb-2">
-                  <Shield className="text-indigo-600 w-16 h-16" />
-                </div>
-                <h4 className="text-lg font-bold dark:text-white">Proteja sua conta</h4>
-                <p className="text-slate-500 text-sm">
-                  Adicione uma camada extra de segurança. Sempre que fizer login, solicitaremos um código único do seu app autenticador.
-                </p>
-                <button 
-                  onClick={() => setStep2FA('qr')}
-                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors"
-                >
-                  Começar Configuração
-                </button>
-              </div>
-            )}
-
-            {step2FA === 'qr' && (
-              <div className="space-y-6 text-center">
-                <p className="text-sm text-slate-500">
-                  Escaneie o código abaixo com seu app autenticador (Google Authenticator, Authy, etc).
-                </p>
-                
-                {/* QR Code Simulado */}
-                <div className="bg-white p-4 rounded-xl border-2 border-slate-100 inline-block mx-auto">
-                   <QrCode className="w-40 h-40 text-slate-800" />
-                </div>
-                
-                <p className="text-xs text-slate-400 font-mono bg-slate-100 dark:bg-slate-800 p-2 rounded-lg">
-                  Código: A3B7 9D2F K8L1 M4N5
-                </p>
-
-                <div className="space-y-2 text-left">
-                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                    Digite o código de 6 dígitos
-                  </label>
-                  <input 
-                    type="text" 
-                    maxLength={6}
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                    placeholder="000000"
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white text-center text-xl tracking-widest font-mono"
-                  />
-                  <p className="text-xs text-center text-slate-400">Para teste use: 123456</p>
-                </div>
-
-                <button 
-                  onClick={handleVerifyOTP}
-                  disabled={otpCode.length < 6 || faLoading}
-                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
-                >
-                  {faLoading && <Loader2 className="animate-spin" size={18} />}
-                  Verificar e Ativar
-                </button>
-              </div>
-            )}
-          </div>
+      <div className="text-center mb-6">
+        <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Shield className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
         </div>
-        )}
+        <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+          Autenticação de Dois Fatores
+        </h3>
+        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+          Proteja sua conta com uma camada extra de segurança.
+        </p>
+      </div>
+
+      {step2FA === 'intro' ? (
+        <div className="space-y-4">
+          <p className="text-sm text-slate-600 dark:text-slate-300 text-center">
+            Ao ativar, enviaremos um código de verificação para o seu e-mail cadastrado.
+          </p>
+          <button
+            onClick={handleStartSetup}
+            disabled={faLoading}
+            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold transition-all shadow-lg shadow-indigo-500/20"
+          >
+            {faLoading ? 'Enviando...' : 'Enviar Código'}
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-5">
+          {/* Caixa de Aviso de Simulação */}
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 flex items-start gap-3">
+            <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-sm font-bold text-blue-900 dark:text-blue-100">
+                Código Enviado!
+              </h4>
+              <p className="text-xs text-blue-700 dark:text-blue-300 mt-1 leading-relaxed">
+                Como estamos em ambiente de desenvolvimento, o e-mail foi simulado.
+                <br/>
+                <strong>Verifique o Terminal/Console onde o Java está rodando</strong> para ver o código de 6 dígitos.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 text-center">
+              Digite o código recebido
+            </label>
+            <input
+              type="text"
+              maxLength={6}
+              value={otpCode}
+              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+              className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-center text-2xl tracking-[0.5em] font-mono transition-all"
+              placeholder="000000"
+              autoFocus
+            />
+          </div>
+
+          <button
+            onClick={handleVerifyOTP}
+            disabled={otpCode.length < 6 || faLoading}
+            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {faLoading ? 'Verificando...' : 'Confirmar Código'}
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+)}
 
       {/* --- MODAL DE GERENCIAR ASSINATURA (MOVIDO PARA FORA) --- */}
       {showSubModal && (
