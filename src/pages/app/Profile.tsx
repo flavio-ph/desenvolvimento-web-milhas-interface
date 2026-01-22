@@ -250,209 +250,214 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-fadeIn pb-12 relative">
-      {/* --- HEADER --- */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center gap-8">
-        <div className="relative group">
-          <img 
-            src="https://github.com/shadcn.png" 
-            alt="Profile" 
-            className="w-32 h-32 rounded-full object-cover ring-4 ring-indigo-50 dark:ring-indigo-900/30"
-          />
-          <button className="absolute bottom-0 right-0 p-2 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition-transform group-hover:scale-110">
-            <Camera size={18} />
-          </button>
-        </div>
-        
-        <div className="text-center md:text-left flex-1">
-          <div className="flex flex-col md:flex-row md:items-center gap-2 mb-2">
-            <h1 className="text-3xl font-bold dark:text-white text-slate-900">
-              {user?.nome || 'Usuário'}
-            </h1>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-xs font-bold rounded-full border border-amber-100 dark:border-amber-900/30 uppercase tracking-wider w-fit mx-auto md:mx-0">
-              <Check size={12} />
-              {currentPlan === 'club' ? 'Clube Milhas' : currentPlan === 'premium' ? 'Membro Premium' : 'Membro Básico'}
-            </span>
-          </div>
-          <p className="text-slate-500 dark:text-slate-400">
-            {user?.email} • Desde 2024
-          </p>
-          
-          <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-4">
-            <div className="text-center px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl">
-              <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Total Acumulado</p>
-              <p className="text-lg font-bold dark:text-white">{totalPontos.toLocaleString('pt-BR')}</p>
-            </div>
-            <div className="text-center px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl">
-              <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Resgates Feitos</p>
-              <p className="text-lg font-bold dark:text-white">0</p>
-            </div>
-          </div>
-        </div>
-        
-        <button 
-          onClick={handleSaveProfile}
-          disabled={saving}
-          className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 dark:shadow-none flex items-center gap-2 disabled:opacity-70"
-        >
-          {saving && <Loader2 className="animate-spin" size={18} />}
-          {saving ? 'Salvando...' : 'Salvar Alterações'}
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* --- COLUNA ESQUERDA (Formulário) --- */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm">
-            <h3 className="text-lg font-bold dark:text-white mb-6 flex items-center gap-2">
-              <User size={20} className="text-indigo-600" />
-              Informações Pessoais
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Nome Completo</label>
-                <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <input type="text" value={formData.nome} onChange={e => setFormData({...formData, nome: e.target.value})} className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">E-mail</label>
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <input type="email" value={formData.email} disabled className="w-full pl-11 pr-4 py-3 bg-slate-100 dark:bg-slate-800/50 border-none rounded-xl text-slate-500 cursor-not-allowed" />
-                </div>
-              </div>
-              {/* CAMPO TELEFONE (Opcional) */}
-               <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
-                  Telefone <span className="text-slate-400 font-normal text-xs">(Opcional)</span>
-                  </label>
-                  <div className="relative">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <input 
-                      type="text" 
-                      placeholder="(00) 00000-0000"
-                      value={formData.telefone}
-                      onChange={e => setFormData({...formData, telefone: e.target.value})}
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all" 
-                            />
-                  </div>
-                 </div>
-              {/* CAMPO CPF (Opcional) */}
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
-                  CPF <span className="text-slate-400 font-normal text-xs">(Opcional)</span>
-                </label>
-                <div className="relative">
-                  <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <input 
-                    type="text" 
-                    placeholder="000.000.000-00"
-                    value={formData.cpf} 
-                    onChange={e => setFormData({...formData, cpf: e.target.value})}
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all" 
-                    />
-                  </div>
-              </div>
-            </div>
-          </div>
-           
-
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm">
-            <h3 className="text-lg font-bold dark:text-white mb-6 flex items-center gap-2">
-              <Lock size={20} className="text-indigo-600" />
-              Segurança
-            </h3>
-            <div className="space-y-4">
-              <button onClick={handleToggle2FA} className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
-                <div className="flex items-center gap-4">
-                  <div className="p-2 bg-white dark:bg-slate-900 rounded-lg"><Smartphone size={20} className="text-indigo-600" /></div>
-                  <div className="text-left">
-                    <p className="font-bold dark:text-white text-sm">Autenticação em Dois Fatores</p>
-                    <p className="text-xs text-slate-500">{is2FAEnabled ? 'Ativado e seguro' : 'Aumente a segurança'}</p>
-                  </div>
-                </div>
-                <span className={`text-xs font-bold uppercase ${is2FAEnabled ? 'text-emerald-600' : 'text-slate-400'}`}>{is2FAEnabled ? 'Ativado' : 'Desativado'}</span>
-              </button>
-              <button onClick={() => setShowPasswordModal(true)} className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
-                <div className="flex items-center gap-4">
-                  <div className="p-2 bg-white dark:bg-slate-900 rounded-lg"><Lock size={20} className="text-indigo-600" /></div>
-                  <div className="text-left">
-                    <p className="font-bold dark:text-white text-sm">Alterar Senha</p>
-                    <p className="text-xs text-slate-500">****</p>
-                  </div>
-                </div>
-                <ChevronRight size={18} className="text-slate-400" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* --- COLUNA DIREITA --- */}
-        <div className="space-y-8">
-          
-          {/* CARD DO PLANO (Com botão de gerenciar) */}
-          <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 text-white shadow-xl shadow-slate-200 dark:shadow-none relative overflow-hidden">
-            <div className="absolute top-[-20%] right-[-10%] w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl"></div>
-            <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><CreditCard size={20} /> Seu Plano</h3>
-            <div className="mb-6">
-              <p className="text-4xl font-bold">
-                {currentPlan === 'club' ? 'Clube' : currentPlan === 'premium' ? 'Premium' : 'Básico'}
-              </p>
-              <p className="text-sm opacity-70 mt-1">
-                {currentPlan === 'free' ? 'Conta gratuita vitalícia' : 'Renovação em 15 Dez, 2025'}
-              </p>
-            </div>
-            <div className="space-y-3 mb-8">
-              {currentPlan !== 'free' && (
-                <>
-                  <div className="flex items-center gap-2 text-sm"><div className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></div>Bônus em transferências</div>
-                  <div className="flex items-center gap-2 text-sm"><div className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></div>Suporte prioritário</div>
-                </>
-              )}
-              <div className="flex items-center gap-2 text-sm"><div className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></div>Acesso ao sistema</div>
-            </div>
-            
-            {/* BOTÃO QUE ABRE O MODAL */}
-            <button 
-              onClick={() => setShowSubModal(true)}
-              className="w-full py-3 bg-white text-slate-900 font-bold rounded-2xl hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
-            >
-              Gerenciar Assinatura
-              <ExternalLink size={16} />
+    <>
+      {/* Container Principal do Conteúdo 
+        (Mantivemos animate-fadeIn aqui, mas tiramos os modais de dentro dele)
+      */}
+      <div className="max-w-5xl mx-auto space-y-8 animate-fadeIn pb-12 relative">
+        {/* --- HEADER --- */}
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center gap-8">
+          <div className="relative group">
+            <img 
+              src="https://github.com/shadcn.png" 
+              alt="Profile" 
+              className="w-32 h-32 rounded-full object-cover ring-4 ring-indigo-50 dark:ring-indigo-900/30"
+            />
+            <button className="absolute bottom-0 right-0 p-2 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition-transform group-hover:scale-110">
+              <Camera size={18} />
             </button>
           </div>
+          
+          <div className="text-center md:text-left flex-1">
+            <div className="flex flex-col md:flex-row md:items-center gap-2 mb-2">
+              <h1 className="text-3xl font-bold dark:text-white text-slate-900">
+                {user?.nome || 'Usuário'}
+              </h1>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-xs font-bold rounded-full border border-amber-100 dark:border-amber-900/30 uppercase tracking-wider w-fit mx-auto md:mx-0">
+                <Check size={12} />
+                {currentPlan === 'club' ? 'Clube Milhas' : currentPlan === 'premium' ? 'Membro Premium' : 'Membro Básico'}
+              </span>
+            </div>
+            <p className="text-slate-500 dark:text-slate-400">
+              {user?.email} • Desde 2024
+            </p>
+            
+            <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-4">
+              <div className="text-center px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Total Acumulado</p>
+                <p className="text-lg font-bold dark:text-white">{totalPontos.toLocaleString('pt-BR')}</p>
+              </div>
+              <div className="text-center px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Resgates Feitos</p>
+                <p className="text-lg font-bold dark:text-white">0</p>
+              </div>
+            </div>
+          </div>
+          
+          <button 
+            onClick={handleSaveProfile}
+            disabled={saving}
+            className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 dark:shadow-none flex items-center gap-2 disabled:opacity-70"
+          >
+            {saving && <Loader2 className="animate-spin" size={18} />}
+            {saving ? 'Salvando...' : 'Salvar Alterações'}
+          </button>
+        </div>
 
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm">
-            <h3 className="text-lg font-bold dark:text-white mb-6 flex items-center gap-2"><Bell size={20} className="text-indigo-600" /> Notificações</h3>
-            <div className="space-y-6">
-              {[
-                { id: 'email', label: 'E-mails de Alerta', desc: 'Resumos semanais e novidades' },
-                { id: 'push', label: 'Notificações Push', desc: 'Alertas em tempo real no app' },
-                { id: 'promotions', label: 'Novas Promoções', desc: 'Sempre que surgir 100% bônus' },
-                { id: 'expiry', label: 'Vencimento de Pontos', desc: 'Avisar 30 dias antes de expirar' },
-              ].map((item) => (
-                <div key={item.id} className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-bold dark:text-white">{item.label}</p>
-                    <p className="text-xs text-slate-500">{item.desc}</p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* --- COLUNA ESQUERDA (Formulário) --- */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm">
+              <h3 className="text-lg font-bold dark:text-white mb-6 flex items-center gap-2">
+                <User size={20} className="text-indigo-600" />
+                Informações Pessoais
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Nome Completo</label>
+                  <div className="relative">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <input type="text" value={formData.nome} onChange={e => setFormData({...formData, nome: e.target.value})} className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white" />
                   </div>
-                  <button 
-                    onClick={() => toggleNotification(item.id as any)}
-                    className={`w-12 h-6 rounded-full relative transition-colors duration-200 ${notifications[item.id as keyof typeof notifications] ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}
-                  >
-                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${notifications[item.id as keyof typeof notifications] ? 'left-7' : 'left-1'}`}></div>
-                  </button>
                 </div>
-              ))}
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">E-mail</label>
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <input type="email" value={formData.email} disabled className="w-full pl-11 pr-4 py-3 bg-slate-100 dark:bg-slate-800/50 border-none rounded-xl text-slate-500 cursor-not-allowed" />
+                  </div>
+                </div>
+                {/* CAMPO TELEFONE (Opcional) */}
+                 <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
+                    Telefone <span className="text-slate-400 font-normal text-xs">(Opcional)</span>
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                      <input 
+                        type="text" 
+                        placeholder="(00) 00000-0000"
+                        value={formData.telefone}
+                        onChange={e => setFormData({...formData, telefone: e.target.value})}
+                        className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all" 
+                              />
+                    </div>
+                   </div>
+                {/* CAMPO CPF (Opcional) */}
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
+                    CPF <span className="text-slate-400 font-normal text-xs">(Opcional)</span>
+                  </label>
+                  <div className="relative">
+                    <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                      <input 
+                      type="text" 
+                      placeholder="000.000.000-00"
+                      value={formData.cpf} 
+                      onChange={e => setFormData({...formData, cpf: e.target.value})}
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all" 
+                      />
+                    </div>
+                </div>
+              </div>
+            </div>
+              
+
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm">
+              <h3 className="text-lg font-bold dark:text-white mb-6 flex items-center gap-2">
+                <Lock size={20} className="text-indigo-600" />
+                Segurança
+              </h3>
+              <div className="space-y-4">
+                <button onClick={handleToggle2FA} className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2 bg-white dark:bg-slate-900 rounded-lg"><Smartphone size={20} className="text-indigo-600" /></div>
+                    <div className="text-left">
+                      <p className="font-bold dark:text-white text-sm">Autenticação em Dois Fatores</p>
+                      <p className="text-xs text-slate-500">{is2FAEnabled ? 'Ativado e seguro' : 'Aumente a segurança'}</p>
+                    </div>
+                  </div>
+                  <span className={`text-xs font-bold uppercase ${is2FAEnabled ? 'text-emerald-600' : 'text-slate-400'}`}>{is2FAEnabled ? 'Ativado' : 'Desativado'}</span>
+                </button>
+                <button onClick={() => setShowPasswordModal(true)} className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2 bg-white dark:bg-slate-900 rounded-lg"><Lock size={20} className="text-indigo-600" /></div>
+                    <div className="text-left">
+                      <p className="font-bold dark:text-white text-sm">Alterar Senha</p>
+                      <p className="text-xs text-slate-500">****</p>
+                    </div>
+                  </div>
+                  <ChevronRight size={18} className="text-slate-400" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* --- COLUNA DIREITA --- */}
+          <div className="space-y-8">
+            
+            {/* CARD DO PLANO (Com botão de gerenciar) */}
+            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 text-white shadow-xl shadow-slate-200 dark:shadow-none relative overflow-hidden">
+              <div className="absolute top-[-20%] right-[-10%] w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl"></div>
+              <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><CreditCard size={20} /> Seu Plano</h3>
+              <div className="mb-6">
+                <p className="text-4xl font-bold">
+                  {currentPlan === 'club' ? 'Clube' : currentPlan === 'premium' ? 'Premium' : 'Básico'}
+                </p>
+                <p className="text-sm opacity-70 mt-1">
+                  {currentPlan === 'free' ? 'Conta gratuita vitalícia' : 'Renovação em 15 Dez, 2025'}
+                </p>
+              </div>
+              <div className="space-y-3 mb-8">
+                {currentPlan !== 'free' && (
+                  <>
+                    <div className="flex items-center gap-2 text-sm"><div className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></div>Bônus em transferências</div>
+                    <div className="flex items-center gap-2 text-sm"><div className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></div>Suporte prioritário</div>
+                  </>
+                )}
+                <div className="flex items-center gap-2 text-sm"><div className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></div>Acesso ao sistema</div>
+              </div>
+              
+              {/* BOTÃO QUE ABRE O MODAL */}
+              <button 
+                onClick={() => setShowSubModal(true)}
+                className="w-full py-3 bg-white text-slate-900 font-bold rounded-2xl hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
+              >
+                Gerenciar Assinatura
+                <ExternalLink size={16} />
+              </button>
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm">
+              <h3 className="text-lg font-bold dark:text-white mb-6 flex items-center gap-2"><Bell size={20} className="text-indigo-600" /> Notificações</h3>
+              <div className="space-y-6">
+                {[
+                  { id: 'email', label: 'E-mails de Alerta', desc: 'Resumos semanais e novidades' },
+                  { id: 'push', label: 'Notificações Push', desc: 'Alertas em tempo real no app' },
+                  { id: 'promotions', label: 'Novas Promoções', desc: 'Sempre que surgir 100% bônus' },
+                  { id: 'expiry', label: 'Vencimento de Pontos', desc: 'Avisar 30 dias antes de expirar' },
+                ].map((item) => (
+                  <div key={item.id} className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-bold dark:text-white">{item.label}</p>
+                      <p className="text-xs text-slate-500">{item.desc}</p>
+                    </div>
+                    <button 
+                      onClick={() => toggleNotification(item.id as any)}
+                      className={`w-12 h-6 rounded-full relative transition-colors duration-200 ${notifications[item.id as keyof typeof notifications] ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}
+                    >
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${notifications[item.id as keyof typeof notifications] ? 'left-7' : 'left-1'}`}></div>
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* --- MODAL DE ALTERAR SENHA --- */}
+      {/* --- MODAL DE ALTERAR SENHA (MOVIDO PARA FORA) --- */}
       {showPasswordModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-100 dark:border-slate-800 animate-fadeIn">
@@ -513,8 +518,7 @@ const ProfilePage: React.FC = () => {
         </div>
       )}
 
-      {/* --- MODAL 2FA --- */}
-      {/* --- MODAL DE 2FA (SIMULAÇÃO) --- */}
+      {/* --- MODAL DE 2FA (SIMULAÇÃO) (MOVIDO PARA FORA) --- */}
       {show2FAModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-100 dark:border-slate-800 animate-fadeIn">
@@ -590,13 +594,16 @@ const ProfilePage: React.FC = () => {
         </div>
         )}
 
-      {/* --- MODAL DE GERENCIAR ASSINATURA (NOVO) --- */}
+      {/* --- MODAL DE GERENCIAR ASSINATURA (MOVIDO PARA FORA) --- */}
       {showSubModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-4xl p-0 shadow-2xl border border-slate-100 dark:border-slate-800 animate-fadeIn my-8">
+          {/* 1. Adicionado 'overflow-hidden' aqui para consertar o arredondamento embaixo.
+             2. Adicionado 'flex flex-col' para garantir estrutura correta.
+          */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-4xl p-0 shadow-2xl border border-slate-100 dark:border-slate-800 animate-fadeIn my-8 overflow-hidden flex flex-col">
             
             {/* Header do Modal */}
-            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 z-10 relative">
               <div>
                 <h2 className="text-2xl font-bold dark:text-white flex items-center gap-2">
                   <CreditCard className="text-indigo-600" />
@@ -609,10 +616,13 @@ const ProfilePage: React.FC = () => {
               </button>
             </div>
 
-            <div className="flex flex-col md:flex-row h-[600px] md:h-auto">
+            {/* 3. Removido h-[600px] fixo. Usamos 'flex-1' para ocupar o espaço necessário.
+               Isso ajuda a scrollbar a se comportar melhor.
+            */}
+            <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
               
               {/* Sidebar do Modal */}
-              <div className="w-full md:w-1/3 bg-slate-50 dark:bg-slate-800/50 p-6 border-r border-slate-100 dark:border-slate-800 space-y-6">
+              <div className="w-full md:w-1/3 bg-slate-50 dark:bg-slate-800/50 p-6 border-r border-slate-100 dark:border-slate-800 space-y-6 overflow-y-auto">
                 
                 {/* Status Atual */}
                 <div className="space-y-2">
@@ -673,9 +683,8 @@ const ProfilePage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Conteúdo Principal (Lista de Planos) */}
-              <div className="flex-1 p-6 overflow-y-auto max-h-[600px]">
-                <h3 className="text-lg font-bold dark:text-white mb-4">Mudar de Plano</h3>
+             {/* Conteúdo Principal (Lista de Planos) */}
+<div className="flex-1 p-6 overflow-y-auto max-h-[70vh] md:max-h-[600px] scrollbar-thin scrollbar-thumb-indigo-500 dark:scrollbar-thumb-indigo-600 scrollbar-track-indigo-50 dark:scrollbar-track-slate-800"> <h3 className="text-lg font-bold dark:text-white mb-4">Mudar de Plano</h3>
                 <div className="space-y-4">
                   {availablePlans.map((plan) => (
                     <div 
@@ -714,13 +723,13 @@ const ProfilePage: React.FC = () => {
                       </div>
 
                       {currentPlan !== plan.id && (
-                         <button 
-                           onClick={(e) => { e.stopPropagation(); handleChangePlan(plan.id); }}
-                           disabled={subLoading}
-                           className="mt-4 w-full py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                         >
-                           {subLoading ? 'Processando...' : plan.id === 'free' ? 'Fazer Downgrade' : 'Selecionar este Plano'}
-                         </button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleChangePlan(plan.id); }}
+                            disabled={subLoading}
+                            className="mt-4 w-full py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                          >
+                            {subLoading ? 'Processando...' : plan.id === 'free' ? 'Fazer Downgrade' : 'Selecionar este Plano'}
+                          </button>
                       )}
                     </div>
                   ))}
@@ -745,8 +754,7 @@ const ProfilePage: React.FC = () => {
           </div>
         </div>
       )}
-
-    </div>
+    </>
   );
 };
 

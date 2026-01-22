@@ -39,3 +39,18 @@ export interface Promotion {
   expiryDate: string;
   bonusPercentage: number;
 }
+
+export interface User {
+  id: number;
+  nome: string;
+  email: string;
+  fotoPerfil?: string; 
+  role: 'USER' | 'ADMIN';
+}
+
+export interface UserUpdateData {
+  nome?: string;
+  telefone?: string;
+  cpf?: string;
+  fotoPerfil?: string; s
+}
