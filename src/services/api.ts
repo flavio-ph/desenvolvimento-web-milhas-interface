@@ -1,11 +1,10 @@
 import axios from 'axios';
-import { UserUpdateData } from '../types/types';
+import { UserUpdateData, Promotion, LoyaltyProgram, Notificacao,Transaction, CreditCard} from '../types/types';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8080', // Endereço do seu Backend Spring Boot
+  baseURL: 'http://localhost:8080', 
 });
 
-// Interceptador para adicionar o Token automaticamente
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -16,22 +15,52 @@ api.interceptors.request.use((config) => {
 
 export default api;
 
+// --- Upload ---
 export const uploadFile = async (file: File): Promise<string> => {
   const formData = new FormData();
   formData.append('file', file);
-
-  // Ajuste '/compras/upload' para o endpoint de upload genérico que você criar no backend
-  // Se não tiver um genérico, pode usar o de compras ou criar '/uploads' no backend
+  // Endpoint ajustado para o genérico ou use '/usuarios/me/foto' se preferir
   const response = await api.post<{ fileUrl: string }>('/uploads', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
+    headers: { 'Content-Type': 'multipart/form-data' },
   });
-  return response.data.fileUrl; // O backend deve retornar a URL do arquivo salvo
+  return response.data.fileUrl;
 };
 
-// Certifique-se que a função de update perfil aceita a foto
+// --- Perfil ---
 export const updateProfile = async (data: UserUpdateData) => {
   const response = await api.put('/usuarios/me', data);
+  return response.data;
+};
+
+// --- Promoções (NOVO) ---
+export const getPromocoes = async () => {
+  const response = await api.get<Promotion[]>('/promocoes');
+  return response.data;
+};
+
+// --- Programas (NOVO) ---
+export const getProgramas = async () => {
+  const response = await api.get<LoyaltyProgram[]>('/programas-pontos');
+  return response.data;
+};
+
+export const getNotificacoes = async () => {
+  const response = await api.get<Notificacao[]>('/notificacoes');
+  return response.data;
+};
+
+export const marcarNotificacaoComoLida = async (id: number) => {
+  // Ajuste a rota conforme seu Controller (ex: /notificacoes/{id}/lida)
+  await api.put(`/notificacoes/${id}/lida`);
+};
+
+export const getCompras = async () => {
+  // Ajuste a rota para a sua real de listagem de compras
+  const response = await api.get<Transaction[]>('/compras'); 
+  return response.data;
+};
+
+export const getCartoes = async () => {
+  const response = await api.get<CreditCard[]>('/cartoes');
   return response.data;
 };

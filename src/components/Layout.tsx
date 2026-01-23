@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Menu, 
@@ -7,10 +7,14 @@ import {
   Sun, 
   Bell, 
   LogOut, 
-  Search
+  Search,
+  Check,
+  ArrowRight
 } from 'lucide-react';
 import { MENU_ITEMS, ADMIN_MENU_ITEMS } from '../constants/constants';
 import { useTheme } from '../context/ThemeContext';
+import { getNotificacoes, marcarNotificacaoComoLida } from '../services/api';
+import { Notificacao } from '../types/types';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -18,21 +22,77 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  
+  // Estados para Notificações
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
+  
+  // Estado para Busca
+  const [searchTerm, setSearchTerm] = useState('');
+
   const { isDarkMode, toggleDarkMode } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
+  const notifRef = useRef<HTMLDivElement>(null);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
+  // --- LÓGICA DE BUSCA ---
+  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchTerm.trim()) {
+      // Navega para a rota de busca passando o termo na URL
+      navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
+      setIsNotifOpen(false); // Fecha notificação se estiver aberta
+    }
+  };
+
+  // --- LÓGICA DE NOTIFICAÇÕES ---
+  const fetchNotificacoes = async () => {
+    try {
+      const data = await getNotificacoes();
+      setNotificacoes(data);
+    } catch (error) {
+      console.error("Erro ao atualizar notificações:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotificacoes();
+    const interval = setInterval(fetchNotificacoes, 30000); // Polling a cada 30s
+    return () => clearInterval(interval);
+  }, [location.pathname]);
+
+  // Fecha o dropdown se clicar fora dele
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+        setIsNotifOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleMarkAsRead = async (id: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      setNotificacoes(prev => prev.map(n => n.id === id ? { ...n, lida: true } : n));
+      await marcarNotificacaoComoLida(id);
+    } catch (error) {
+      console.error("Erro ao marcar como lida", error);
+    }
+  };
+
+  const unreadCount = notificacoes.filter(n => !n.lida).length;
+
   return (
-    // ALTERAÇÃO AQUI: Mudamos de 'min-h-screen' para 'h-screen' e adicionamos 'overflow-hidden'
     <div className="h-screen w-full flex bg-slate-50 dark:bg-slate-950 transition-colors duration-300 overflow-hidden">
       
+      {/* --- SIDEBAR --- */}
       <aside 
         className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="flex flex-col h-full">
-          {/* ... (código do cabeçalho do menu mantém igual) ... */}
           <div className="p-6 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">M</div>
@@ -44,7 +104,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
 
           <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto custom-scrollbar">
-             {/* ... (itens do menu mantêm igual) ... */}
              <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 px-2">Menu Principal</div>
             {MENU_ITEMS.map((item) => (
               <Link
@@ -70,7 +129,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             ))}
           </nav>
 
-          {/* O botão sair ficará sempre fixo no rodapé do menu devido ao flex-col h-full e nav flex-1 */}
           <div className="p-4 border-t border-slate-200 dark:border-slate-800">
             <button 
               onClick={() => navigate('/login')}
@@ -83,36 +141,115 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </aside>
 
+      {/* --- CONTEÚDO PRINCIPAL --- */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* ... (Header superior mantém igual) ... */}
-        <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 lg:px-8">
-            {/* ... Conteúdo do header ... */}
+        
+        {/* HEADER */}
+        <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 lg:px-8 z-40 relative">
             <div className="flex items-center gap-4">
                 <button onClick={toggleSidebar} className="lg:hidden text-slate-500">
-                <Menu size={24} />
+                  <Menu size={24} />
                 </button>
+                
+                {/* BARRA DE BUSCA FUNCIONAL */}
                 <div className="relative hidden md:block">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <input 
-                    type="text" 
-                    placeholder="Buscar por transação, cartão..." 
-                    className="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-full text-sm w-64 focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white"
-                />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <input 
+                      type="text" 
+                      placeholder="Buscar por transação, cartão..." 
+                      className="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-full text-sm w-64 focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all focus:w-80"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onKeyDown={handleSearch}
+                  />
                 </div>
             </div>
 
             <div className="flex items-center gap-2 lg:gap-4">
                 <button 
-                onClick={toggleDarkMode}
-                className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors focus:outline-none"
+                  onClick={toggleDarkMode}
+                  className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors focus:outline-none"
                 >
-                {isDarkMode ? <Sun size={20} className="text-amber-400" /> : <Moon size={20} />}
+                  {isDarkMode ? <Sun size={20} className="text-amber-400" /> : <Moon size={20} />}
                 </button>
                 
-                <Link to="/notifications" className="relative p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
-                <Bell size={20} />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
-                </Link>
+                {/* SINO COM DROPDOWN */}
+                <div className="relative" ref={notifRef}>
+                  <button 
+                    onClick={() => setIsNotifOpen(!isNotifOpen)}
+                    className={`relative p-2 rounded-full transition-colors ${isNotifOpen ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/50' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                  >
+                    <Bell size={20} />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-0 right-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-500 border-2 border-white dark:border-slate-900 rounded-full transform translate-x-1/4 -translate-y-1/4">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* POPUP DE NOTIFICAÇÕES */}
+                  {isNotifOpen && (
+                    <div className="absolute right-0 top-12 w-80 sm:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-xl ring-1 ring-slate-900/5 dark:ring-white/10 overflow-hidden animate-fadeIn origin-top-right">
+                      <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                        <h3 className="font-bold text-slate-900 dark:text-white">Notificações</h3>
+                        <span className="text-xs font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full">
+                          {unreadCount} novas
+                        </span>
+                      </div>
+
+                      <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
+                        {notificacoes.length > 0 ? (
+                          notificacoes.slice(0, 5).map((notif) => (
+                            <div 
+                              key={notif.id} 
+                              className={`p-4 border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group relative ${!notif.lida ? 'bg-indigo-50/30 dark:bg-indigo-900/10' : ''}`}
+                              onClick={() => {
+                                setIsNotifOpen(false);
+                                navigate('/notifications');
+                              }}
+                            >
+                              <div className="flex gap-3">
+                                <div className={`w-2 h-2 mt-2 rounded-full shrink-0 ${notif.lida ? 'bg-transparent' : 'bg-indigo-500'}`}></div>
+                                <div className="flex-1">
+                                  <p className={`text-sm ${!notif.lida ? 'font-semibold text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
+                                    {notif.mensagem}
+                                  </p>
+                                  <p className="text-xs text-slate-400 mt-1">
+                                    {new Date(notif.dataEnvio).toLocaleDateString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                  </p>
+                                </div>
+                                {!notif.lida && (
+                                  <button 
+                                    onClick={(e) => handleMarkAsRead(notif.id, e)}
+                                    className="opacity-0 group-hover:opacity-100 p-1.5 text-indigo-600 hover:bg-indigo-100 rounded-full transition-all self-start"
+                                    title="Marcar como lida"
+                                  >
+                                    <Check size={14} />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="p-8 text-center text-slate-500">
+                            <Bell size={32} className="mx-auto mb-2 opacity-20" />
+                            <p className="text-sm">Nenhuma notificação</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="p-3 bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 text-center">
+                        <Link 
+                          to="/notifications" 
+                          onClick={() => setIsNotifOpen(false)}
+                          className="text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 inline-flex items-center gap-1"
+                        >
+                          Ver todas as notificações <ArrowRight size={14} />
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 mx-2"></div>
 
@@ -130,7 +267,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </div>
         </header>
 
-        {/* O main já tem overflow-y-auto, então ele rolará independentemente do menu */}
         <main className="flex-1 overflow-y-auto p-4 lg:p-8 custom-scrollbar">
           {children}
         </main>

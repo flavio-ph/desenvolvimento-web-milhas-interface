@@ -15,6 +15,7 @@ import PromotionsPage from '../src/pages/app/Promotions';
 import AdminBrands from '../src/pages/admin/Brands';
 import AdminPrograms from '../src/pages/admin/Programs';
 import AdminPromotions from '../src/pages/admin/Promotions';
+import SearchResults from '../src/pages/app/SearchResults';
 import { ThemeProvider } from './context/ThemeContext';
 
 const App: React.FC = () => {
@@ -33,6 +34,7 @@ const App: React.FC = () => {
           <Route path="/promotions" element={<Layout><PromotionsPage /></Layout>} />
           <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
           <Route path="/notifications" element={<Layout><NotificationsPage /></Layout>} />
+          <Route path="/search" element={<Layout><SearchResults /></Layout>} />
           
           <Route path="/admin/brands" element={<Layout><AdminBrands /></Layout>} />
           <Route path="/admin/programs" element={<Layout><AdminPrograms /></Layout>} />

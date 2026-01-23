@@ -7,10 +7,10 @@ export enum CardBrand {
 }
 
 export interface LoyaltyProgram {
-  id: string;
-  name: string;
-  points: number;
-  color: string;
+  id: number; 
+  nome: string; 
+  points?: number; 
+  color?: string;
 }
 
 export interface CreditCard {
@@ -32,12 +32,14 @@ export interface Transaction {
   expectedCreditDate: string;
 }
 
-export interface Promotion {
-  id: string;
-  title: string;
-  description: string;
-  expiryDate: string;
-  bonusPercentage: number;
+export interface Promotion  {
+  id: number;
+  titulo: string;
+  descricao: string;
+  urlPromocao: string;
+  dataInicio: string; 
+  dataFim: string;
+  nomePrograma: string;
 }
 
 export interface User {
@@ -53,4 +55,12 @@ export interface UserUpdateData {
   telefone?: string;
   cpf?: string;
   fotoPerfil?: string; s
+}
+
+export interface Notificacao {
+  id: number;
+  mensagem: string;
+  lida: boolean;
+  tipo: 'COMPRA' | 'TRANSFERENCIA' | 'PROMOCAO' | 'EXPIRACAO' | 'GERAL'; // Ajuste conforme seu Enum no Java
+  dataEnvio: string;
 }

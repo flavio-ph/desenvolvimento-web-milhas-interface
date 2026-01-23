@@ -32,10 +32,10 @@ export const ADMIN_MENU_ITEMS = [
 ];
 
 export const MOCK_PROGRAMS: LoyaltyProgram[] = [
-  { id: '1', name: 'Smiles', points: 125400, color: 'orange' },
-  { id: '2', name: 'Azul', points: 45000, color: 'blue' },
-  { id: '3', name: 'Latam Pass', points: 78200, color: 'pink' },
-  { id: '4', name: 'Livelo', points: 12000, color: 'red' },
+  { id: 1, nome: 'Smiles', points: 125400, color: 'orange' },
+  { id: 2, nome: 'Azul', points: 45000, color: 'blue' },
+  { id: 3, nome: 'Latam Pass', points: 78200, color: 'pink' },
+  { id: 4, nome: 'Livelo', points: 12000, color: 'red' },
 ];
 
 export const MOCK_CARDS: CreditCardType[] = [
@@ -52,6 +52,22 @@ export const MOCK_TRANSACTIONS: Transaction[] = [
 ];
 
 export const MOCK_PROMOTIONS: Promotion[] = [
-  { id: 'p1', title: '100% de Bônus Smiles', description: 'Transfira seus pontos Livelo e ganhe 100% de bônus.', expiryDate: '2023-11-15', bonusPercentage: 100 },
-  { id: 'p2', title: '80% de Bônus TudoAzul', description: 'Válido para portadores de cartões Itaú.', expiryDate: '2023-11-20', bonusPercentage: 80 },
+  { 
+    id: 1, 
+    titulo: '100% de Bônus Smiles', 
+    descricao: 'Transfira seus pontos Livelo e ganhe 100% de bônus.', 
+    dataFim: '2023-11-15', 
+    dataInicio: '2023-11-01',
+    urlPromocao: 'https://smiles.com.br',
+    nomePrograma: 'Smiles'
+  },
+  { 
+    id: 2, 
+    titulo: '80% de Bônus TudoAzul', 
+    descricao: 'Válido para portadores de cartões Itaú.', 
+    dataFim: '2023-11-20', 
+    dataInicio: '2023-11-05',
+    urlPromocao: 'https://tudoazul.com.br',
+    nomePrograma: 'Azul'
+  },
 ];
