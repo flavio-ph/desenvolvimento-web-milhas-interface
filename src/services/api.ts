@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { UserUpdateData, Promotion, LoyaltyProgram, Notificacao,Transaction, CreditCard} from '../types/types';
+import { UserUpdateData, Promotion, LoyaltyProgram, Notificacao, Transaction, CreditCard } from '../types/types';
 
 const api = axios.create({
   baseURL: 'http://localhost:8080', 
@@ -19,7 +19,6 @@ export default api;
 export const uploadFile = async (file: File): Promise<string> => {
   const formData = new FormData();
   formData.append('file', file);
-  // Endpoint ajustado para o genérico ou use '/usuarios/me/foto' se preferir
   const response = await api.post<{ fileUrl: string }>('/uploads', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
@@ -32,34 +31,55 @@ export const updateProfile = async (data: UserUpdateData) => {
   return response.data;
 };
 
-// --- Promoções (NOVO) ---
+// --- Promoções (Leitura) ---
 export const getPromocoes = async () => {
   const response = await api.get<Promotion[]>('/promocoes');
   return response.data;
 };
 
-// --- Programas (NOVO) ---
-export const getProgramas = async () => {
-  const response = await api.get<LoyaltyProgram[]>('/programas-pontos');
+// --- Promoções (Escrita) ---
+export const createPromocao = async (data: any) => {
+  const response = await api.post('/promocoes', data);
   return response.data;
 };
 
+export const deletePromocao = async (id: number) => {
+  await api.delete(`/promocoes/${id}`);
+};
+
+// --- Programas ---
+export const getProgramas = async () => {
+  const response = await api.get<LoyaltyProgram[]>('/programas');
+  return response.data;
+};
+
+export const createPrograma = async (data: { nome: string; url: string }) => {
+  const response = await api.post('/programas', data);
+  return response.data;
+};
+
+export const deletePrograma = async (id: number) => {
+  // CORREÇÃO: Adicionada a barra '/' antes do ID
+  await api.delete(`/programas/${id}`);
+};
+
+// --- Notificações ---
 export const getNotificacoes = async () => {
   const response = await api.get<Notificacao[]>('/notificacoes');
   return response.data;
 };
 
 export const marcarNotificacaoComoLida = async (id: number) => {
-  // Ajuste a rota conforme seu Controller (ex: /notificacoes/{id}/lida)
   await api.put(`/notificacoes/${id}/lida`);
 };
 
+// --- Compras ---
 export const getCompras = async () => {
-  // Ajuste a rota para a sua real de listagem de compras
   const response = await api.get<Transaction[]>('/compras'); 
   return response.data;
 };
 
+// --- Cartões ---
 export const getCartoes = async () => {
   const response = await api.get<CreditCard[]>('/cartoes');
   return response.data;

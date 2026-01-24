@@ -1,142 +1,263 @@
-import React, { useState } from 'react';
-import { Globe, Plus, Settings2, Trash2, ExternalLink, TrendingUp, X } from 'lucide-react';
-import { MOCK_PROGRAMS } from '../../constants/constants';
+import React, { useState, useEffect } from 'react';
+import { Globe, Plus, Trash2, ExternalLink, X, Check, Loader2, Link as LinkIcon } from 'lucide-react';
+import { getProgramas, createPrograma, deletePrograma } from '../../services/api'; 
+import { LoyaltyProgram } from '../../types/types';
+
+// Constante de cores para o seletor (se quiser implementar cor no futuro)
+// Por enquanto, usaremos cores geradas baseadas no nome ou aleatórias para o preview
+const PREVIEW_COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#3b82f6'];
 
 const AdminPrograms: React.FC = () => {
-  // Estado para controlar a visibilidade do Popup
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [programs, setPrograms] = useState<LoyaltyProgram[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Form State
+  const [formData, setFormData] = useState({
+    nome: '',
+    url: ''
+  });
+
+  // Carregar dados
+  const loadPrograms = async () => {
+    try {
+      setLoading(true);
+      const data = await getProgramas();
+      setPrograms(data || []);
+    } catch (e) {
+      console.error("Erro ao listar programas", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPrograms();
+  }, []);
+
+  // Criar Programa
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setIsSubmitting(true);
+      await createPrograma(formData);
+      
+      alert('Programa criado com sucesso!');
+      setIsModalOpen(false);
+      setFormData({ nome: '', url: '' });
+      loadPrograms();
+    } catch (error) {
+      console.error(error);
+      alert('Erro ao criar programa.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Deletar Programa
+  const handleDelete = async (id: number) => {
+    if (!confirm('Deseja realmente remover este programa?')) return;
+    try {
+      await deletePrograma(id);
+      setPrograms(programs.filter(p => p.id !== id));
+    } catch (error) {
+      console.error(error);
+      alert('Erro ao remover programa.');
+    }
+  };
+
+  // Helper para cor aleatória consistente (baseada no ID ou Index)
+  const getColor = (index: number) => PREVIEW_COLORS[index % PREVIEW_COLORS.length];
 
   return (
-    <div className="space-y-8 animate-fadeIn relative">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold dark:text-white flex items-center gap-3">
-            <Globe className="text-indigo-600" />
-            Programas de Fidelidade
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Gerencie os parceiros e regras de acúmulo de pontos.</p>
+    <>
+      <div className="space-y-8 animate-fadeIn pb-10 max-w-6xl mx-auto">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold dark:text-white flex items-center gap-3">
+              <Globe className="text-indigo-600" />
+              Programas de Fidelidade
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 mt-1">Gerencie os parceiros e regras de acúmulo de pontos.</p>
+          </div>
+          
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 px-5 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 dark:shadow-none"
+          >
+            <Plus size={20} />
+            Novo Programa
+          </button>
         </div>
-        
-        {/* Adicionado onClick para abrir o modal */}
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 dark:shadow-none"
-        >
-          <Plus size={20} />
-          Novo Programa
-        </button>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {MOCK_PROGRAMS.map((program) => (
-          <div key={program.id} className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm group hover:shadow-xl hover:translate-y-[-4px] transition-all duration-300">
-            <div className="flex justify-between items-start mb-6">
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-${program.color}-100 dark:shadow-none`} style={{ backgroundColor: program.color }}>
-                {program.name.charAt(0)}
+        {loading ? (
+          <div className="flex justify-center p-12"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {programs.length === 0 && (
+              <div className="col-span-full text-center p-12 bg-slate-50 dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800">
+                <Globe className="mx-auto text-slate-300 mb-4" size={48} />
+                <p className="text-slate-500">Nenhum programa cadastrado.</p>
               </div>
-              <div className="flex gap-2">
-                <button className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all">
-                  <Settings2 size={18} />
-                </button>
-              </div>
-            </div>
-            
-            <h3 className="text-xl font-bold dark:text-white mb-1">{program.name}</h3>
-            <p className="text-xs text-slate-400 uppercase font-bold tracking-widest mb-4">Total na Plataforma</p>
-            
-            <div className="flex items-end gap-2 mb-6">
-              <span className="text-2xl font-black dark:text-white">{(program.points / 1000).toFixed(0)}M</span>
-              <span className="text-xs text-emerald-500 font-bold mb-1 flex items-center">
-                <TrendingUp size={12} className="mr-1" />
-                +8%
-              </span>
-            </div>
+            )}
 
-            <div className="pt-4 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-400 uppercase">Ações</span>
-              <div className="flex gap-1">
-                <button className="p-2 text-slate-400 hover:text-rose-600 transition-colors">
-                  <Trash2 size={16} />
-                </button>
-                <button className="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
-                  <ExternalLink size={16} />
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+            {programs.map((program, index) => (
+              <div key={program.id} className="bg-white dark:bg-slate-900 rounded-[24px] p-6 border border-slate-100 dark:border-slate-800 shadow-sm group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-full">
+                <div>
+                  <div className="flex justify-between items-start mb-6">
+                    <div 
+                      className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-lg transform group-hover:scale-110 transition-transform"
+                      style={{ backgroundColor: getColor(index) }}
+                    >
+                      {program.name.charAt(0).toUpperCase()}
+                    </div>
+                    
+                    {/* Menu de Ações (Top Right) */}
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        onClick={() => handleDelete(program.id)}
+                        className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-colors"
+                        title="Remover"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <h3 className="text-xl font-bold dark:text-white mb-2">{program.name}</h3>
+                  <a 
+                    href={program.url || '#'} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="text-sm text-slate-400 hover:text-indigo-500 flex items-center gap-1 transition-colors truncate"
+                  >
+                    <LinkIcon size={12} />
+                    {program.url || 'Sem link cadastrado'}
+                  </a>
+                </div>
 
-        {/* Adicionado onClick para abrir o modal */}
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center gap-3 text-slate-400 hover:border-indigo-400 hover:text-indigo-600 transition-all group min-h-[220px]"
-        >
-          <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-full group-hover:scale-110 transition-transform">
-            <Plus size={24} />
-          </div>
-          <span className="font-bold">Adicionar Parceiro</span>
-        </button>
-      </div>
-
-      {/* --- INÍCIO DO POPUP (MODAL) --- */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-200">
-            
-            {/* Cabeçalho do Modal */}
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold dark:text-white">Novo Programa</h2>
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-slate-200 rounded-full transition-all"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* Conteúdo do Formulário */}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-2">Nome do Programa</label>
-                <input 
-                  type="text" 
-                  placeholder="Ex: TudoAzul, Latam Pass..." 
-                  className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-2 border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 outline-none transition-all font-medium dark:text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-2">Cor de Identificação</label>
-                <div className="flex gap-3">
-                  {['#4f46e5', '#ec4899', '#06b6d4', '#eab308', '#84cc16'].map((color) => (
-                    <button 
-                      key={color}
-                      className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-700 shadow-sm hover:scale-110 transition-transform focus:ring-2 focus:ring-offset-2 ring-indigo-500"
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
+                <div className="pt-6 mt-4 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</span>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-black rounded-lg uppercase">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Ativo
+                  </span>
                 </div>
               </div>
+            ))}
+            
+            {/* Card de Adicionar (Botão Grande) */}
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[24px] p-6 flex flex-col items-center justify-center gap-4 text-slate-400 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group min-h-[240px]"
+            >
+              <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-full group-hover:scale-110 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/30 transition-all">
+                <Plus size={32} />
+              </div>
+              <span className="font-bold text-sm uppercase tracking-wide">Novo Parceiro</span>
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* MODAL PADRONIZADO (FORA DA ANIMAÇÃO) */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setIsModalOpen(false)} />
+          
+          <div className="bg-white dark:bg-slate-900 w-full max-w-4xl rounded-3xl shadow-2xl animate-scaleIn z-10 overflow-hidden flex flex-col md:flex-row max-h-[90vh]">
+            
+            {/* LADO ESQUERDO: Formulário */}
+            <div className="w-full md:w-1/2 flex flex-col overflow-y-auto border-r border-slate-100 dark:border-slate-800">
+              <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center sticky top-0 bg-white dark:bg-slate-900 z-20">
+                <h2 className="text-xl font-bold dark:text-white flex items-center gap-2">
+                  <Plus className="text-indigo-600" />
+                  Novo Programa
+                </h2>
+                <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                  <X size={24} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Nome do Programa</label>
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      value={formData.nome}
+                      onChange={e => setFormData({...formData, nome: e.target.value})}
+                      className="w-full px-4 py-3 pl-11 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white"
+                      placeholder="Ex: Livelo"
+                      required
+                    />
+                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">URL do Site Oficial</label>
+                  <div className="relative">
+                    <input 
+                      type="url" 
+                      value={formData.url}
+                      onChange={e => setFormData({...formData, url: e.target.value})}
+                      className="w-full px-4 py-3 pl-11 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white"
+                      placeholder="https://www.livelo.com.br"
+                      required
+                    />
+                    <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                  </div>
+                </div>
+
+                <div className="pt-4">
+                  <button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30 flex items-center justify-center gap-2 disabled:opacity-70 transform active:scale-95"
+                  >
+                    {isSubmitting ? <Loader2 className="animate-spin" /> : <Check size={20} />}
+                    Cadastrar Programa
+                  </button>
+                </div>
+              </form>
             </div>
 
-            {/* Rodapé do Modal */}
-            <div className="flex gap-3 mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="flex-1 px-4 py-2.5 rounded-xl font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button className="flex-1 px-4 py-2.5 rounded-xl font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none">
-                Criar Programa
-              </button>
+            {/* LADO DIREITO: Preview Visual */}
+            <div className="hidden md:flex md:w-1/2 bg-slate-50 dark:bg-slate-950 items-center justify-center p-8 relative overflow-hidden">
+              <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, gray 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
+              
+              <div className="relative w-full max-w-xs text-center">
+                <h4 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-8">Como aparecerá no App</h4>
+                
+                {/* Card Preview */}
+                <div className="bg-white dark:bg-slate-900 rounded-[32px] p-8 border border-slate-100 dark:border-slate-800 shadow-2xl transform hover:scale-105 transition-duration-500 flex flex-col items-center gap-6">
+                  <div className="w-24 h-24 rounded-3xl bg-indigo-600 shadow-xl shadow-indigo-200 dark:shadow-indigo-900/20 flex items-center justify-center text-white text-4xl font-black">
+                    {formData.nome ? formData.nome.charAt(0).toUpperCase() : '?'}
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <h3 className="text-2xl font-black dark:text-white">
+                      {formData.nome || 'Nome do Programa'}
+                    </h3>
+                    <p className="text-sm text-slate-400 font-medium truncate max-w-[200px] mx-auto">
+                      {formData.url || 'www.siteoficial.com.br'}
+                    </p>
+                  </div>
+
+                  <div className="w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mt-2">
+                    <div className="w-2/3 h-full bg-indigo-500 rounded-full"></div>
+                  </div>
+                  
+                  <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Parceiro Oficial</p>
+                </div>
+              </div>
             </div>
 
           </div>
         </div>
       )}
-      {/* --- FIM DO POPUP (MODAL) --- */}
-    </div>
+    </>
   );
 };
 

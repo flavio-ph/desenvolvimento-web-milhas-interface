@@ -13,7 +13,7 @@ import ProfilePage from '../src/pages/app/Profile';
 import NotificationsPage from '../src/pages/app/Notifications';
 import PromotionsPage from '../src/pages/app/Promotions';
 import AdminBrands from '../src/pages/admin/Brands';
-import AdminPrograms from '../src/pages/admin/Programs';
+import AdminPrograms from './pages/admin/Programs';
 import AdminPromotions from '../src/pages/admin/Promotions';
 import SearchResults from '../src/pages/app/SearchResults';
 import { ThemeProvider } from './context/ThemeContext';

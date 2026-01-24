@@ -1,5 +1,4 @@
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Tag, 
   Search, 
@@ -11,31 +10,74 @@ import {
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
-import { MOCK_PROMOTIONS, MOCK_PROGRAMS } from '../../constants/constants';
+// IMPORTANTE: Importando da API em vez dos Mocks
+import { getPromocoes, getProgramas } from '../../services/api';
+import { Promotion, LoyaltyProgram } from '../../types/types';
 
 const PromotionsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProgram, setSelectedProgram] = useState('ALL');
 
-  // No mundo real, filtraríamos por data atual. Para o demo, consideramos todas do MOCK como ativas
+  // Estados para armazenar dados vindos do Backend
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [programs, setPrograms] = useState<LoyaltyProgram[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Busca os dados reais ao carregar a página
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setIsLoading(true);
+        // Busca promoções e programas em paralelo
+        const [promosData, programsData] = await Promise.all([
+          getPromocoes(),
+          getProgramas()
+        ]);
+        setPromotions(promosData || []);
+        setPrograms(programsData || []);
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
   const activePromotions = useMemo(() => {
-    return MOCK_PROMOTIONS.filter(promo => {
-      const matchesSearch = promo.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            promo.description.toLowerCase().includes(searchTerm.toLowerCase());
-      // Como o mock não tem programId direto no objeto Promotion, fazemos uma busca por texto simples
+    // Garante que promotions é um array antes de filtrar
+    if (!promotions) return [];
+
+    return promotions.filter(promo => {
+      // Proteção contra campos nulos (caso o backend retorne null em title/description)
+      const title = promo.title?.toLowerCase() || '';
+      const desc = promo.description?.toLowerCase() || '';
+      const searchLower = searchTerm.toLowerCase();
+
+      const matchesSearch = title.includes(searchLower) || desc.includes(searchLower);
+      
       const matchesProgram = selectedProgram === 'ALL' || 
-                             promo.title.toLowerCase().includes(selectedProgram.toLowerCase()) ||
-                             promo.description.toLowerCase().includes(selectedProgram.toLowerCase());
+                             (promo.programName && promo.programName === selectedProgram);
       
       return matchesSearch && matchesProgram;
     });
-  }, [searchTerm, selectedProgram]);
+  }, [searchTerm, selectedProgram, promotions]);
 
   const getDaysRemaining = (dateStr: string) => {
+    if (!dateStr) return 0;
     const diff = new Date(dateStr).getTime() - new Date().getTime();
     const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
     return days > 0 ? days : 0;
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <p className="mt-4 text-slate-500">Buscando melhores ofertas...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-fadeIn max-w-6xl mx-auto py-4">
@@ -60,7 +102,7 @@ const PromotionsPage: React.FC = () => {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
           <input 
             type="text" 
-            placeholder="Buscar promoção ou programa..." 
+            placeholder="Buscar promoção..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white shadow-sm transition-all"
@@ -76,7 +118,7 @@ const PromotionsPage: React.FC = () => {
               className="w-full lg:w-64 pl-12 pr-4 py-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white shadow-sm transition-all appearance-none font-bold text-sm"
             >
               <option value="ALL">Todos os Programas</option>
-              {MOCK_PROGRAMS.map(p => (
+              {programs.map(p => (
                 <option key={p.id} value={p.name}>{p.name}</option>
               ))}
             </select>
@@ -124,13 +166,19 @@ const PromotionsPage: React.FC = () => {
                     <div className="flex items-center gap-2 text-slate-400">
                       <Clock size={16} />
                       <span className="text-xs font-bold uppercase tracking-wider">
-                        Expira em {new Date(promo.expiryDate).toLocaleDateString('pt-BR')}
+                        {promo.expiryDate ? `Expira em ${new Date(promo.expiryDate).toLocaleDateString('pt-BR')}` : 'Sem validade'}
                       </span>
                     </div>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl text-sm font-black hover:bg-indigo-600 hover:text-white transition-all">
+                    
+                    <a 
+                      href={promo.link || "#"} 
+                      target="_blank" 
+                      rel="noreferrer"
+                      className="flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl text-sm font-black hover:bg-indigo-600 hover:text-white transition-all"
+                    >
                       Participar
                       <ArrowRight size={16} />
-                    </button>
+                    </a>
                   </div>
                 </div>
               </div>
@@ -143,7 +191,7 @@ const PromotionsPage: React.FC = () => {
             </div>
             <h3 className="text-xl font-bold dark:text-white text-slate-900">Nenhuma promoção encontrada</h3>
             <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-sm">
-              Tente ajustar seus filtros ou pesquisar por outro programa de fidelidade.
+              Tente ajustar seus filtros ou aguarde novas oportunidades cadastradas.
             </p>
             <button 
               onClick={() => {setSearchTerm(''); setSelectedProgram('ALL');}}
