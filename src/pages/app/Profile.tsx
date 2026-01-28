@@ -88,6 +88,10 @@ const ProfilePage: React.FC = () => {
   const [currentPlan, setCurrentPlan] = useState('premium'); // 'free', 'premium', 'club'
   const [subLoading, setSubLoading] = useState(false);
 
+  // Upload de Avatar 
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
   // Lista de Planos Disponíveis
   const availablePlans: PlanOption[] = [
     {
@@ -124,6 +128,11 @@ const ProfilePage: React.FC = () => {
         const userData = userRes.data;
         
         setUser(userData);
+
+        if (userData.fotoPerfil) {
+        setPreviewUrl(`http://localhost:8080/uploads/${userData.fotoPerfil}`);
+        }
+
         setFormData({
           nome: userData.nome || '',
           email: userData.email || '',
@@ -151,25 +160,44 @@ const ProfilePage: React.FC = () => {
     fetchData();
   }, []);
 
+  // Função para lidar com mudança de foto
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  if (e.target.files && e.target.files[0]) {
+    const file = e.target.files[0];
+    setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file)); // Cria uma URL temporária para visualização
+  }
+};
+
   // 2. Salvar Perfil
   const handleSaveProfile = async () => {
-    setSaving(true);
-    try {
-      const payload = {
-        nome: formData.nome,
-        telefone: formData.telefone,
-        cpf: formData.cpf
-      };
-      const response = await api.put('/usuarios/me', payload);
-      setUser(response.data); 
-      alert('Perfil atualizado com sucesso!');
-    } catch (error) {
-      console.error("Erro ao atualizar:", error);
-      alert("Erro ao salvar alterações.");
-    } finally {
-      setSaving(false);
+  setSaving(true);
+  try {
+    // Primeiro salva os dados textuais (Nome, CPF, etc)
+    const payload = {
+      nome: formData.nome,
+      telefone: formData.telefone,
+      cpf: formData.cpf
+    };
+    await api.put('/usuarios/me', payload);
+
+    // Se houver uma nova foto selecionada, faz o upload logo a seguir
+    if (selectedFile) {
+      const photoData = new FormData();
+      photoData.append('foto', selectedFile); 
+      await api.post('/usuarios/me/upload-foto', photoData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
     }
-  };
+
+    alert('Perfil atualizado com sucesso!');
+  } catch (error) {
+    console.error(error);
+    alert("Erro ao salvar alterações.");
+  } finally {
+    setSaving(false);
+  }
+};
 
 // 3. Alterar Senha
   const handleUpdatePassword = async () => {
@@ -272,13 +300,23 @@ const ProfilePage: React.FC = () => {
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center gap-8">
           <div className="relative group">
             <img 
-              src="https://github.com/shadcn.png" 
+              src={previewUrl || "https://github.com/shadcn.png"} 
               alt="Profile" 
               className="w-32 h-32 rounded-full object-cover ring-4 ring-indigo-50 dark:ring-indigo-900/30"
             />
-            <button className="absolute bottom-0 right-0 p-2 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition-transform group-hover:scale-110">
+            <label 
+              htmlFor="photo-upload" 
+              className="absolute bottom-0 right-0 p-2 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition-transform group-hover:scale-110 cursor-pointer"
+            >
               <Camera size={18} />
-            </button>
+              <input 
+                type="file" 
+                id="photo-upload" 
+                className="hidden" 
+                accept="image/*" 
+                onChange={handlePhotoChange} 
+              />
+            </label>
           </div>
           
           <div className="text-center md:text-left flex-1">
