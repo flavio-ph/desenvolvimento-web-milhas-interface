@@ -15,6 +15,13 @@ import { MENU_ITEMS, ADMIN_MENU_ITEMS } from '../constants/constants';
 import { useTheme } from '../context/ThemeContext';
 import { getNotificacoes, marcarNotificacaoComoLida } from '../services/api';
 import { Notificacao } from '../types/types';
+import api from '../services/api';
+
+interface UserData {
+  nome: string;
+  fotoPerfil?: string;
+  role?: string;
+}
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -29,6 +36,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   
   // Estado para Busca
   const [searchTerm, setSearchTerm] = useState('');
+  // Estado para Usuário 
+  const [user, setUser] = useState<{ nome: string; fotoPerfil?: string; role?: string } | null>(null);
 
   const { isDarkMode, toggleDarkMode } = useTheme();
   const location = useLocation();
@@ -36,6 +45,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const notifRef = useRef<HTMLDivElement>(null);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  
 
   // --- LÓGICA DE BUSCA ---
   const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -55,6 +65,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       console.error("Erro ao atualizar notificações:", error);
     }
   };
+
+  useEffect(() => {
+  const fetchUserProfile = async () => {
+    try {
+      // Faz a chamada para o UsuarioController através do axios configurado
+      const response = await api.get('/usuarios/me');
+      setUser(response.data);
+    } catch (error) {
+      console.error("Erro ao carregar perfil no Layout:", error);
+    }
+  };
+  fetchUserProfile();
+}, []);
 
   useEffect(() => {
     fetchNotificacoes();
@@ -254,15 +277,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 mx-2"></div>
 
                 <div className="flex items-center gap-3 ml-2 cursor-pointer group" onClick={() => navigate('/profile')}>
-                <div className="hidden lg:block text-right">
-                    <p className="text-sm font-semibold dark:text-white">Naruto Uzumaki</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Plano Premium</p>
-                </div>
-                <img 
-                    src="https://i.pinimg.com/1200x/ee/61/37/ee61374e60f036d0d605c37b3a7bee8a.jpg" 
+                  <div className="hidden lg:block text-right">
+                    <p className="text-sm font-semibold dark:text-white">
+                      {user?.nome || 'Carregando...'}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {/* Verifica o UserRole definido no seu enum Java */}
+                      {user?.role === 'ADMIN' ? 'Administrador' : 'Plano Premium'}
+                    </p>
+                  </div>
+                  <img 
+                    src={user?.fotoPerfil 
+                      ? `http://localhost:8080/uploads/${user.fotoPerfil}` 
+                      : "https://github.com/shadcn.png"
+                    }
                     alt="Profile" 
                     className="w-10 h-10 rounded-full object-cover ring-2 ring-transparent group-hover:ring-indigo-500 transition-all"
-                />
+                  />
                 </div>
             </div>
         </header>
