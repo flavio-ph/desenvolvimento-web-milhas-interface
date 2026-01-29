@@ -11,7 +11,8 @@ import {
   Loader2,
   Filter,
   AlertTriangle,
-  MailOpen
+  MailOpen,
+  XCircle
 } from 'lucide-react';
 import { getNotificacoes, marcarNotificacaoComoLida } from '../../services/api';
 import { Notificacao } from '../../types/types';
@@ -62,7 +63,12 @@ const NotificationsPage: React.FC = () => {
 
   // Lógica para definir o que é "Importante"
   const isImportant = (n: Notificacao) => {
-    return n.tipo === 'EXPIRACAO' || n.tipo === 'TRANSFERENCIA';
+    return (
+      n.tipo === 'EXPIRACAO' || 
+      n.tipo === 'TRANSFERENCIA' ||
+      n.tipo === 'AVISO_EXPIRACAO' || // <--- ADICIONE ESTE
+      n.tipo === 'PONTOS_EXPIRADOS'   // <--- ADICIONE ESTE
+    );
   };
 
   // Filtra as notificações com base na aba selecionada
@@ -79,7 +85,20 @@ const NotificationsPage: React.FC = () => {
       case 'COMPRA': return <ShoppingBag size={20} className="text-blue-500" />;
       case 'TRANSFERENCIA': return <ArrowRightLeft size={20} className="text-emerald-500" />;
       case 'PROMOCAO': return <Tag size={20} className="text-purple-500" />;
+      
+      // Mantive o antigo caso existir legado
       case 'EXPIRACAO': return <Clock size={20} className="text-rose-500" />;
+
+      // 👇 NOVOS CASOS DO BACKEND
+      case 'AVISO_EXPIRACAO': 
+        return <AlertTriangle size={20} className="text-amber-500" />; // Amarelo (Alerta)
+      
+      case 'PONTOS_EXPIRADOS': 
+        return <XCircle size={20} className="text-red-500" />; // Vermelho (Perda)
+        
+      case 'CREDITO_REALIZADO':
+        return <CheckCircle2 size={20} className="text-emerald-500" />; // Verde (Ganho)
+
       default: return <Info size={20} className="text-slate-500" />;
     }
   };

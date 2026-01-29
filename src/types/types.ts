@@ -62,6 +62,6 @@ export interface Notificacao {
   id: number;
   mensagem: string;
   lida: boolean;
-  tipo: 'COMPRA' | 'TRANSFERENCIA' | 'PROMOCAO' | 'EXPIRACAO' | 'GERAL'; // Ajuste conforme seu Enum no Java
+  tipo: 'COMPRA' | 'TRANSFERENCIA' | 'PROMOCAO' | 'EXPIRACAO' | 'GERAL' | 'AVISO_EXPIRACAO' | 'PONTOS_EXPIRADOS' | 'CREDITO_REALIZADO'; // Ajuste conforme seu Enum no Java
   dataEnvio: string;
 }
