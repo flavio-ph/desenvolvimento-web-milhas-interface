@@ -13,7 +13,7 @@ import {
   FileSpreadsheet // Ícone para o Excel
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
-import api, { getPontosPendentes, getPontosExpirando, ResumoPendentesResponse } from '../../services/api';
+import api, { getPontosPendentes, getPontosExpirando, ResumoPendentesResponse , creditarCompra} from '../../services/api';
 
 
 interface Transaction {
@@ -222,8 +222,17 @@ const HistoryPage: React.FC = () => {
             </div>
             <span className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Expirando em Breve</span>
           </div>
-          <h3 className="text-2xl font-bold dark:text-white">0 pts</h3>
-          <p className="text-xs text-slate-500 mt-1">Nenhum ponto expirando</p>
+          {/* Valor Dinâmico vindo do estado pontosExpirando */}
+            <h3 className="text-2xl font-bold dark:text-white">
+              {pontosExpirando.toLocaleString('pt-BR')} pts
+            </h3>
+
+            {/* Lógica condicional para o texto de apoio */}
+            <p className="text-xs text-slate-500 mt-1">
+              {pontosExpirando > 0 
+                ? `Pontos com vencimento nos próximos 30 dias` 
+                : 'Nenhum ponto expirando no próximo mês'}
+            </p>
         </div>
       </div>
 
@@ -328,14 +337,27 @@ const HistoryPage: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-5">
-                        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tight bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30">
-                          <CheckCircle2 size={10} />
-                          Processado
-                        </span>
+                        {tx.status === 'CREDITADO' ? (
+                          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tight bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30">
+                            <CheckCircle2 size={10} />
+                            Processado
+                          </span>
+                        ) : tx.status === 'PENDENTE' ? (
+                          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tight bg-amber-50 text-amber-600 dark:bg-amber-900/30">
+                            <Clock size={10} />
+                            Aguardando
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tight bg-rose-50 text-rose-600 dark:bg-rose-900/30">
+                            <AlertTriangle size={10} />
+                            Expirado
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-5 text-right">
+                        {/* Botão apenas visual de detalhes, sem ação de crédito manual */}
                         <button className="text-slate-400 hover:text-indigo-600 transition-colors p-1">
-                          Ver detalhes
+                          <Search size={16} />
                         </button>
                       </td>
                     </tr>

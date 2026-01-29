@@ -102,6 +102,10 @@ export const getPontosExpirando = async (dias: number = 30): Promise<number> => 
   });
   return response.data;
 };
+// --- Creditar Compra ---
+export const creditarCompra = async (id: number) => {
+  await api.put(`/compras/${id}/creditar`);
+};
 
 
 

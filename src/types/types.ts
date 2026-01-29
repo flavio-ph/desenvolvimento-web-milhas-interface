@@ -23,13 +23,14 @@ export interface CreditCard {
 }
 
 export interface Transaction {
-  id: string;
-  description: string;
-  amount: number;
-  points: number;
-  date: string;
-  status: 'PENDING' | 'CREDITED' | 'EXPIRED';
-  expectedCreditDate: string;
+  id: number; // No Java é Long/number
+  descricao: string;
+  quantidadePontos: number;
+  dataMovimentacao: string;
+  // Alinhando os Enums com o Java (Maiúsculas e nomes exatos)
+  tipo: 'ACUMULO' | 'USO' | 'BONUS' | 'EXPIRACAO' | 'AJUSTE' | 'TRANSFERENCIA_ENTRADA' | 'TRANSFERENCIA_SAIDA';
+  status: 'PENDENTE' | 'CREDITADO' | 'EXPIRADO'; 
+  nomePrograma: string;
 }
 
 export interface Promotion  {
