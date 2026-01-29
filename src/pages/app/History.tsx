@@ -13,11 +13,12 @@ import {
   FileSpreadsheet // Ícone para o Excel
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
-import api from '../../services/api';
+import api, { getPontosPendentes, getPontosExpirando, ResumoPendentesResponse } from '../../services/api';
+
 
 interface Transaction {
   id: number;
-  tipo: 'ACUMULO' | 'RESGATE' | 'BONUS' | 'EXPIRACAO' | 'TRANSFERENCIA'; 
+  tipo: 'ACUMULO' | 'USO' | 'BONUS' | 'EXPIRACAO' | 'AJUSTE' | 'TRANSFERENCIA_ENTRADA' | 'TRANSFERENCIA_SAIDA';
   quantidadePontos: number;
   dataMovimentacao: string;
   descricao: string;
@@ -38,22 +39,46 @@ const HistoryPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [programFilter, setProgramFilter] = useState('ALL');
+  // Estado para Pontos Pendentes
+  const [resumoPendentes, setResumoPendentes] = useState<ResumoPendentesResponse>({ 
+  totalPontos: 0, 
+  diasParaProximoCredito: null 
+  });
+  // Estado para Pontos Expirando
+  const [pontosExpirando, setPontosExpirando] = useState(0);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get('/movimentacoes'); 
-        setTransactions(response.data);
-      } catch (error) {
-        console.error("Erro ao buscar histórico:", error);
-        setTransactions([]); 
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      
+      // 1. Busca o histórico (Tabela)
+      const response = await api.get('/movimentacoes'); 
+      setTransactions(response.data);
 
-    fetchData();
+      // 2. Busca o resumo de pendentes (Card Amarelo)
+      const pendentes = await getPontosPendentes();
+      
+      // CORREÇÃO AQUI:
+      // Usamos o novo setter e passamos o objeto inteiro, não precisa do "|| 0"
+      // Se você renomeou o estado para 'resumoPendentes', use setResumoPendentes:
+      setResumoPendentes(pendentes); 
+
+      const expirando = await getPontosExpirando(30);
+      setPontosExpirando(expirando);
+
+    } catch (error) {
+      console.error("Erro ao buscar dados:", error);
+      setTransactions([]); 
+      // Em caso de erro, zera o resumo mantendo o formato do objeto
+      setResumoPendentes({ totalPontos: 0, diasParaProximoCredito: null });
+      setPontosExpirando(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchData();
   }, []);
 
   const uniquePrograms = useMemo(() => {
@@ -77,7 +102,7 @@ const HistoryPage: React.FC = () => {
 
   const acumuladoMes = useMemo(() => {
     return filteredTransactions
-      .filter(t => ['ACUMULO', 'BONUS', 'TRANSFERENCIA_ENTRADA'].includes(t.tipo || 'ACUMULO'))
+      .filter(t => ['ACUMULO', 'BONUS', 'AJUSTE', 'TRANSFERENCIA_ENTRADA'].includes(t.tipo || 'ACUMULO'))
       .reduce((acc, curr) => acc + curr.quantidadePontos, 0);
   }, [filteredTransactions]);
 
@@ -164,6 +189,7 @@ const HistoryPage: React.FC = () => {
           <p className="text-xs mt-2 bg-white/20 inline-block px-2 py-1 rounded-full">Filtrado por data</p>
         </div>
         
+        {/* Card Aguardando Crédito */}
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
@@ -171,8 +197,22 @@ const HistoryPage: React.FC = () => {
             </div>
             <span className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Aguardando Crédito</span>
           </div>
-          <h3 className="text-2xl font-bold dark:text-white">0 pts</h3>
-          <p className="text-xs text-slate-500 mt-1">Sem lançamentos pendentes</p>
+          
+          <h3 className="text-2xl font-bold dark:text-white">
+            {/* Agora usamos .totalPontos */}
+            {resumoPendentes.totalPontos.toLocaleString('pt-BR')} pts
+          </h3>
+          
+          <p className="text-xs text-slate-500 mt-1">
+            {/* Lógica Dinâmica dos Dias */}
+            {resumoPendentes.totalPontos > 0 ? (
+               resumoPendentes.diasParaProximoCredito !== null && resumoPendentes.diasParaProximoCredito > 0
+                 ? `Próximo crédito em ${resumoPendentes.diasParaProximoCredito} dias`
+                 : (resumoPendentes.diasParaProximoCredito === 0 ? 'Crédito agendado para hoje!' : 'Processando...')
+            ) : (
+               'Sem lançamentos pendentes'
+            )}
+          </p>
         </div>
 
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
@@ -252,7 +292,7 @@ const HistoryPage: React.FC = () => {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {filteredTransactions.length > 0 ? (
                 filteredTransactions.map((tx) => {
-                  const isNegative = ['RESGATE', 'EXPIRACAO', 'TRANSFERENCIA_SAIDA'].includes(tx.tipo);
+                  const isNegative = ['USO', 'EXPIRACAO', 'TRANSFERENCIA_SAIDA'].includes(tx.tipo);
                   
                   return (
                     <tr key={tx.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-default">

@@ -1,6 +1,11 @@
 import axios from 'axios';
 import { UserUpdateData, Promotion, LoyaltyProgram, Notificacao, Transaction, CreditCard } from '../types/types';
 
+export interface ResumoPendentesResponse {
+  totalPontos: number;
+  diasParaProximoCredito: number | null;
+}
+
 const api = axios.create({
   baseURL: 'http://localhost:8080', 
 });
@@ -14,6 +19,7 @@ api.interceptors.request.use((config) => {
 });
 
 export default api;
+
 
 // --- Upload ---
 export const uploadFile = async (file: File): Promise<string> => {
@@ -84,3 +90,18 @@ export const getCartoes = async () => {
   const response = await api.get<CreditCard[]>('/cartoes');
   return response.data;
 };
+// --- Pontos Pendentes ---
+export const getPontosPendentes = async (): Promise<ResumoPendentesResponse> => {
+  const response = await api.get<ResumoPendentesResponse>('/compras/pendentes/total');
+  return response.data;
+};
+// --- Pontos Expirando ---
+export const getPontosExpirando = async (dias: number = 30): Promise<number> => {
+  const response = await api.get<number>('/movimentacoes/expirando', {
+    params: { dias } 
+  });
+  return response.data;
+};
+
+
+
