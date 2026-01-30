@@ -110,7 +110,7 @@ const AdminPrograms: React.FC = () => {
                       className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-lg transform group-hover:scale-110 transition-transform"
                       style={{ backgroundColor: getColor(index) }}
                     >
-                      {program.name.charAt(0).toUpperCase()}
+                      {program.nome.charAt(0).toUpperCase()}
                     </div>
                     
                     {/* Menu de Ações (Top Right) */}
@@ -125,7 +125,7 @@ const AdminPrograms: React.FC = () => {
                     </div>
                   </div>
                   
-                  <h3 className="text-xl font-bold dark:text-white mb-2">{program.name}</h3>
+                  <h3 className="text-xl font-bold dark:text-white mb-2">{program.nome}</h3>
                   <a 
                     href={program.url || '#'} 
                     target="_blank" 
