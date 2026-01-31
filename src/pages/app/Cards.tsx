@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, CreditCard, Trash2, X, Check, Loader2, Coins } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 
 // Interfaces baseadas no seu Backend
@@ -37,7 +38,7 @@ const CARD_COLORS = [
 const CardsPage: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
-  
+    const navigate = useNavigate();
   // Listas de dados
   const [cards, setCards] = useState<Cartao[]>([]);
   const [bandeiras, setBandeiras] = useState<Bandeira[]>([]);
@@ -57,7 +58,7 @@ const CardsPage: React.FC = () => {
 
   // Helper para escurecer a cor (para o gradiente)
   const adjustColor = (color: string, amount: number) => {
-    return '#' + color.replace(/^#/, '').replace(/../g, color => ('0'+Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
+    return '#' + color.replace(/^#/, '').replace(/../g, color => ('0' + Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
   }
 
   // 1. Buscar dados iniciais
@@ -69,7 +70,7 @@ const CardsPage: React.FC = () => {
         api.get('/bandeiras'),
         api.get('/programas')
       ]);
-      
+
       setCards(cardsRes.data);
       setBandeiras(bandeirasRes.data);
       setProgramas(programasRes.data);
@@ -87,7 +88,7 @@ const CardsPage: React.FC = () => {
   // 2. Criar novo cartão
   const handleCreateCard = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.bandeiraId || !formData.programaPontosId) {
       alert("Selecione uma bandeira e um programa de pontos.");
       return;
@@ -104,18 +105,18 @@ const CardsPage: React.FC = () => {
       };
 
       await api.post('/cartoes', payload);
-      
+
       // Sucesso
       setShowModal(false);
-      setFormData({ 
-        nomePersonalizado: '', 
-        ultimosDigitos: '', 
-        fatorConversao: '', 
-        bandeiraId: '', 
-        programaPontosId: '' 
+      setFormData({
+        nomePersonalizado: '',
+        ultimosDigitos: '',
+        fatorConversao: '',
+        bandeiraId: '',
+        programaPontosId: ''
       });
       setSelectedColor(CARD_COLORS[0]);
-      fetchData(); 
+      fetchData();
     } catch (error) {
       console.error('Erro ao criar cartão:', error);
       alert('Erro ao criar cartão. Verifique os dados.');
@@ -156,7 +157,7 @@ const CardsPage: React.FC = () => {
             <h1 className="text-3xl font-bold dark:text-white">Meus Cartões</h1>
             <p className="text-slate-500 dark:text-slate-400 mt-1">Gerencie seus cartões e pontuações.</p>
           </div>
-          <button 
+          <button
             onClick={() => setShowModal(true)}
             className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none"
           >
@@ -179,54 +180,81 @@ const CardsPage: React.FC = () => {
             {cards.map((card) => {
               const style = getCardStyle(card);
               return (
-                <div 
-                  key={card.id} 
-                  className="group relative rounded-2xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-transparent min-h-[180px] flex flex-col justify-between"
-                  style={style}
+                <div
+                  key={card.id}
+                  className="rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800"
                 >
-                  <div className="relative z-10 h-full flex flex-col justify-between">
-                    <div className="flex justify-between items-start">
-                      <div className="w-12 h-8 bg-white/20 backdrop-blur-sm rounded-md flex items-center justify-center text-[10px] text-white/80 border border-white/10">Chip</div>
-                      <button 
+                  {/* PARTE DO CARTÃO */}
+                  <div
+                    className="p-6 text-white"
+                    style={style}
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center">
+                          ⚡
+                        </div>
+                        <span className="text-sm font-bold uppercase">
+                          {card.nomeBandeira || 'VISA'}
+                        </span>
+                      </div>
+                      <button
                         onClick={() => handleDeleteCard(card.id)}
-                        className="p-2 hover:bg-white/20 rounded-full text-white/70 hover:text-white transition-colors"
-                        title="Excluir Cartão"
+                        className="p-2 rounded-full hover:bg-white/20 text-white/80"
                       >
                         <Trash2 size={16} />
                       </button>
                     </div>
 
-                    <div>
-                      <h3 className="font-bold text-lg mb-1 text-white drop-shadow-sm">{card.nomePersonalizado}</h3>
-                      <div className="flex justify-between items-end mb-4">
-                          <p className="text-sm text-white/80 font-medium">
-                            {card.nomeBandeira || 'Bandeira n/a'}
-                          </p>
-                          <p className="text-xs font-mono bg-black/20 px-2 py-1 rounded text-white/90 border border-white/10">
-                            •••• {card.ultimosDigitos}
-                          </p>
+                    <div className="mb-4">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-6 rounded-md bg-yellow-400"></div>
+                        <div className="flex gap-2 text-lg tracking-widest font-mono">
+                          •••• •••• ••••
+                        </div>
+                      </div>
+                      <div className="text-lg font-mono tracking-widest">
+                        {card.ultimosDigitos}
                       </div>
                     </div>
 
-                    <div className="pt-3 border-t border-white/20 flex justify-between items-center">
+                    <div className="flex justify-between text-xs text-white/80">
                       <div>
-                        <p className="text-[10px] uppercase tracking-wider text-white/60 font-bold">Programa</p>
-                        <p className="text-sm font-medium text-white truncate max-w-[100px]">
-                          {card.nomePrograma || '-'}
-                        </p>
+                        <p className="uppercase text-[10px]">Apelido</p>
+                        <p className="font-bold">{card.nomePersonalizado}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-[10px] uppercase tracking-wider text-white/60 font-bold">Conversão</p>
-                        <div className="flex items-center gap-1 justify-end text-white">
-                          <Coins size={14} />
-                          <p className="font-bold text-sm">{card.fatorConversao?.toFixed(1) || '1.0'}</p>
-                        </div>
+                        <p className="uppercase text-[10px]">Validade</p>
+                        <p className="font-bold">12/28</p>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* PARTE BRANCA */}
+                  <div className="p-5 bg-white dark:bg-slate-900">
+                    <div className="flex justify-between items-center text-sm mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                        <span>{card.nomePrograma || 'Programa Principal'}</span>
+                      </div>
+                      <span className="text-indigo-600 font-bold text-xs">
+                        {card.fatorConversao?.toFixed(1)} pts / R$1,00
+                      </span>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <button 
+                      onClick={() => navigate('/history')}
+                      className="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-sm font-medium">
+                        Ver Extrato
+                      </button>
+                      
                     </div>
                   </div>
                 </div>
               );
             })}
+
           </div>
         )}
       </div>
@@ -235,9 +263,9 @@ const CardsPage: React.FC = () => {
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setShowModal(false)} />
-          
+
           <div className="bg-white dark:bg-slate-900 w-full max-w-4xl rounded-3xl shadow-2xl animate-scaleIn z-10 overflow-hidden flex flex-col md:flex-row max-h-[90vh]">
-            
+
             {/* Coluna da Esquerda - Formulário */}
             <div className="w-full md:w-1/2 flex flex-col overflow-y-auto">
               <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 sticky top-0 z-20">
@@ -249,7 +277,7 @@ const CardsPage: React.FC = () => {
                   <X size={24} />
                 </button>
               </div>
-              
+
               <form onSubmit={handleCreateCard} className="p-6 space-y-5">
                 {/* Seletor de Cores */}
                 <div>
@@ -261,11 +289,10 @@ const CardsPage: React.FC = () => {
                         type="button"
                         onClick={() => setSelectedColor(color)}
                         style={{ backgroundColor: color }}
-                        className={`w-9 h-9 rounded-full transition-all flex items-center justify-center shadow-sm ${
-                          selectedColor === color 
-                            ? 'ring-2 ring-offset-2 ring-indigo-600 scale-110' 
+                        className={`w-9 h-9 rounded-full transition-all flex items-center justify-center shadow-sm ${selectedColor === color
+                            ? 'ring-2 ring-offset-2 ring-indigo-600 scale-110'
                             : 'hover:scale-105 hover:shadow-md border-2 border-transparent'
-                        }`}
+                          }`}
                       >
                         {selectedColor === color && <Check size={16} className="text-white drop-shadow-md" />}
                       </button>
@@ -277,12 +304,12 @@ const CardsPage: React.FC = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Apelido do Cartão</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={formData.nomePersonalizado}
-                      onChange={e => setFormData({...formData, nomePersonalizado: e.target.value})}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white" 
-                      placeholder="Ex: Nubank Principal" 
+                      onChange={e => setFormData({ ...formData, nomePersonalizado: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white"
+                      placeholder="Ex: Nubank Principal"
                       required
                     />
                   </div>
@@ -290,64 +317,64 @@ const CardsPage: React.FC = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Últimos 4 dígitos</label>
-                      <input 
-                        type="text" 
-                        maxLength={4} 
+                      <input
+                        type="text"
+                        maxLength={4}
                         value={formData.ultimosDigitos}
-                        onChange={e => setFormData({...formData, ultimosDigitos: e.target.value.replace(/\D/g, '')})}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-center tracking-widest font-mono" 
-                        placeholder="0000" 
+                        onChange={e => setFormData({ ...formData, ultimosDigitos: e.target.value.replace(/\D/g, '') })}
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-center tracking-widest font-mono"
+                        placeholder="0000"
                         required
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Pontos por $</label>
-                      <input 
-                        type="number" 
-                        step="0.1" 
+                      <input
+                        type="number"
+                        step="0.1"
                         min="0"
                         value={formData.fatorConversao}
-                        onChange={e => setFormData({...formData, fatorConversao: e.target.value})}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white" 
-                        placeholder="Ex: 2.5" 
+                        onChange={e => setFormData({ ...formData, fatorConversao: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white"
+                        placeholder="Ex: 2.5"
                         required
                       />
                     </div>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Bandeira</label>
                     <div className="relative">
-                        <select
-                            value={formData.bandeiraId}
-                            onChange={e => setFormData({...formData, bandeiraId: e.target.value})}
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white appearance-none"
-                            required
-                        >
-                            <option value="">Selecione...</option>
-                            {bandeiras.map(b => (
-                                <option key={b.id} value={b.id}>{b.nome}</option>
-                            ))}
-                        </select>
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
+                      <select
+                        value={formData.bandeiraId}
+                        onChange={e => setFormData({ ...formData, bandeiraId: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white appearance-none"
+                        required
+                      >
+                        <option value="">Selecione...</option>
+                        {bandeiras.map(b => (
+                          <option key={b.id} value={b.id}>{b.nome}</option>
+                        ))}
+                      </select>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Programa de Pontos</label>
                     <div className="relative">
-                        <select
-                            value={formData.programaPontosId}
-                            onChange={e => setFormData({...formData, programaPontosId: e.target.value})}
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white appearance-none"
-                            required
-                        >
-                            <option value="">Selecione...</option>
-                            {programas.map(p => (
-                                <option key={p.id} value={p.id}>{p.nome}</option>
-                            ))}
-                        </select>
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
+                      <select
+                        value={formData.programaPontosId}
+                        onChange={e => setFormData({ ...formData, programaPontosId: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white appearance-none"
+                        required
+                      >
+                        <option value="">Selecione...</option>
+                        {programas.map(p => (
+                          <option key={p.id} value={p.id}>{p.nome}</option>
+                        ))}
+                      </select>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
                     </div>
                   </div>
                 </div>
@@ -371,9 +398,9 @@ const CardsPage: React.FC = () => {
 
               <div className="relative w-full max-w-sm">
                 <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6 text-center">Visualização</h3>
-                
+
                 {/* Cartão Preview */}
-                <div 
+                <div
                   className="relative w-full aspect-[1.586/1] rounded-2xl p-6 text-white shadow-2xl transition-all duration-500 transform hover:scale-105 flex flex-col justify-between"
                   style={{
                     background: `linear-gradient(135deg, ${selectedColor} 0%, ${adjustColor(selectedColor, -40)} 100%)`,
