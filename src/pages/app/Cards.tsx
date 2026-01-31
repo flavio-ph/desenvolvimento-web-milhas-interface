@@ -235,7 +235,7 @@ const CardsPage: React.FC = () => {
                     <div className="flex justify-between items-center text-sm mb-3">
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                        <span>{card.nomePrograma || 'Programa Principal'}</span>
+                        <span>{card.nomeProgramaPontos || 'Sem Programa'}</span>
                       </div>
                       <span className="text-indigo-600 font-bold text-xs">
                         {card.fatorConversao?.toFixed(1)} pts / R$1,00
