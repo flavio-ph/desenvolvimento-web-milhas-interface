@@ -7,15 +7,19 @@ import {
   Sun, 
   Bell, 
   LogOut, 
-  Search,
   Check,
-  ArrowRight
+  ArrowRight,
+  LayoutDashboard, // Adicionei ícones para ilustrar o título se quiser
+  CreditCard,
+  History
 } from 'lucide-react';
 import { MENU_ITEMS, ADMIN_MENU_ITEMS } from '../constants/constants';
 import { useTheme } from '../context/ThemeContext';
 import { getNotificacoes, marcarNotificacaoComoLida } from '../services/api';
 import { Notificacao } from '../types/types';
 import api from '../services/api';
+// Importação do Logo
+import { Logo } from './Logo';
 
 interface UserData {
   nome: string;
@@ -34,8 +38,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
   
-  // Estado para Busca
-  const [searchTerm, setSearchTerm] = useState('');
+  // (REMOVIDO) Estado para Busca e função handleSearch
+  
   // Estado para Usuário 
   const [user, setUser] = useState<{ nome: string; fotoPerfil?: string; role?: string } | null>(null);
 
@@ -45,16 +49,26 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const notifRef = useRef<HTMLDivElement>(null);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-  
 
-  // --- LÓGICA DE BUSCA ---
-  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && searchTerm.trim()) {
-      // Navega para a rota de busca passando o termo na URL
-      navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
-      setIsNotifOpen(false); // Fecha notificação se estiver aberta
+  // --- NOVA LÓGICA: TÍTULO DA PÁGINA ---
+  const getPageTitle = (path: string) => {
+    switch (path) {
+      case '/': return 'Visão Geral';
+      case '/cards': return 'Carteira de Cartões';
+      case '/history': return 'Extrato de Movimentações';
+      case '/promotions': return 'Promoções e Bônus';
+      case '/new-purchase': return 'Registrar Nova Compra';
+      case '/profile': return 'Meu Perfil';
+      case '/notifications': return 'Central de Notificações';
+      // Rotas Admin
+      case '/admin/programs': return 'Gerenciar Programas';
+      case '/admin/brands': return 'Gerenciar Bandeiras';
+      case '/admin/promotions': return 'Gerenciar Promoções';
+      default: return 'Horizo';
     }
   };
+
+  const currentTitle = getPageTitle(location.pathname);
 
   // --- LÓGICA DE NOTIFICAÇÕES ---
   const fetchNotificacoes = async () => {
@@ -68,7 +82,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   useEffect(() => {
     const handleCustomUpdate = () => {
-      fetchNotificacoes(); // Recarrega o sino quando a página de notificações marcar algo como lido
+      fetchNotificacoes(); 
     };
 
     window.addEventListener('notificationRead', handleCustomUpdate);
@@ -78,7 +92,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        // Faz a chamada para o UsuarioController através do axios configurado
         const response = await api.get('/usuarios/me');
         setUser(response.data);
       } catch (error) {
@@ -91,10 +104,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   useEffect(() => {
     fetchNotificacoes();
     
-    // Criamos uma função para atualizar o sino
     const atualizarSino = () => fetchNotificacoes();
-
-    // Escuta o evento que dispararemos da página de notificações
     window.addEventListener('notificacaoAtualizada', atualizarSino);
     
     const interval = setInterval(fetchNotificacoes, 30000);
@@ -119,10 +129,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const handleMarkAsRead = async (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      // 1. Atualiza no Banco
       await marcarNotificacaoComoLida(id);
-      
-      // 2. Atualiza o estado local para sumir o ponto azul na hora
       setNotificacoes(prev => prev.map(n => n.id === id ? { ...n, lida: true } : n));
     } catch (error) {
       console.error("Erro ao marcar como lida no Layout", error);
@@ -136,52 +143,69 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       
       {/* --- SIDEBAR --- */}
       <aside 
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="flex flex-col h-full">
-          <div className="p-6 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">M</div>
-              <span className="text-xl font-bold tracking-tight dark:text-white">MilhasPro</span>
+          {/* HEADER DA SIDEBAR COM LOGO */}
+          <div className="p-6 flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-auto hover:scale-105 transition-transform duration-300">
+                 <Logo className="w-full h-full drop-shadow-md" />
+              </div>
+              <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                Horizo
+              </span>
             </div>
-            <button onClick={toggleSidebar} className="lg:hidden text-slate-500">
+            <button onClick={toggleSidebar} className="lg:hidden text-slate-500 hover:text-indigo-600 transition-colors">
               <X size={24} />
             </button>
           </div>
 
-          <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto custom-scrollbar">
-             <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 px-2">Menu Principal</div>
+          <nav className="flex-1 px-3 space-y-1.5 overflow-y-auto custom-scrollbar">
+             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 px-4 mt-2">Menu Principal</div>
             {MENU_ITEMS.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${location.pathname === item.path ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 font-medium' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                className={`flex items-center gap-3 px-4 py-3 mx-2 rounded-xl transition-all duration-300 group font-medium ${
+                  location.pathname === item.path 
+                    ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20 translate-x-1' 
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 hover:translate-x-1'
+                }`}
               >
-                {item.icon}
+                <div className={`${location.pathname === item.path ? 'text-white' : 'group-hover:scale-110 transition-transform duration-200'}`}>
+                    {item.icon}
+                </div>
                 <span>{item.label}</span>
               </Link>
             ))}
 
-            <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-16 mb-12 px-2">Administrativo</div>
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-10 mb-3 px-4">Administrativo</div>
             {ADMIN_MENU_ITEMS.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${location.pathname === item.path ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 font-medium' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                className={`flex items-center gap-3 px-4 py-3 mx-2 rounded-xl transition-all duration-300 group font-medium ${
+                  location.pathname === item.path 
+                    ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-lg shadow-emerald-200 dark:shadow-emerald-900/20 translate-x-1' 
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-emerald-600 dark:hover:text-emerald-400 hover:translate-x-1'
+                }`}
               >
-                {item.icon}
+                <div className={`${location.pathname === item.path ? 'text-white' : 'group-hover:scale-110 transition-transform duration-200'}`}>
+                    {item.icon}
+                </div>
                 <span>{item.label}</span>
               </Link>
             ))}
           </nav>
 
-          <div className="p-4 border-t border-slate-200 dark:border-slate-800">
+          <div className="p-4 mt-auto border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-sm">
             <button 
               onClick={() => navigate('/login')}
-              className="flex items-center gap-3 w-full px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+              className="flex items-center gap-3 w-full px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 hover:text-red-600 dark:hover:text-red-400 rounded-xl transition-all duration-300 hover:shadow-sm group font-medium"
             >
-              <LogOut size={20} />
-              <span>Sair</span>
+              <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
+              <span>Sair da conta</span>
             </button>
           </div>
         </div>
@@ -191,54 +215,50 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         
         {/* HEADER */}
-        <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 lg:px-8 z-40 relative">
+        <header className="h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 lg:px-8 z-40 relative">
             <div className="flex items-center gap-4">
-                <button onClick={toggleSidebar} className="lg:hidden text-slate-500">
+                <button onClick={toggleSidebar} className="lg:hidden text-slate-500 hover:text-indigo-600 transition-colors">
                   <Menu size={24} />
                 </button>
                 
-                {/* BARRA DE BUSCA FUNCIONAL */}
-                <div className="relative hidden md:block">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <input 
-                      type="text" 
-                      placeholder="Buscar por transação, cartão..." 
-                      className="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-full text-sm w-64 focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all focus:w-80"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      onKeyDown={handleSearch}
-                  />
+                {/* SUBSTITUIÇÃO DA BUSCA PELO TÍTULO DA PÁGINA */}
+                <div className="hidden md:flex flex-col animate-fadeIn">
+                  <h1 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">
+                    {currentTitle}
+                  </h1>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  </p>
                 </div>
             </div>
 
-            <div className="flex items-center gap-2 lg:gap-4">
+            <div className="flex items-center gap-3 lg:gap-6">
                 <button 
                   onClick={toggleDarkMode}
-                  className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors focus:outline-none"
+                  className="p-2.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all hover:scale-105 active:scale-95 focus:outline-none"
                 >
-                  {isDarkMode ? <Sun size={20} className="text-amber-400" /> : <Moon size={20} />}
+                  {isDarkMode ? <Sun size={20} className="text-amber-400 fill-amber-400" /> : <Moon size={20} />}
                 </button>
                 
                 {/* SINO COM DROPDOWN */}
                 <div className="relative" ref={notifRef}>
                   <button 
                     onClick={() => setIsNotifOpen(!isNotifOpen)}
-                    className={`relative p-2 rounded-full transition-colors ${isNotifOpen ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/50' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                    className={`relative p-2.5 rounded-xl transition-all hover:scale-105 active:scale-95 ${isNotifOpen ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/50' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                   >
                     <Bell size={20} />
                     {unreadCount > 0 && (
-                      <span className="absolute top-0 right-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-500 border-2 border-white dark:border-slate-900 rounded-full transform translate-x-1/4 -translate-y-1/4">
-                        {unreadCount > 9 ? '9+' : unreadCount}
+                      <span className="absolute top-1 right-1 inline-flex items-center justify-center min-w-[10px] h-[10px] bg-red-500 border-2 border-white dark:border-slate-900 rounded-full animate-pulse">
                       </span>
                     )}
                   </button>
 
                   {/* POPUP DE NOTIFICAÇÕES */}
                   {isNotifOpen && (
-                    <div className="absolute right-0 top-12 w-80 sm:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-xl ring-1 ring-slate-900/5 dark:ring-white/10 overflow-hidden animate-fadeIn origin-top-right">
-                      <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <div className="absolute right-0 top-14 w-80 sm:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 ring-1 ring-slate-900/5 dark:ring-white/10 overflow-hidden animate-fadeIn origin-top-right z-50">
+                      <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
                         <h3 className="font-bold text-slate-900 dark:text-white">Notificações</h3>
-                        <span className="text-xs font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full">
+                        <span className="text-xs font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 dark:text-indigo-400 px-2.5 py-1 rounded-full border border-indigo-100 dark:border-indigo-800">
                           {unreadCount} novas
                         </span>
                       </div>
@@ -255,19 +275,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                               }}
                             >
                               <div className="flex gap-3">
-                                <div className={`w-2 h-2 mt-2 rounded-full shrink-0 ${notif.lida ? 'bg-transparent' : 'bg-indigo-500'}`}></div>
+                                <div className={`w-2.5 h-2.5 mt-1.5 rounded-full shrink-0 shadow-sm ${notif.lida ? 'bg-slate-200 dark:bg-slate-700' : 'bg-indigo-500'}`}></div>
                                 <div className="flex-1">
-                                  <p className={`text-sm ${!notif.lida ? 'font-semibold text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
+                                  <p className={`text-sm ${!notif.lida ? 'font-bold text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
                                     {notif.mensagem}
                                   </p>
-                                  <p className="text-xs text-slate-400 mt-1">
+                                  <p className="text-xs text-slate-400 mt-1 font-medium">
                                     {new Date(notif.dataEnvio).toLocaleDateString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                   </p>
                                 </div>
                                 {!notif.lida && (
                                   <button 
                                     onClick={(e) => handleMarkAsRead(notif.id, e)}
-                                    className="opacity-0 group-hover:opacity-100 p-1.5 text-indigo-600 hover:bg-indigo-100 rounded-full transition-all self-start"
+                                    className="opacity-0 group-hover:opacity-100 p-1.5 text-indigo-600 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 rounded-full transition-all self-start"
                                     title="Marcar como lida"
                                   >
                                     <Check size={14} />
@@ -279,7 +299,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         ) : (
                           <div className="p-8 text-center text-slate-500">
                             <Bell size={32} className="mx-auto mb-2 opacity-20" />
-                            <p className="text-sm">Nenhuma notificação</p>
+                            <p className="text-sm font-medium">Nenhuma notificação</p>
                           </div>
                         )}
                       </div>
@@ -288,7 +308,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         <Link 
                           to="/notifications" 
                           onClick={() => setIsNotifOpen(false)}
-                          className="text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 inline-flex items-center gap-1"
+                          className="text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 inline-flex items-center gap-1 hover:gap-2 transition-all"
                         >
                           Ver todas as notificações <ArrowRight size={14} />
                         </Link>
@@ -299,29 +319,31 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
                 <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 mx-2"></div>
 
-                <div className="flex items-center gap-3 ml-2 cursor-pointer group" onClick={() => navigate('/profile')}>
+                <div className="flex items-center gap-3 pl-2 cursor-pointer group" onClick={() => navigate('/profile')}>
                   <div className="hidden lg:block text-right">
-                    <p className="text-sm font-semibold dark:text-white">
+                    <p className="text-sm font-bold dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                       {user?.nome || 'Carregando...'}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      {/* Verifica o UserRole definido no seu enum Java */}
+                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                       {user?.role === 'ADMIN' ? 'Administrador' : 'Plano Premium'}
                     </p>
                   </div>
-                  <img 
-                    src={user?.fotoPerfil 
-                      ? `http://localhost:8080/uploads/${user.fotoPerfil}` 
-                      : "https://github.com/shadcn.png"
-                    }
-                    alt="Profile" 
-                    className="w-10 h-10 rounded-full object-cover ring-2 ring-transparent group-hover:ring-indigo-500 transition-all"
-                  />
+                  <div className="relative">
+                    <img 
+                        src={user?.fotoPerfil 
+                        ? `http://localhost:8080/uploads/${user.fotoPerfil}` 
+                        : "https://github.com/shadcn.png"
+                        }
+                        alt="Profile" 
+                        className="w-10 h-10 rounded-xl object-cover ring-2 ring-slate-100 dark:ring-slate-800 group-hover:ring-indigo-500 transition-all shadow-sm"
+                    />
+                    <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full"></div>
+                  </div>
                 </div>
             </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 lg:p-8 custom-scrollbar">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-8 custom-scrollbar bg-slate-50/50 dark:bg-slate-950">
           {children}
         </main>
       </div>

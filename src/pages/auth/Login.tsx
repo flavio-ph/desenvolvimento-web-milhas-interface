@@ -14,6 +14,7 @@ import {
   AlertCircle   // Importado para o erro
 } from 'lucide-react';
 import api from '../../services/api';
+import { Logo } from '../../components/Logo';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -79,10 +80,16 @@ const Login: React.FC = () => {
 
         <div className="relative z-10 max-w-lg text-white space-y-8">
           <div className="space-y-4">
-            <div className="w-16 h-16 bg-white/20 backdrop-blur-lg rounded-2xl flex items-center justify-center border border-white/30 shadow-2xl">
-              <span className="text-3xl font-black">M</span>
+            
+            {/* LOGO + NOME (Lado a Lado) */}
+            <div className="flex items-center gap-5">
+              <div className="w-20 h-auto bg-white/20 backdrop-blur-lg rounded-2xl flex items-center justify-center border border-white/30 shadow-2xl p-2">
+                 <Logo className="w-full h-full drop-shadow-lg" />
+              </div>
+              <span className="text-5xl font-black tracking-tight text-white">Horizo</span>
             </div>
-            <h1 className="text-5xl font-black leading-tight">Domine suas milhas, conquiste o mundo.</h1>
+
+            <h1 className="text-4xl font-black leading-tight">Domine suas milhas, conquiste o mundo.</h1>
             <p className="text-xl text-indigo-100 font-medium">A plataforma definitiva para quem leva o acúmulo de pontos a sério.</p>
           </div>
 
@@ -114,7 +121,10 @@ const Login: React.FC = () => {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-slate-50 dark:bg-slate-950">
         <div className="w-full max-w-md space-y-8 animate-fadeIn">
           <div className="text-center lg:text-left">
-            <div className="lg:hidden w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-2xl mx-auto mb-6">M</div>
+            {/* LOGO MOBILE */}
+            <div className="lg:hidden w-16 h-auto mx-auto mb-6">
+               <Logo className="w-full h-full" />
+            </div>
             <h2 className="text-3xl font-black text-slate-900 dark:text-white">Bem-vindo de volta</h2>
             <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">Insira suas credenciais para acessar sua conta.</p>
           </div>
