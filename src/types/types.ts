@@ -38,6 +38,7 @@ export interface Promotion  {
   titulo: string;
   descricao: string;
   urlPromocao: string;
+  bonusPorcentagem: number;
   dataInicio: string; 
   dataFim: string;
   nomePrograma: string;
