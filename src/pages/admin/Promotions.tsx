@@ -149,7 +149,7 @@ const AdminPromotions: React.FC = () => {
                       {/* Título e Programa */}
                       <div className="flex flex-col">
                         <span className="text-[10px] font-bold text-indigo-600 uppercase mb-0.5">
-                          {promo.programName || "Programa"}
+                          {promo.nomeProgramaPontos || "Programa"}
                         </span>
                         <div className="font-bold text-slate-800 text-sm">
                           {promo.title || promo.titulo}
