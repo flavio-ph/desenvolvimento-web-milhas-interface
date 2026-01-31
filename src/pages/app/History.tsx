@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
-  Search,
   Filter,
   ArrowUpRight,
   ArrowDownRight,
@@ -10,11 +9,11 @@ import {
   AlertTriangle,
   Loader2,
   Calendar as CalendarIcon,
-  FileSpreadsheet // Ícone para o Excel
+  FileSpreadsheet
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
-import api, { getPontosPendentes, getPontosExpirando, ResumoPendentesResponse, creditarCompra } from '../../services/api';
-
+import api, { getPontosPendentes, getPontosExpirando, getProgramas, ResumoPendentesResponse } from '../../services/api';
+import { LoyaltyProgram } from '../../types/types';
 
 interface Transaction {
   id: number;
@@ -23,45 +22,73 @@ interface Transaction {
   dataMovimentacao: string;
   descricao: string;
   nomePrograma: string;
+  status?: string;
 }
 
 const HistoryPage: React.FC = () => {
   const { isDarkMode } = useTheme();
 
-  // Estados
+  // Estados de Dados
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [programsList, setProgramsList] = useState<LoyaltyProgram[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Estado para o Mês Selecionado (Formato YYYY-MM)
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
 
   // Filtros
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
+  // Mudamos o nome para typeFilter para refletir o Backend
+  const [typeFilter, setTypeFilter] = useState('ALL'); 
   const [programFilter, setProgramFilter] = useState('ALL');
-  // Estado para Pontos Pendentes
+
+  // Resumos
   const [resumoPendentes, setResumoPendentes] = useState<ResumoPendentesResponse>({
     totalPontos: 0,
     diasParaProximoCredito: null
   });
-  // Estado para Pontos Expirando
   const [pontosExpirando, setPontosExpirando] = useState(0);
 
- useEffect(() => {
+  // 1. Carregar Programas para o Select
+  useEffect(() => {
+    const fetchPrograms = async () => {
+      try {
+        const data = await getProgramas();
+        setProgramsList(data);
+      } catch (error) {
+        console.error("Erro ao buscar programas para o filtro", error);
+      }
+    };
+    fetchPrograms();
+  }, []);
+
+  // 2. Buscar Transações (Logica ajustada para o Backend)
+  useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
 
-        const response = await api.get('/movimentacoes', {
-          params: {
-            mes: selectedMonth, 
-            termo: searchTerm,  
-            programa: programFilter === 'ALL' ? '' : programFilter 
-          }
-        });
+        const [year, month] = selectedMonth.split('-').map(Number);
+
+        const params: any = {
+          mes: month,
+          ano: year
+        };
+
+        // Filtro de Programa
+        if (programFilter !== 'ALL') {
+          params.programa = programFilter; 
+        }
+
+        // Filtro de Tipo (Substitui o antigo Status)
+        if (typeFilter !== 'ALL') {
+          params.tipo = typeFilter;
+        }
+
+        const response = await api.get('/movimentacoes', { params });
         
         setTransactions(response.data);
 
+        // Carregamento de resumos
         const pendentes = await getPontosPendentes();
         setResumoPendentes(pendentes);
 
@@ -70,7 +97,6 @@ const HistoryPage: React.FC = () => {
 
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
-        
         setTransactions([]);
         setResumoPendentes({ totalPontos: 0, diasParaProximoCredito: null });
         setPontosExpirando(0);
@@ -85,35 +111,16 @@ const HistoryPage: React.FC = () => {
 
     return () => clearTimeout(delayDebounceFn);
 
-  }, [selectedMonth, searchTerm, programFilter]); //
+  }, [selectedMonth, programFilter, typeFilter]); // Dependências atualizadas
 
-  const uniquePrograms = useMemo(() => {
-    const programs = new Set(transactions.map(t => t.nomePrograma));
-    return Array.from(programs);
-  }, [transactions]);
-
-  // --- LÓGICA DE FILTRO ---
-  const filteredTransactions = useMemo(() => {
-    return transactions.filter(tx => {
-      const matchesSearch = tx.descricao.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesProgram = programFilter === 'ALL' || tx.nomePrograma === programFilter;
-
-      const txDate = new Date(tx.dataMovimentacao);
-      const [selYear, selMonth] = selectedMonth.split('-').map(Number);
-      const matchesDate = txDate.getFullYear() === selYear && (txDate.getMonth() + 1) === selMonth;
-
-      return matchesSearch && matchesProgram && matchesDate;
-    });
-  }, [searchTerm, programFilter, selectedMonth, transactions]);
-
+  // Cálculo de acumulado visual
   const acumuladoMes = useMemo(() => {
-    return filteredTransactions
+    return transactions
       .filter(t => ['ACUMULO', 'BONUS', 'AJUSTE', 'TRANSFERENCIA_ENTRADA'].includes(t.tipo || 'ACUMULO'))
       .reduce((acc, curr) => acc + curr.quantidadePontos, 0);
-  }, [filteredTransactions]);
+  }, [transactions]);
 
-  // --- FUNÇÕES DE EXPORTAÇÃO ---
-
+  // --- EXPORTAÇÃO ---
   const handleExportPdf = async () => {
     try {
       const response = await api.get('/relatorios/movimentacoes/pdf', { responseType: 'blob' });
@@ -132,7 +139,6 @@ const HistoryPage: React.FC = () => {
 
   const handleExportExcel = async () => {
     try {
-      // Chama o endpoint CSV que abre no Excel
       const response = await api.get('/relatorios/movimentacoes/csv', { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
@@ -205,12 +211,10 @@ const HistoryPage: React.FC = () => {
           </div>
 
           <h3 className="text-2xl font-bold dark:text-white">
-            {/* Agora usamos .totalPontos */}
             {resumoPendentes.totalPontos.toLocaleString('pt-BR')} pts
           </h3>
 
           <p className="text-xs text-slate-500 mt-1">
-            {/* Lógica Dinâmica dos Dias */}
             {resumoPendentes.totalPontos > 0 ? (
               resumoPendentes.diasParaProximoCredito !== null && resumoPendentes.diasParaProximoCredito > 0
                 ? `Próximo crédito em ${resumoPendentes.diasParaProximoCredito} dias`
@@ -228,12 +232,11 @@ const HistoryPage: React.FC = () => {
             </div>
             <span className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Expirando em Breve</span>
           </div>
-          {/* Valor Dinâmico vindo do estado pontosExpirando */}
+          
           <h3 className="text-2xl font-bold dark:text-white">
             {pontosExpirando.toLocaleString('pt-BR')} pts
           </h3>
 
-          {/* Lógica condicional para o texto de apoio */}
           <p className="text-xs text-slate-500 mt-1">
             {pontosExpirando > 0
               ? `Pontos com vencimento nos próximos 30 dias`
@@ -242,40 +245,31 @@ const HistoryPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Barra de Filtros */}
-      <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col lg:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-          <input
-            type="text"
-            placeholder="Buscar por descrição..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all"
-          />
+      {/* Barra de Filtros (REFEITA) */}
+      <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        
+        {/* Label Visual */}
+        <div className="hidden md:flex items-center gap-2 text-slate-500">
+             <Filter size={20} />
+             <span className="font-medium text-sm">Filtros</span>
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-col md:flex-row w-full md:w-auto gap-3">
+          {/* 1. Select de Programas */}
           <select
             value={programFilter}
             onChange={(e) => setProgramFilter(e.target.value)}
             className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm font-medium dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
           >
             <option value="ALL">Todos os Programas</option>
-            {uniquePrograms.map(prog => (
-              <option key={prog} value={prog}>{prog}</option>
+            {programsList.map(prog => (
+              <option key={prog.id} value={prog.nome}>{prog.nome}</option>
             ))}
           </select>
 
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm font-medium dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
-          >
-            <option value="ALL">Status: Todos</option>
-            <option value="CREDITED">Creditados</option>
-          </select>
-
+          {/* 2. Select de Tipo (Antigo Status) */}
+          
+          {/* 3. Seletor de Data */}
           <div className="relative">
             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-600 dark:text-indigo-400 pointer-events-none">
               <CalendarIcon size={18} />
@@ -284,7 +278,7 @@ const HistoryPage: React.FC = () => {
               type="month"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="pl-10 pr-4 py-2.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-colors border-none outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+              className="w-full md:w-auto pl-10 pr-4 py-2.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-colors border-none outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
             />
           </div>
         </div>
@@ -293,29 +287,26 @@ const HistoryPage: React.FC = () => {
       {/* Tabela de Transações */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full"> {/* Removido text-left */}
+          <table className="w-full">
             <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
               <tr>
-                {/* Adicionado text-center em todos os THs */}
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Data</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Descrição</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Programa</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Pontos</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Status</th>
-                {/* Coluna "Ação" foi removida daqui */}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {filteredTransactions.length > 0 ? (
-                filteredTransactions.map((tx) => {
+              {transactions.length > 0 ? (
+                transactions.map((tx) => {
                   const isNegative = ['USO', 'EXPIRACAO', 'TRANSFERENCIA_SAIDA'].includes(tx.tipo);
 
                   return (
                     <tr key={tx.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-default">
-
-                      {/* 1. DATA (Centralizado com items-center) */}
+                      {/* 1. DATA */}
                       <td className="px-6 py-5 whitespace-nowrap">
-                        <div className="flex flex-col items-center"> {/* items-center centraliza verticalmente */}
+                        <div className="flex flex-col items-center">
                           <span className="text-sm font-semibold dark:text-white">
                             {new Date(tx.dataMovimentacao).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
                           </span>
@@ -325,33 +316,32 @@ const HistoryPage: React.FC = () => {
                         </div>
                       </td>
 
-                      {/* 2. DESCRIÇÃO (Centralizado com justify-center) */}
+                      {/* 2. DESCRIÇÃO */}
                       <td className="px-6 py-5">
-                        <div className="flex items-center justify-center gap-3"> {/* justify-center centraliza horizontalmente */}
-                          <div className={`p-2 rounded-lg ${!isNegative ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600'
-                            }`}>
+                        <div className="flex items-center justify-center gap-3">
+                          <div className={`p-2 rounded-lg ${!isNegative ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600'}`}>
                             {!isNegative ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
                           </div>
                           <span className="text-sm font-medium dark:text-white">{tx.descricao}</span>
                         </div>
                       </td>
 
-                      {/* 3. PROGRAMA (Centralizado com justify-center) */}
+                      {/* 3. PROGRAMA */}
                       <td className="px-6 py-5">
-                        <div className="flex items-center justify-center gap-2"> {/* justify-center */}
+                        <div className="flex items-center justify-center gap-2">
                           <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
                           <span className="text-sm text-slate-600 dark:text-slate-400">{tx.nomePrograma}</span>
                         </div>
                       </td>
 
-                      {/* 4. PONTOS (Centralizado com text-center na TD) */}
+                      {/* 4. PONTOS */}
                       <td className="px-6 py-5 text-center">
                         <span className={`text-sm font-bold ${!isNegative ? 'text-indigo-600 dark:text-indigo-400' : 'text-rose-500'}`}>
                           {!isNegative ? '+' : ''}{tx.quantidadePontos.toLocaleString('pt-BR')} pts
                         </span>
                       </td>
 
-                      {/* 5. STATUS (Centralizado com text-center na TD) */}
+                      {/* 5. STATUS */}
                       <td className="px-6 py-5 text-center">
                         {tx.status === 'CREDITADO' || tx.status === 'FINALIZADA' ? (
                           <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tight bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30">
@@ -374,15 +364,11 @@ const HistoryPage: React.FC = () => {
                           </span>
                         )}
                       </td>
-
-                      {/* Coluna "Ação" removida daqui também */}
-
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  {/* Ajustado colSpan para 5, já que removemos uma coluna */}
                   <td colSpan={5} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center">
                       <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-300 dark:text-slate-700 mb-4">
@@ -399,11 +385,10 @@ const HistoryPage: React.FC = () => {
           </table>
         </div>
 
-        {/* Pagination (Visual) */}
+        {/* Footer da Tabela */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-          <p className="text-xs text-slate-500">Mostrando {filteredTransactions.length} movimentações</p>
-          <div className="flex gap-2">
-          </div>
+          <p className="text-xs text-slate-500">Mostrando {transactions.length} movimentações</p>
+          <div className="flex gap-2"></div>
         </div>
       </div>
     </div>
