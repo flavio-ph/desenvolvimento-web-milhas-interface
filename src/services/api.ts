@@ -76,7 +76,8 @@ export const getNotificacoes = async () => {
 };
 
 export const marcarNotificacaoComoLida = async (id: number) => {
-  await api.put(`/notificacoes/${id}/lida`);
+  console.log("Enviando PATCH para ID:", id);
+  await api.patch(`/notificacoes/${id}/lida`);
 };
 
 // --- Compras ---

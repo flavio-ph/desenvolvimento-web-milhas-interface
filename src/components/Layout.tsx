@@ -67,22 +67,42 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   useEffect(() => {
-  const fetchUserProfile = async () => {
-    try {
-      // Faz a chamada para o UsuarioController através do axios configurado
-      const response = await api.get('/usuarios/me');
-      setUser(response.data);
-    } catch (error) {
-      console.error("Erro ao carregar perfil no Layout:", error);
-    }
-  };
-  fetchUserProfile();
-}, []);
+    const handleCustomUpdate = () => {
+      fetchNotificacoes(); // Recarrega o sino quando a página de notificações marcar algo como lido
+    };
+
+    window.addEventListener('notificationRead', handleCustomUpdate);
+    return () => window.removeEventListener('notificationRead', handleCustomUpdate);
+  }, []);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        // Faz a chamada para o UsuarioController através do axios configurado
+        const response = await api.get('/usuarios/me');
+        setUser(response.data);
+      } catch (error) {
+        console.error("Erro ao carregar perfil no Layout:", error);
+      }
+    };
+    fetchUserProfile();
+  }, []);
 
   useEffect(() => {
     fetchNotificacoes();
-    const interval = setInterval(fetchNotificacoes, 30000); // Polling a cada 30s
-    return () => clearInterval(interval);
+    
+    // Criamos uma função para atualizar o sino
+    const atualizarSino = () => fetchNotificacoes();
+
+    // Escuta o evento que dispararemos da página de notificações
+    window.addEventListener('notificacaoAtualizada', atualizarSino);
+    
+    const interval = setInterval(fetchNotificacoes, 30000);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('notificacaoAtualizada', atualizarSino);
+    };
   }, [location.pathname]);
 
   // Fecha o dropdown se clicar fora dele
@@ -99,10 +119,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const handleMarkAsRead = async (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      setNotificacoes(prev => prev.map(n => n.id === id ? { ...n, lida: true } : n));
+      // 1. Atualiza no Banco
       await marcarNotificacaoComoLida(id);
+      
+      // 2. Atualiza o estado local para sumir o ponto azul na hora
+      setNotificacoes(prev => prev.map(n => n.id === id ? { ...n, lida: true } : n));
     } catch (error) {
-      console.error("Erro ao marcar como lida", error);
+      console.error("Erro ao marcar como lida no Layout", error);
     }
   };
 

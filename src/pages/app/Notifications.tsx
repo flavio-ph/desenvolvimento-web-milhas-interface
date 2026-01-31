@@ -43,12 +43,21 @@ const NotificationsPage: React.FC = () => {
 
   const handleMarkAsRead = async (id: number) => {
     try {
+      // 1. Primeiro garantimos a persistência no Backend
+      await marcarNotificacaoComoLida(id);
+      
+      // 2. Atualizamos o estado da página
       setNotificacoes(prev => prev.map(n => 
         n.id === id ? { ...n, lida: true } : n
       ));
-      await marcarNotificacaoComoLida(id);
+
+      // 3. DISPARAMOS O EVENTO para o Layout (Sino) saber que mudou
+      window.dispatchEvent(new Event('notificacaoAtualizada'));
+      
     } catch (error) {
-      console.error("Erro ao marcar como lida", error);
+      console.error("Erro ao marcar como lida na página", error);
+      // Se o erro persistir, verifique se o ID está chegando correto
+      alert("Não foi possível marcar como lida. Tente novamente.");
     }
   };
 
