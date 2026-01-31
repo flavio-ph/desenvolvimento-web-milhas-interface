@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { 
-  Search, 
-  Filter, 
-  ArrowUpRight, 
-  ArrowDownRight, 
+import {
+  Search,
+  Filter,
+  ArrowUpRight,
+  ArrowDownRight,
   Download,
   Clock,
   CheckCircle2,
@@ -13,7 +13,7 @@ import {
   FileSpreadsheet // Ícone para o Excel
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
-import api, { getPontosPendentes, getPontosExpirando, ResumoPendentesResponse , creditarCompra} from '../../services/api';
+import api, { getPontosPendentes, getPontosExpirando, ResumoPendentesResponse, creditarCompra } from '../../services/api';
 
 
 interface Transaction {
@@ -27,59 +27,65 @@ interface Transaction {
 
 const HistoryPage: React.FC = () => {
   const { isDarkMode } = useTheme();
-  
+
   // Estados
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Estado para o Mês Selecionado (Formato YYYY-MM)
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
-  
+
   // Filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [programFilter, setProgramFilter] = useState('ALL');
   // Estado para Pontos Pendentes
-  const [resumoPendentes, setResumoPendentes] = useState<ResumoPendentesResponse>({ 
-  totalPontos: 0, 
-  diasParaProximoCredito: null 
+  const [resumoPendentes, setResumoPendentes] = useState<ResumoPendentesResponse>({
+    totalPontos: 0,
+    diasParaProximoCredito: null
   });
   // Estado para Pontos Expirando
   const [pontosExpirando, setPontosExpirando] = useState(0);
 
-  useEffect(() => {
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      
-      // 1. Busca o histórico (Tabela)
-      const response = await api.get('/movimentacoes'); 
-      setTransactions(response.data);
+ useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
 
-      // 2. Busca o resumo de pendentes (Card Amarelo)
-      const pendentes = await getPontosPendentes();
-      
-      // CORREÇÃO AQUI:
-      // Usamos o novo setter e passamos o objeto inteiro, não precisa do "|| 0"
-      // Se você renomeou o estado para 'resumoPendentes', use setResumoPendentes:
-      setResumoPendentes(pendentes); 
+        const response = await api.get('/movimentacoes', {
+          params: {
+            mes: selectedMonth, 
+            termo: searchTerm,  
+            programa: programFilter === 'ALL' ? '' : programFilter 
+          }
+        });
+        
+        setTransactions(response.data);
 
-      const expirando = await getPontosExpirando(30);
-      setPontosExpirando(expirando);
+        const pendentes = await getPontosPendentes();
+        setResumoPendentes(pendentes);
 
-    } catch (error) {
-      console.error("Erro ao buscar dados:", error);
-      setTransactions([]); 
-      // Em caso de erro, zera o resumo mantendo o formato do objeto
-      setResumoPendentes({ totalPontos: 0, diasParaProximoCredito: null });
-      setPontosExpirando(0);
-    } finally {
-      setLoading(false);
-    }
-  };
+        const expirando = await getPontosExpirando(30);
+        setPontosExpirando(expirando);
 
-  fetchData();
-  }, []);
+      } catch (error) {
+        console.error("Erro ao buscar dados:", error);
+        
+        setTransactions([]);
+        setResumoPendentes({ totalPontos: 0, diasParaProximoCredito: null });
+        setPontosExpirando(0);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const delayDebounceFn = setTimeout(() => {
+      fetchData();
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+
+  }, [selectedMonth, searchTerm, programFilter]); //
 
   const uniquePrograms = useMemo(() => {
     const programs = new Set(transactions.map(t => t.nomePrograma));
@@ -91,7 +97,7 @@ const HistoryPage: React.FC = () => {
     return transactions.filter(tx => {
       const matchesSearch = tx.descricao.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesProgram = programFilter === 'ALL' || tx.nomePrograma === programFilter;
-      
+
       const txDate = new Date(tx.dataMovimentacao);
       const [selYear, selMonth] = selectedMonth.split('-').map(Number);
       const matchesDate = txDate.getFullYear() === selYear && (txDate.getMonth() + 1) === selMonth;
@@ -107,7 +113,7 @@ const HistoryPage: React.FC = () => {
   }, [filteredTransactions]);
 
   // --- FUNÇÕES DE EXPORTAÇÃO ---
-  
+
   const handleExportPdf = async () => {
     try {
       const response = await api.get('/relatorios/movimentacoes/pdf', { responseType: 'blob' });
@@ -157,18 +163,18 @@ const HistoryPage: React.FC = () => {
           <h1 className="text-3xl font-bold dark:text-white text-slate-900">Extrato de Pontos</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Acompanhe detalhadamente suas entradas e saídas.</p>
         </div>
-        
+
         {/* Botões de Ação */}
         <div className="flex gap-3">
-          <button 
+          <button
             onClick={handleExportExcel}
             className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-xl text-sm font-bold hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all shadow-sm"
           >
             <FileSpreadsheet size={18} />
             Exportar Excel
           </button>
-          
-          <button 
+
+          <button
             onClick={handleExportPdf}
             className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-semibold dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm"
           >
@@ -188,7 +194,7 @@ const HistoryPage: React.FC = () => {
           <h3 className="text-3xl font-bold">+{acumuladoMes.toLocaleString('pt-BR')} pts</h3>
           <p className="text-xs mt-2 bg-white/20 inline-block px-2 py-1 rounded-full">Filtrado por data</p>
         </div>
-        
+
         {/* Card Aguardando Crédito */}
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
@@ -197,20 +203,20 @@ const HistoryPage: React.FC = () => {
             </div>
             <span className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Aguardando Crédito</span>
           </div>
-          
+
           <h3 className="text-2xl font-bold dark:text-white">
             {/* Agora usamos .totalPontos */}
             {resumoPendentes.totalPontos.toLocaleString('pt-BR')} pts
           </h3>
-          
+
           <p className="text-xs text-slate-500 mt-1">
             {/* Lógica Dinâmica dos Dias */}
             {resumoPendentes.totalPontos > 0 ? (
-               resumoPendentes.diasParaProximoCredito !== null && resumoPendentes.diasParaProximoCredito > 0
-                 ? `Próximo crédito em ${resumoPendentes.diasParaProximoCredito} dias`
-                 : (resumoPendentes.diasParaProximoCredito === 0 ? 'Crédito agendado para hoje!' : 'Processando...')
+              resumoPendentes.diasParaProximoCredito !== null && resumoPendentes.diasParaProximoCredito > 0
+                ? `Próximo crédito em ${resumoPendentes.diasParaProximoCredito} dias`
+                : (resumoPendentes.diasParaProximoCredito === 0 ? 'Crédito agendado para hoje!' : 'Processando...')
             ) : (
-               'Sem lançamentos pendentes'
+              'Sem lançamentos pendentes'
             )}
           </p>
         </div>
@@ -223,16 +229,16 @@ const HistoryPage: React.FC = () => {
             <span className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Expirando em Breve</span>
           </div>
           {/* Valor Dinâmico vindo do estado pontosExpirando */}
-            <h3 className="text-2xl font-bold dark:text-white">
-              {pontosExpirando.toLocaleString('pt-BR')} pts
-            </h3>
+          <h3 className="text-2xl font-bold dark:text-white">
+            {pontosExpirando.toLocaleString('pt-BR')} pts
+          </h3>
 
-            {/* Lógica condicional para o texto de apoio */}
-            <p className="text-xs text-slate-500 mt-1">
-              {pontosExpirando > 0 
-                ? `Pontos com vencimento nos próximos 30 dias` 
-                : 'Nenhum ponto expirando no próximo mês'}
-            </p>
+          {/* Lógica condicional para o texto de apoio */}
+          <p className="text-xs text-slate-500 mt-1">
+            {pontosExpirando > 0
+              ? `Pontos com vencimento nos próximos 30 dias`
+              : 'Nenhum ponto expirando no próximo mês'}
+          </p>
         </div>
       </div>
 
@@ -240,17 +246,17 @@ const HistoryPage: React.FC = () => {
       <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col lg:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-          <input 
-            type="text" 
-            placeholder="Buscar por descrição..." 
+          <input
+            type="text"
+            placeholder="Buscar por descrição..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all"
           />
         </div>
-        
+
         <div className="flex flex-wrap gap-3">
-          <select 
+          <select
             value={programFilter}
             onChange={(e) => setProgramFilter(e.target.value)}
             className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm font-medium dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
@@ -261,7 +267,7 @@ const HistoryPage: React.FC = () => {
             ))}
           </select>
 
-          <select 
+          <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm font-medium dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
@@ -274,8 +280,8 @@ const HistoryPage: React.FC = () => {
             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-600 dark:text-indigo-400 pointer-events-none">
               <CalendarIcon size={18} />
             </div>
-            <input 
-              type="month" 
+            <input
+              type="month"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
               className="pl-10 pr-4 py-2.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-colors border-none outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
@@ -287,26 +293,29 @@ const HistoryPage: React.FC = () => {
       {/* Tabela de Transações */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+          <table className="w-full"> {/* Removido text-left */}
             <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
               <tr>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Data</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Descrição</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Programa</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Pontos</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-right">Ação</th>
+                {/* Adicionado text-center em todos os THs */}
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Data</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Descrição</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Programa</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Pontos</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Status</th>
+                {/* Coluna "Ação" foi removida daqui */}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {filteredTransactions.length > 0 ? (
                 filteredTransactions.map((tx) => {
                   const isNegative = ['USO', 'EXPIRACAO', 'TRANSFERENCIA_SAIDA'].includes(tx.tipo);
-                  
+
                   return (
                     <tr key={tx.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-default">
+
+                      {/* 1. DATA (Centralizado com items-center) */}
                       <td className="px-6 py-5 whitespace-nowrap">
-                        <div className="flex flex-col">
+                        <div className="flex flex-col items-center"> {/* items-center centraliza verticalmente */}
                           <span className="text-sm font-semibold dark:text-white">
                             {new Date(tx.dataMovimentacao).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
                           </span>
@@ -315,57 +324,66 @@ const HistoryPage: React.FC = () => {
                           </span>
                         </div>
                       </td>
+
+                      {/* 2. DESCRIÇÃO (Centralizado com justify-center) */}
                       <td className="px-6 py-5">
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${
-                            !isNegative ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600'
-                          }`}>
+                        <div className="flex items-center justify-center gap-3"> {/* justify-center centraliza horizontalmente */}
+                          <div className={`p-2 rounded-lg ${!isNegative ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600'
+                            }`}>
                             {!isNegative ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
                           </div>
                           <span className="text-sm font-medium dark:text-white">{tx.descricao}</span>
                         </div>
                       </td>
+
+                      {/* 3. PROGRAMA (Centralizado com justify-center) */}
                       <td className="px-6 py-5">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-center gap-2"> {/* justify-center */}
                           <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
                           <span className="text-sm text-slate-600 dark:text-slate-400">{tx.nomePrograma}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-5">
+
+                      {/* 4. PONTOS (Centralizado com text-center na TD) */}
+                      <td className="px-6 py-5 text-center">
                         <span className={`text-sm font-bold ${!isNegative ? 'text-indigo-600 dark:text-indigo-400' : 'text-rose-500'}`}>
                           {!isNegative ? '+' : ''}{tx.quantidadePontos.toLocaleString('pt-BR')} pts
                         </span>
                       </td>
-                      <td className="px-6 py-5">
-                        {tx.status === 'CREDITADO' ? (
+
+                      {/* 5. STATUS (Centralizado com text-center na TD) */}
+                      <td className="px-6 py-5 text-center">
+                        {tx.status === 'CREDITADO' || tx.status === 'FINALIZADA' ? (
                           <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tight bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30">
                             <CheckCircle2 size={10} />
                             Processado
                           </span>
-                        ) : tx.status === 'PENDENTE' ? (
+                        ) : tx.status === 'PENDENTE' || tx.status === 'AGENDADA' ? (
                           <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tight bg-amber-50 text-amber-600 dark:bg-amber-900/30">
                             <Clock size={10} />
                             Aguardando
                           </span>
-                        ) : (
+                        ) : tx.status === 'EXPIRADA' || tx.status === 'CANCELADA' ? (
                           <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tight bg-rose-50 text-rose-600 dark:bg-rose-900/30">
                             <AlertTriangle size={10} />
                             Expirado
                           </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tight bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                            {tx.status || 'Processando'}
+                          </span>
                         )}
                       </td>
-                      <td className="px-6 py-5 text-right">
-                        {/* Botão apenas visual de detalhes, sem ação de crédito manual */}
-                        <button className="text-slate-400 hover:text-indigo-600 transition-colors p-1">
-                          <Search size={16} />
-                        </button>
-                      </td>
+
+                      {/* Coluna "Ação" removida daqui também */}
+
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-6 py-20 text-center">
+                  {/* Ajustado colSpan para 5, já que removemos uma coluna */}
+                  <td colSpan={5} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center">
                       <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-300 dark:text-slate-700 mb-4">
                         <Filter size={32} />
@@ -380,13 +398,11 @@ const HistoryPage: React.FC = () => {
             </tbody>
           </table>
         </div>
-        
+
         {/* Pagination (Visual) */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <p className="text-xs text-slate-500">Mostrando {filteredTransactions.length} movimentações</p>
           <div className="flex gap-2">
-            <button disabled className="px-3 py-1 bg-slate-50 dark:bg-slate-800 text-slate-400 rounded-lg text-xs font-bold cursor-not-allowed">Anterior</button>
-            <button disabled className="px-3 py-1 bg-slate-50 dark:bg-slate-800 text-slate-400 rounded-lg text-xs font-bold cursor-not-allowed">Próxima</button>
           </div>
         </div>
       </div>
