@@ -61,6 +61,7 @@ const AdminPromotions: React.FC = () => {
         titulo: formData.titulo,
         descricao: formData.descricao,
         urlPromocao: formData.link,
+        bonusPorcentagem: parseFloat(formData.bonusPorcentagem),
         dataInicio: new Date().toISOString().split('T')[0],
         dataFim: formData.dataValidade,
         programaPontosId: parseInt(formData.programaPontosId)
@@ -161,7 +162,7 @@ const AdminPromotions: React.FC = () => {
                     <td className="px-6 py-5 text-center">
                       {/* Ajuste conforme o nome que vem da sua API (bonusPercentage ou bonusPorcentagem) */}
                       <span className="text-emerald-500 font-bold">
-                        {promo.bonusPercentage || promo.bonusPorcentagem || "0"}%
+                        {promo.bonusPorcentagem ? `${promo.bonusPorcentagem}%` : '0%'}
                       </span>
                     </td>
                     <td className="px-6 py-5 text-center">
@@ -303,8 +304,8 @@ const AdminPromotions: React.FC = () => {
 
             <div className="bg-white rounded-[2rem] shadow-2xl overflow-hidden border border-white w-full">
               <div className={`p-8 text-white flex flex-col items-center transition-all duration-500 ${(parseInt(formData.bonusPorcentagem) || 0) >= 100
-                  ? 'bg-gradient-to-br from-indigo-600 to-violet-700'
-                  : 'bg-gradient-to-br from-emerald-500 to-teal-600'
+                ? 'bg-gradient-to-br from-indigo-600 to-violet-700'
+                : 'bg-gradient-to-br from-emerald-500 to-teal-600'
                 }`}>
                 <span className="text-[10px] font-black uppercase opacity-60 mb-1">Bônus de</span>
                 <h4 className="text-5xl font-black">{formData.bonusPorcentagem || '0'}%</h4>
