@@ -177,7 +177,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Cards Superiores */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
         <StatCard 
           title="Total Acumulado" 
           value={totalPontos.toLocaleString('pt-BR')} 
@@ -341,7 +341,7 @@ const Dashboard: React.FC = () => {
 
 // Componente Auxiliar para Cards
 const StatCard = ({ title, value, icon, color, subText }: any) => (
-  <div className={`bg-white dark:bg-slate-900 p-6 rounded-2xl border-l-4 border-${color}-500 shadow-sm border-slate-100 dark:border-slate-800`}>
+  <div className={`bg-white dark:bg-slate-900 p-2 rounded-2xl border-l-4 border-${color}-500 shadow-sm border-slate-100 dark:border-slate-800`}>
     <div className="flex justify-between items-start mb-4">
       <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl">{icon}</div>
     </div>
