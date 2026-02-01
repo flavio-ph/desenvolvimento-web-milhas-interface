@@ -53,6 +53,11 @@ export const deletePromocao = async (id: number) => {
   await api.delete(`/promocoes/${id}`);
 };
 
+export const updatePromocao = async (id: number, data: any) => {
+  const response = await api.put(`/promocoes/${id}`, data);
+  return response.data;
+};
+
 // --- Programas ---
 export const getProgramas = async () => {
   const response = await api.get<LoyaltyProgram[]>('/programas');
