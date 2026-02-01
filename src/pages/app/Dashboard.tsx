@@ -11,8 +11,8 @@ import {
   FileSpreadsheet // Importado
 } from 'lucide-react';
 import { 
-  AreaChart, 
-  Area, 
+  LineChart, 
+  Line, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
@@ -207,34 +207,39 @@ const Dashboard: React.FC = () => {
 
       {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Histórico */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
-          <h3 className="text-lg font-bold dark:text-white mb-6">Histórico de Acúmulo</h3>
-          <div className="h-[300px] w-full">
-            {areaData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={areaData}>
-                  <defs>
-                    <linearGradient id="colorPoints" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDarkMode ? '#1e293b' : '#e2e8f0'} />
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                  <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
-                  <Area type="monotone" dataKey="points" stroke="#4f46e5" strokeWidth={3} fillOpacity={1} fill="url(#colorPoints)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                <p>Sem dados de histórico suficientes.</p>
-                <p className="text-xs mt-2">Cadastre movimentações antigas para visualizar.</p>
-              </div>
-            )}
+        {/* Histórico - Agora como Gráfico de Linha */}
+          <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
+            <h3 className="text-lg font-bold dark:text-white mb-6">Gráfico de Pontos</h3>
+            <div className="h-[300px] w-full">
+              {areaData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={areaData}> {/* Alterado para LineChart */}
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDarkMode ? '#1e293b' : '#e2e8f0'} />
+                    <XAxis 
+                      dataKey="month" // Este campo receberá o "DD/MM" do back-end
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{fill: '#94a3b8', fontSize: 12}} 
+                    />
+                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
+                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
+                    <Line 
+                      type="monotone" 
+                      dataKey="points" 
+                      stroke="#4f46e5" 
+                      strokeWidth={3} 
+                      dot={{ r: 4, fill: '#f14714', strokeWidth: 2, stroke: '#e9da0d' }} // Pontos visíveis
+                      activeDot={{ r: 6, strokeWidth: 0 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                  <p>Sem dados de histórico suficientes.</p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
         {/* Pizza */}
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
