@@ -39,7 +39,7 @@ const CardsPage: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  
+
   // Listas de dados
   const [cards, setCards] = useState<Cartao[]>([]);
   const [bandeiras, setBandeiras] = useState<Bandeira[]>([]);
@@ -108,7 +108,7 @@ const CardsPage: React.FC = () => {
   // Abrir modal para EDITAR
   const openEditModal = (card: Cartao) => {
     setEditingCardId(card.id);
-    
+
     // Encontrar os IDs baseados nos nomes que vieram da lista
     const bandeira = bandeiras.find(b => b.nome === card.nomeBandeira);
     // CORRIGIDO: Usando nomeProgramaPontos para achar o ID correto
@@ -121,7 +121,7 @@ const CardsPage: React.FC = () => {
       bandeiraId: bandeira ? bandeira.id.toString() : '',
       programaPontosId: programa ? programa.id.toString() : ''
     });
-    
+
     setSelectedColor(card.cor || CARD_COLORS[0]);
     setShowModal(true);
   };
@@ -158,7 +158,7 @@ const CardsPage: React.FC = () => {
       fetchData(); // Recarrega a lista
     } catch (error: any) {
       console.error('Erro ao salvar cartão:', error);
-      
+
       // Exibe mensagem amigável caso seja o bloqueio de edição por ter compras
       if (error.response && error.response.data && error.response.data.message) {
         alert(error.response.data.message);
@@ -244,7 +244,7 @@ const CardsPage: React.FC = () => {
                           {card.nomeBandeira || 'VISA'}
                         </span>
                       </div>
-                      
+
                       {/* Botões de Ação */}
                       <div className="flex gap-1">
                         <button
@@ -302,9 +302,10 @@ const CardsPage: React.FC = () => {
                     </div>
 
                     <div className="flex gap-3">
-                      <button 
-                      onClick={() => navigate('/history')}
-                      className="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-sm font-medium">
+                      <button
+                        onClick={() => navigate('/history')}
+                        className="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-sm font-medium text-slate-700 dark:text-slate-300 transition-colors"
+                      >
                         Ver Extrato
                       </button>
                     </div>
@@ -349,8 +350,8 @@ const CardsPage: React.FC = () => {
                         onClick={() => setSelectedColor(color)}
                         style={{ backgroundColor: color }}
                         className={`w-9 h-9 rounded-full transition-all flex items-center justify-center shadow-sm ${selectedColor === color
-                            ? 'ring-2 ring-offset-2 ring-indigo-600 scale-110'
-                            : 'hover:scale-105 hover:shadow-md border-2 border-transparent'
+                          ? 'ring-2 ring-offset-2 ring-indigo-600 scale-110'
+                          : 'hover:scale-105 hover:shadow-md border-2 border-transparent'
                           }`}
                       >
                         {selectedColor === color && <Check size={16} className="text-white drop-shadow-md" />}

@@ -33,6 +33,7 @@ interface UserProfile {
   telefone?: string;
   cpf?: string;
   role?: string;
+  dataCadastro?: string;
 }
 
 // Interface para Planos (Simulação)
@@ -330,7 +331,7 @@ const ProfilePage: React.FC = () => {
               </span>
             </div>
             <p className="text-slate-500 dark:text-slate-400">
-              {user?.email} • Desde 2024
+              {user?.email} • Desde {user?.dataCadastro ? new Date(user.dataCadastro).getFullYear() : new Date().getFullYear()}
             </p>
             
             <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-4">
@@ -421,16 +422,6 @@ const ProfilePage: React.FC = () => {
                 Segurança
               </h3>
               <div className="space-y-4">
-                <button onClick={handleToggle2FA} className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 bg-white dark:bg-slate-900 rounded-lg"><Smartphone size={20} className="text-indigo-600" /></div>
-                    <div className="text-left">
-                      <p className="font-bold dark:text-white text-sm">Autenticação em Dois Fatores</p>
-                      <p className="text-xs text-slate-500">{is2FAEnabled ? 'Ativado e seguro' : 'Aumente a segurança'}</p>
-                    </div>
-                  </div>
-                  <span className={`text-xs font-bold uppercase ${is2FAEnabled ? 'text-emerald-600' : 'text-slate-400'}`}>{is2FAEnabled ? 'Ativado' : 'Desativado'}</span>
-                </button>
                 <button onClick={() => setShowPasswordModal(true)} className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
                   <div className="flex items-center gap-4">
                     <div className="p-2 bg-white dark:bg-slate-900 rounded-lg"><Lock size={20} className="text-indigo-600" /></div>
