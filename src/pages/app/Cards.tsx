@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, CreditCard, Trash2, X, Check, Loader2, Coins } from 'lucide-react';
+import { Plus, CreditCard, Trash2, X, Check, Loader2, Coins, Edit2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 
-// Interfaces baseadas no seu Backend
+// Interfaces ajustadas para bater com o Backend (CartaoResponse.java)
 interface Cartao {
   id: number;
   nomePersonalizado: string;
   ultimosDigitos: string;
   fatorConversao: number;
   nomeBandeira?: string;
-  nomePrograma?: string;
+  nomeProgramaPontos?: string; // CORRIGIDO: O backend manda nomeProgramaPontos
   cor?: string;
 }
 
@@ -38,11 +38,15 @@ const CARD_COLORS = [
 const CardsPage: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  
   // Listas de dados
   const [cards, setCards] = useState<Cartao[]>([]);
   const [bandeiras, setBandeiras] = useState<Bandeira[]>([]);
   const [programas, setProgramas] = useState<Programa[]>([]);
+
+  // Estado para controlar a edição
+  const [editingCardId, setEditingCardId] = useState<number | null>(null);
 
   // Estado do Formulário
   const [formData, setFormData] = useState({
@@ -85,8 +89,45 @@ const CardsPage: React.FC = () => {
     fetchData();
   }, []);
 
-  // 2. Criar novo cartão
-  const handleCreateCard = async (e: React.FormEvent) => {
+  // --- FUNÇÕES DE MODAL ---
+
+  // Abrir modal para CRIAR
+  const openCreateModal = () => {
+    setEditingCardId(null); // Limpa ID de edição
+    setFormData({
+      nomePersonalizado: '',
+      ultimosDigitos: '',
+      fatorConversao: '',
+      bandeiraId: '',
+      programaPontosId: ''
+    });
+    setSelectedColor(CARD_COLORS[0]);
+    setShowModal(true);
+  };
+
+  // Abrir modal para EDITAR
+  const openEditModal = (card: Cartao) => {
+    setEditingCardId(card.id);
+    
+    // Encontrar os IDs baseados nos nomes que vieram da lista
+    const bandeira = bandeiras.find(b => b.nome === card.nomeBandeira);
+    // CORRIGIDO: Usando nomeProgramaPontos para achar o ID correto
+    const programa = programas.find(p => p.nome === card.nomeProgramaPontos);
+
+    setFormData({
+      nomePersonalizado: card.nomePersonalizado,
+      ultimosDigitos: card.ultimosDigitos,
+      fatorConversao: card.fatorConversao.toString(),
+      bandeiraId: bandeira ? bandeira.id.toString() : '',
+      programaPontosId: programa ? programa.id.toString() : ''
+    });
+    
+    setSelectedColor(card.cor || CARD_COLORS[0]);
+    setShowModal(true);
+  };
+
+  // 2. Salvar cartão (Criar ou Atualizar)
+  const handleSaveCard = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.bandeiraId || !formData.programaPontosId) {
@@ -104,22 +145,26 @@ const CardsPage: React.FC = () => {
         cor: selectedColor
       };
 
-      await api.post('/cartoes', payload);
+      if (editingCardId) {
+        // MODO EDIÇÃO (PUT)
+        await api.put(`/cartoes/${editingCardId}`, payload);
+      } else {
+        // MODO CRIAÇÃO (POST)
+        await api.post('/cartoes', payload);
+      }
 
       // Sucesso
       setShowModal(false);
-      setFormData({
-        nomePersonalizado: '',
-        ultimosDigitos: '',
-        fatorConversao: '',
-        bandeiraId: '',
-        programaPontosId: ''
-      });
-      setSelectedColor(CARD_COLORS[0]);
-      fetchData();
-    } catch (error) {
-      console.error('Erro ao criar cartão:', error);
-      alert('Erro ao criar cartão. Verifique os dados.');
+      fetchData(); // Recarrega a lista
+    } catch (error: any) {
+      console.error('Erro ao salvar cartão:', error);
+      
+      // Exibe mensagem amigável caso seja o bloqueio de edição por ter compras
+      if (error.response && error.response.data && error.response.data.message) {
+        alert(error.response.data.message);
+      } else {
+        alert('Erro ao salvar cartão. Verifique os dados.');
+      }
     }
   };
 
@@ -131,6 +176,7 @@ const CardsPage: React.FC = () => {
       setCards(cards.filter(c => c.id !== id));
     } catch (error) {
       console.error('Erro ao deletar cartão:', error);
+      alert("Não foi possível excluir. Verifique se existem compras vinculadas.");
     }
   };
 
@@ -158,7 +204,7 @@ const CardsPage: React.FC = () => {
             <p className="text-slate-500 dark:text-slate-400 mt-1">Gerencie seus cartões e pontuações.</p>
           </div>
           <button
-            onClick={() => setShowModal(true)}
+            onClick={openCreateModal}
             className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none"
           >
             <Plus size={20} />
@@ -198,12 +244,24 @@ const CardsPage: React.FC = () => {
                           {card.nomeBandeira || 'VISA'}
                         </span>
                       </div>
-                      <button
-                        onClick={() => handleDeleteCard(card.id)}
-                        className="p-2 rounded-full hover:bg-white/20 text-white/80"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      
+                      {/* Botões de Ação */}
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => openEditModal(card)}
+                          className="p-2 rounded-full hover:bg-white/20 text-white/80 transition-colors"
+                          title="Editar"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCard(card.id)}
+                          className="p-2 rounded-full hover:bg-white/20 text-white/80 transition-colors"
+                          title="Excluir"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
 
                     <div className="mb-4">
@@ -235,6 +293,7 @@ const CardsPage: React.FC = () => {
                     <div className="flex justify-between items-center text-sm mb-3">
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                        {/* CORREÇÃO AQUI: Usando nomeProgramaPontos */}
                         <span>{card.nomeProgramaPontos || 'Sem Programa'}</span>
                       </div>
                       <span className="text-indigo-600 font-bold text-xs">
@@ -248,7 +307,6 @@ const CardsPage: React.FC = () => {
                       className="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-sm font-medium">
                         Ver Extrato
                       </button>
-                      
                     </div>
                   </div>
                 </div>
@@ -259,7 +317,7 @@ const CardsPage: React.FC = () => {
         )}
       </div>
 
-      {/* Modal movido para fora da div principal para corrigir o blur */}
+      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setShowModal(false)} />
@@ -270,15 +328,16 @@ const CardsPage: React.FC = () => {
             <div className="w-full md:w-1/2 flex flex-col overflow-y-auto">
               <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 sticky top-0 z-20">
                 <h2 className="text-xl font-bold dark:text-white flex items-center gap-2">
-                  <Plus className="text-indigo-600" />
-                  Novo Cartão
+                  {/* Ícone muda se for edição ou criação */}
+                  {editingCardId ? <Edit2 className="text-indigo-600" /> : <Plus className="text-indigo-600" />}
+                  {editingCardId ? 'Editar Cartão' : 'Novo Cartão'}
                 </h2>
                 <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                   <X size={24} />
                 </button>
               </div>
 
-              <form onSubmit={handleCreateCard} className="p-6 space-y-5">
+              <form onSubmit={handleSaveCard} className="p-6 space-y-5">
                 {/* Seletor de Cores */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Cor do Cartão</label>
@@ -382,7 +441,7 @@ const CardsPage: React.FC = () => {
                 <div className="pt-4">
                   <button type="submit" className="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30 flex items-center justify-center gap-2 transform active:scale-95">
                     <Check size={20} />
-                    Salvar Cartão
+                    {editingCardId ? 'Atualizar Cartão' : 'Salvar Cartão'}
                   </button>
                 </div>
               </form>
@@ -427,6 +486,7 @@ const CardsPage: React.FC = () => {
 
                   <div className="pt-4 border-t border-white/20 flex justify-between items-center text-xs text-white/70">
                     <span>
+                      {/* CORREÇÃO AQUI: Usando o ID do form para achar o nome no preview */}
                       {programas.find(p => p.id.toString() === formData.programaPontosId)?.nome || 'Programa'}
                     </span>
                     <div className="flex items-center gap-1 font-bold text-white">
