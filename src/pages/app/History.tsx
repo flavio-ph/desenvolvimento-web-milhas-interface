@@ -12,8 +12,8 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
-import api, { getPontosPendentes, getPontosExpirando, getProgramas, ResumoPendentesResponse } from '../../services/api';
-import { LoyaltyProgram } from '../../types/types';
+import api, { getPontosPendentes, getPontosExpirando, getProgramas,  } from '../../services/api';
+import { LoyaltyProgram, ResumoPendentesResponse} from '../../types/types';
 
 interface Transaction {
   id: number;

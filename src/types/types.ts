@@ -61,7 +61,7 @@ export interface UserUpdateData {
   nome?: string;
   telefone?: string;
   cpf?: string;
-  fotoPerfil?: string; s
+  fotoPerfil?: string; 
 }
 
 export interface Notificacao {
