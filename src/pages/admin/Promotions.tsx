@@ -205,7 +205,7 @@ const AdminPromotions: React.FC = () => {
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-500 uppercase">Programa</label>
                 <select
-                  className="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm focus:ring-2 focus:ring-indigo-500 outline-none dark:text-black"
                   value={formData.programaPontosId}
                   onChange={e => setFormData({ ...formData, programaPontosId: e.target.value })}
                   required
@@ -240,8 +240,8 @@ const AdminPromotions: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase">Data Fim</label>
-                <input type="date" className="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm" value={formData.dataValidade} onChange={e => setFormData({ ...formData, dataValidade: e.target.value })} required />
+                <label className="text-xs font-bold text-slate-500 uppercase ">Data Fim</label>
+                <input type="date" className="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm dark:text-black" value={formData.dataValidade} onChange={e => setFormData({ ...formData, dataValidade: e.target.value })} required />
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-500 uppercase">Link</label>
