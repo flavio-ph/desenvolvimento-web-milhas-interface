@@ -13,6 +13,11 @@ export interface LoyaltyProgram {
   color?: string;
 }
 
+export interface ResumoPendentesResponse {
+  totalPontos: number;
+  diasParaProximoCredito: number | null;
+}
+
 export interface CreditCard {
   id: string;
   name: string;

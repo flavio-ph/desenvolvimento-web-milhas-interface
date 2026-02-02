@@ -1,10 +1,5 @@
 import axios from 'axios';
-import { UserUpdateData, Promotion, LoyaltyProgram, Notificacao, Transaction, CreditCard } from '../types/types';
-
-export interface ResumoPendentesResponse {
-  totalPontos: number;
-  diasParaProximoCredito: number | null;
-}
+import { UserUpdateData, Promotion, LoyaltyProgram, Notificacao, Transaction, CreditCard, ResumoPendentesResponse } from '../types/types';
 
 const api = axios.create({
   baseURL: 'http://localhost:8080', 
