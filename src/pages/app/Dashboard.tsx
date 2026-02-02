@@ -334,15 +334,26 @@ const Dashboard: React.FC = () => {
   );
 };
 
-const StatCard = ({ title, value, icon, color, subText }: any) => (
-  <div className={`bg-white dark:bg-slate-900 p-2 rounded-2xl border-l-4 border-${color}-500 shadow-sm border-slate-100 dark:border-slate-800`}>
-    <div className="flex justify-between items-start mb-4">
-      <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl">{icon}</div>
+// --- ALTERAÇÃO AQUI EMBAIXO ---
+const StatCard = ({ title, value, icon, color, subText }: any) => {
+  const borderColors: Record<string, string> = {
+    // ALTERAÇÃO AQUI: Adicionamos a classe 'dark:border-l-...' para garantir a cor no modo escuro
+    indigo: 'border-l-indigo-500 dark:border-l-indigo-500',
+    emerald: 'border-l-emerald-500 dark:border-l-emerald-500',
+    amber: 'border-l-amber-500 dark:border-l-amber-500',
+    rose: 'border-l-rose-500 dark:border-l-rose-500',
+  };
+
+  return (
+    <div className={`bg-white dark:bg-slate-900 p-2 rounded-2xl border-l-4 ${borderColors[color] || 'border-l-gray-500'} shadow-sm border-slate-100 dark:border-slate-800`}>
+      <div className="flex justify-between items-start mb-4">
+        <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl">{icon}</div>
+      </div>
+      <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">{title}</p>
+      <h3 className="text-2xl font-bold dark:text-white mt-1">{value}</h3>
+      {subText && <p className="text-xs text-rose-500 font-medium mt-1">{subText}</p>}
     </div>
-    <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">{title}</p>
-    <h3 className="text-2xl font-bold dark:text-white mt-1">{value}</h3>
-    {subText && <p className="text-xs text-rose-500 font-medium mt-1">{subText}</p>}
-  </div>
-);
+  );
+};
 
 export default Dashboard;

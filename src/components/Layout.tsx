@@ -57,7 +57,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       case '/notifications': return 'Central de Notificações';
       case '/admin/programs': return 'Gerenciar Programas';
       case '/admin/brands': return 'Gerenciar Bandeiras';
-      case '/admin/promotions': return 'Gerenciar Promoções';
+      case '/admin/new-promotion': return 'Gerenciar Promoções';
       default: return 'Horizo';
     }
   };
