@@ -218,7 +218,7 @@ const AdminPromotions: React.FC = () => {
                 <label className="text-xs font-bold text-slate-500 uppercase">Bônus %</label>
                 <input
                   type="number"
-                  className="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm focus:ring-2 focus:ring-indigo-500 outline-none dark:text-black"
                   placeholder="Ex: 100"
                   value={formData.bonusPorcentagem}
                   onChange={e => setFormData({ ...formData, bonusPorcentagem: e.target.value })}
@@ -230,7 +230,7 @@ const AdminPromotions: React.FC = () => {
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-500 uppercase">Título</label>
               <input
-                className="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                className="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm focus:ring-2 focus:ring-indigo-500 outline-none dark:text-black"
                 placeholder="Ex: Transfira para o Smiles"
                 value={formData.titulo}
                 onChange={e => setFormData({ ...formData, titulo: e.target.value })}
@@ -246,7 +246,7 @@ const AdminPromotions: React.FC = () => {
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-500 uppercase">Link</label>
                 <input type="url"         
-                className="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm" value={formData.link} onChange={e => setFormData({ ...formData, link: e.target.value })} required 
+                className="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm dark:text-black" value={formData.link} onChange={e => setFormData({ ...formData, link: e.target.value })} required 
                 placeholder="https://..."
                 />
                 
@@ -255,7 +255,7 @@ const AdminPromotions: React.FC = () => {
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-500 uppercase">Descrição</label>
-              <textarea className="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm h-28" value={formData.descricao} onChange={e => setFormData({ ...formData, descricao: e.target.value })} required
+              <textarea className="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm h-28 dark:text-black" value={formData.descricao} onChange={e => setFormData({ ...formData, descricao: e.target.value })} required
               placeholder="Descreva a promoção..."
               />
             </div>
