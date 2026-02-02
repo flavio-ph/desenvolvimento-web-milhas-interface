@@ -8,7 +8,7 @@ import {
   Clock,
   Download,
   AlertCircle,
-  FileSpreadsheet // Importado
+  FileSpreadsheet 
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -25,7 +25,6 @@ import {
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 
-// --- Interfaces ---
 
 interface PontosPorCartaoDTO {
   cartaoId: number;
@@ -79,7 +78,6 @@ const Dashboard: React.FC = () => {
     fetchData();
   }, []);
 
-  // --- FUNÇÕES DE EXPORTAÇÃO (Adicionadas) ---
   const handleExportPdf = async () => {
     try {
       const response = await api.get('/relatorios/movimentacoes/pdf', { responseType: 'blob' });
@@ -111,15 +109,12 @@ const Dashboard: React.FC = () => {
       alert("Erro ao gerar planilha Excel.");
     }
   };
-  // ---------------------------------------------
 
-  // Totais
   const totalPontos = data?.pontosPorCartao?.reduce((acc, curr) => acc + curr.totalPontos, 0) || 0;
   const qtdCartoes = data?.pontosPorCartao?.length || 0;
   const prazoMedio = data?.prazoMedio?.diasMedios || 0;
   const expirando = data?.pontosExpirando || 0;
 
-  // Gráficos
   const pieData = data?.pontosPorCartao?.map(i => ({ name: i.nomeCartao, value: i.totalPontos })) || [];
   const areaData = data?.historicoPontos?.map(h => ({ month: h.mes, points: h.pontos })) || [];
 
@@ -156,7 +151,7 @@ const Dashboard: React.FC = () => {
           <p className="text-slate-500 dark:text-slate-400 mt-1">Visão geral em tempo real.</p>
         </div>
         
-        {/* NOVOS BOTÕES DE EXPORTAÇÃO */}
+        {/* BOTÕES DE EXPORTAÇÃO */}
         <div className="flex gap-2">
           <button 
             onClick={handleExportExcel}
@@ -207,16 +202,16 @@ const Dashboard: React.FC = () => {
 
       {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Histórico - Agora como Gráfico de Linha */}
+        {/* Histórico - Gráfico de Linha */}
           <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
             <h3 className="text-lg font-bold dark:text-white mb-6">Gráfico de Pontos</h3>
             <div className="h-[300px] w-full">
               {areaData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={areaData}> {/* Alterado para LineChart */}
+                  <LineChart data={areaData}> {/* LineChart */}
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDarkMode ? '#1e293b' : '#e2e8f0'} />
                     <XAxis 
-                      dataKey="month" // Este campo receberá o "DD/MM" do back-end
+                      dataKey="month" 
                       axisLine={false} 
                       tickLine={false} 
                       tick={{fill: '#94a3b8', fontSize: 12}} 
@@ -228,7 +223,7 @@ const Dashboard: React.FC = () => {
                       dataKey="points" 
                       stroke="#4f46e5" 
                       strokeWidth={3} 
-                      dot={{ r: 4, fill: '#f14714', strokeWidth: 2, stroke: '#e9da0d' }} // Pontos visíveis
+                      dot={{ r: 4, fill: '#f14714', strokeWidth: 2, stroke: '#e9da0d' }} 
                       activeDot={{ r: 6, strokeWidth: 0 }}
                     />
                   </LineChart>
@@ -339,7 +334,6 @@ const Dashboard: React.FC = () => {
   );
 };
 
-// Componente Auxiliar para Cards
 const StatCard = ({ title, value, icon, color, subText }: any) => (
   <div className={`bg-white dark:bg-slate-900 p-2 rounded-2xl border-l-4 border-${color}-500 shadow-sm border-slate-100 dark:border-slate-800`}>
     <div className="flex justify-between items-start mb-4">

@@ -3,8 +3,6 @@ import { Globe, Plus, Trash2, ExternalLink, X, Check, Loader2, Link as LinkIcon 
 import { getProgramas, createPrograma, deletePrograma } from '../../services/api';
 import { LoyaltyProgram } from '../../types/types';
 
-// Constante de cores para o seletor (se quiser implementar cor no futuro)
-// Por enquanto, usaremos cores geradas baseadas no nome ou aleatórias para o preview
 const PREVIEW_COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#3b82f6'];
 
 const AdminPrograms: React.FC = () => {
@@ -13,13 +11,11 @@ const AdminPrograms: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Form State
   const [formData, setFormData] = useState({
     nome: '',
     url: ''
   });
 
-  // Carregar dados
   const loadPrograms = async () => {
     try {
       setLoading(true);
@@ -36,7 +32,6 @@ const AdminPrograms: React.FC = () => {
     loadPrograms();
   }, []);
 
-  // Criar Programa
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -55,7 +50,6 @@ const AdminPrograms: React.FC = () => {
     }
   };
 
-  // Deletar Programa
   const handleDelete = async (id: number) => {
     if (!confirm('Deseja realmente remover este programa?')) return;
     try {
@@ -67,7 +61,6 @@ const AdminPrograms: React.FC = () => {
     }
   };
 
-  // Helper para cor aleatória consistente (baseada no ID ou Index)
   const getColor = (index: number) => PREVIEW_COLORS[index % PREVIEW_COLORS.length];
 
   return (
@@ -171,7 +164,7 @@ const AdminPrograms: React.FC = () => {
         )}
       </div>
 
-      {/* MODAL — MANTIDO IGUAL */}
+      {/* MODAL  */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div

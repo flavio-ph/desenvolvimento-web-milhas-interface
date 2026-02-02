@@ -19,15 +19,14 @@ export interface CreditCard {
   brand: CardBrand;
   lastFour: string;
   programId: string;
-  multiplier: number; // points per dollar/real
+  multiplier: number; 
 }
 
 export interface Transaction {
-  id: number; // No Java é Long/number
+  id: number; 
   descricao: string;
   quantidadePontos: number;
   dataMovimentacao: string;
-  // Alinhando os Enums com o Java (Maiúsculas e nomes exatos)
   tipo: 'ACUMULO' | 'USO' | 'BONUS' | 'EXPIRACAO' | 'AJUSTE' | 'TRANSFERENCIA_ENTRADA' | 'TRANSFERENCIA_SAIDA';
   status: 'PENDENTE' | 'CREDITADO' | 'EXPIRADO'; 
   nomePrograma: string;

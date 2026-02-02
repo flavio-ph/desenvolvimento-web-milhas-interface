@@ -26,7 +26,6 @@ import {
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
 
-// Interface de Usuário
 interface UserProfile {
   nome: string;
   email: string;
@@ -36,7 +35,6 @@ interface UserProfile {
   dataCadastro?: string;
 }
 
-// Interface para Planos (Simulação)
 interface PlanOption {
   id: string;
   name: string;
@@ -48,15 +46,12 @@ interface PlanOption {
 const ProfilePage: React.FC = () => {
   const { isDarkMode } = useTheme();
   
-  // Estados de Dados
   const [user, setUser] = useState<UserProfile | null>(null);
   const [totalPontos, setTotalPontos] = useState(0);
   
-  // Estados de UI Globais
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Formulário de Perfil
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
@@ -64,7 +59,6 @@ const ProfilePage: React.FC = () => {
     cpf: ''
   });
 
-  // Notificações
   const [notifications, setNotifications] = useState({
     email: true,
     push: true,
@@ -72,7 +66,6 @@ const ProfilePage: React.FC = () => {
     expiry: true
   });
 
-  // --- ESTADOS DE SEGURANÇA (Senha / 2FA) ---
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ nova: '', confirmacao: '' });
   const [showPassword, setShowPassword] = useState(false);
@@ -84,16 +77,13 @@ const ProfilePage: React.FC = () => {
   const [otpCode, setOtpCode] = useState('');
   const [faLoading, setFaLoading] = useState(false);
 
-  // --- ESTADOS DE ASSINATURA (NOVO) ---
   const [showSubModal, setShowSubModal] = useState(false);
-  const [currentPlan, setCurrentPlan] = useState('premium'); // 'free', 'premium', 'club'
+  const [currentPlan, setCurrentPlan] = useState('premium'); 
   const [subLoading, setSubLoading] = useState(false);
 
-  // Upload de Avatar 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  // Lista de Planos Disponíveis
   const availablePlans: PlanOption[] = [
     {
       id: 'free',
@@ -116,12 +106,10 @@ const ProfilePage: React.FC = () => {
     }
   ];
 
-  // Alternar Notificações
   const toggleNotification = (key: keyof typeof notifications) => {
     setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  // 1. Carregar dados ao montar
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -161,20 +149,17 @@ const ProfilePage: React.FC = () => {
     fetchData();
   }, []);
 
-  // Função para lidar com mudança de foto
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   if (e.target.files && e.target.files[0]) {
     const file = e.target.files[0];
     setSelectedFile(file);
-    setPreviewUrl(URL.createObjectURL(file)); // Cria uma URL temporária para visualização
+    setPreviewUrl(URL.createObjectURL(file)); 
   }
 };
 
-  // 2. Salvar Perfil
   const handleSaveProfile = async () => {
   setSaving(true);
   try {
-    // Primeiro salva os dados textuais (Nome, CPF, etc)
     const payload = {
       nome: formData.nome,
       telefone: formData.telefone,
@@ -182,7 +167,6 @@ const ProfilePage: React.FC = () => {
     };
     await api.put('/usuarios/me', payload);
 
-    // Se houver uma nova foto selecionada, faz o upload logo a seguir
     if (selectedFile) {
       const photoData = new FormData();
       photoData.append('foto', selectedFile); 
@@ -200,7 +184,6 @@ const ProfilePage: React.FC = () => {
   }
 };
 
-// 3. Alterar Senha
   const handleUpdatePassword = async () => {
     if (!passwordForm.nova || !passwordForm.confirmacao) {
       alert("Preencha todos os campos.");
@@ -212,8 +195,6 @@ const ProfilePage: React.FC = () => {
     }
     setPasswordLoading(true);
     try {
-      // CORREÇÃO: Enviamos 'nome' (do formData) junto com a 'senha'.
-      // Isso evita o erro 400 Bad Request se o backend exigir o nome.
       await api.put('/usuarios/me', { 
         nome: formData.nome, 
         senha: passwordForm.nova 
@@ -224,14 +205,12 @@ const ProfilePage: React.FC = () => {
       setPasswordForm({ nova: '', confirmacao: '' });
     } catch (error: any) {
       console.error(error);
-      // Dica visual do erro real
       const msg = error.response?.data?.message || "Erro ao alterar senha.";
       alert(msg);
     } finally {
       setPasswordLoading(false);
     }
   };
-  // 4. Lógica de 2FA
   const handleToggle2FA = () => {
     if (is2FAEnabled) {
       if(window.confirm("Desativar 2FA?")) setIs2FAEnabled(false);
@@ -260,21 +239,18 @@ const ProfilePage: React.FC = () => {
   const handleStartSetup = async () => {
       setFaLoading(true);
       try {
-          // Solicita a geração do código (que vai aparecer no terminal do Java)
           await api.get('/usuarios/me/2fa/generate');
-          setStep2FA('verify'); // Avança para a tela de input
+          setStep2FA('verify'); 
       } catch (error) {
           alert("Erro ao solicitar código. Verifique o console do backend.");
       } finally {
           setFaLoading(false);
       }
   };
-  // 5. Lógica de Assinatura (NOVO)
   const handleChangePlan = (planId: string) => {
     if (planId === currentPlan) return;
     if (window.confirm(`Deseja alterar seu plano para ${planId.toUpperCase()}?`)) {
       setSubLoading(true);
-      // Simula API call
       setTimeout(() => {
         setCurrentPlan(planId);
         setSubLoading(false);
@@ -293,11 +269,9 @@ const ProfilePage: React.FC = () => {
 
   return (
     <>
-      {/* Container Principal do Conteúdo 
-        (Mantivemos animate-fadeIn aqui, mas tiramos os modais de dentro dele)
-      */}
+      {/* Container Principal do Conteúdo */}
       <div className="max-w-5xl mx-auto space-y-8 animate-fadeIn pb-12 relative">
-        {/* --- HEADER --- */}
+        {/* HEADER */}
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center gap-8">
           <div className="relative group">
             <img 
@@ -358,7 +332,7 @@ const ProfilePage: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* --- COLUNA ESQUERDA (Formulário) --- */}
+          {/* COLUNA ESQUERDA do Formulário  */}
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm">
               <h3 className="text-lg font-bold dark:text-white mb-6 flex items-center gap-2">
@@ -380,7 +354,7 @@ const ProfilePage: React.FC = () => {
                     <input type="email" value={formData.email} disabled className="w-full pl-11 pr-4 py-3 bg-slate-100 dark:bg-slate-800/50 border-none rounded-xl text-slate-500 cursor-not-allowed" />
                   </div>
                 </div>
-                {/* CAMPO TELEFONE (Opcional) */}
+                {/* CAMPO TELEFONE Opcional */}
                  <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                     Telefone <span className="text-slate-400 font-normal text-xs">(Opcional)</span>
@@ -396,7 +370,7 @@ const ProfilePage: React.FC = () => {
                               />
                     </div>
                    </div>
-                {/* CAMPO CPF (Opcional) */}
+                {/* CAMPO CPF Opcional */}
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                     CPF <span className="text-slate-400 font-normal text-xs">(Opcional)</span>
@@ -439,7 +413,7 @@ const ProfilePage: React.FC = () => {
           {/* --- COLUNA DIREITA --- */}
           <div className="space-y-8">
             
-            {/* CARD DO PLANO (Com botão de gerenciar) */}
+            {/* CARD DO PLANO */}
             <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 text-white shadow-xl shadow-slate-200 dark:shadow-none relative overflow-hidden">
               <div className="absolute top-[-20%] right-[-10%] w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl"></div>
               <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><CreditCard size={20} /> Seu Plano</h3>
@@ -461,7 +435,7 @@ const ProfilePage: React.FC = () => {
                 <div className="flex items-center gap-2 text-sm"><div className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></div>Acesso ao sistema</div>
               </div>
               
-              {/* BOTÃO QUE ABRE O MODAL */}
+              {/* BOTÃO DO MODAL */}
               <button 
                 onClick={() => setShowSubModal(true)}
                 className="w-full py-3 bg-white text-slate-900 font-bold rounded-2xl hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
@@ -499,7 +473,7 @@ const ProfilePage: React.FC = () => {
         </div>
       </div>
 
-      {/* --- MODAL DE ALTERAR SENHA (MOVIDO PARA FORA) --- */}
+      {/* MODAL DE ALTERAR SENHA */}
       {showPasswordModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-100 dark:border-slate-800 animate-fadeIn">
@@ -560,7 +534,7 @@ const ProfilePage: React.FC = () => {
         </div>
       )}
 
-      {/* --- MODAL DE 2FA (SIMULAÇÃO) (MOVIDO PARA FORA) --- */}
+      {/*  MODAL DE 2FA */}
       {show2FAModal && (
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
     <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-md w-full p-6 relative">
@@ -641,12 +615,9 @@ const ProfilePage: React.FC = () => {
   </div>
 )}
 
-      {/* --- MODAL DE GERENCIAR ASSINATURA (MOVIDO PARA FORA) --- */}
+      {/* MODAL DE GERENCIAR ASSINATURA  */}
       {showSubModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
-          {/* 1. Adicionado 'overflow-hidden' aqui para consertar o arredondamento embaixo.
-             2. Adicionado 'flex flex-col' para garantir estrutura correta.
-          */}
           <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-4xl p-0 shadow-2xl border border-slate-100 dark:border-slate-800 animate-fadeIn my-8 overflow-hidden flex flex-col">
             
             {/* Header do Modal */}
@@ -663,9 +634,6 @@ const ProfilePage: React.FC = () => {
               </button>
             </div>
 
-            {/* 3. Removido h-[600px] fixo. Usamos 'flex-1' para ocupar o espaço necessário.
-               Isso ajuda a scrollbar a se comportar melhor.
-            */}
             <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
               
               {/* Sidebar do Modal */}
@@ -730,7 +698,7 @@ const ProfilePage: React.FC = () => {
                 </div>
               </div>
 
-             {/* Conteúdo Principal (Lista de Planos) */}
+             {/* Conteúdo Principal  */}
 <div className="flex-1 p-6 overflow-y-auto max-h-[70vh] md:max-h-[600px] scrollbar-thin scrollbar-thumb-indigo-500 dark:scrollbar-thumb-indigo-600 scrollbar-track-indigo-50 dark:scrollbar-track-slate-800"> <h3 className="text-lg font-bold dark:text-white mb-4">Mudar de Plano</h3>
                 <div className="space-y-4">
                   {availablePlans.map((plan) => (

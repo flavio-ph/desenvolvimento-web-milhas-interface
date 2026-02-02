@@ -16,20 +16,17 @@ import api from '../../services/api';
 const RecoverPassword: React.FC = () => {
   const navigate = useNavigate();
   
-  // Estados de Controle
   const [step, setStep] = useState<'REQUEST' | 'RESET'>('REQUEST');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Estados do Formulário
   const [email, setEmail] = useState('');
   const [token, setToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  // ETAPA 1: Solicitar o Reset
   const handleRequestReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -40,7 +37,6 @@ const RecoverPassword: React.FC = () => {
       
       setSuccessMsg('Solicitação enviada! Verifique seu terminal/email.');
       
-      // Limpa os campos da próxima etapa para evitar lixo de autofill
       setToken('');
       setNewPassword('');
       setConfirmPassword('');
@@ -54,7 +50,6 @@ const RecoverPassword: React.FC = () => {
     }
   };
 
-  // ETAPA 2: Executar o Reset
   const handleExecuteReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -130,7 +125,7 @@ const RecoverPassword: React.FC = () => {
             </div>
           )}
 
-          {/* --- FORMULÁRIO 1: SOLICITAR (EMAIL) --- */}
+          {/* FORMULÁRIO 1: SOLICITAR (EMAIL) */}
           {step === 'REQUEST' && (
             <form onSubmit={handleRequestReset} className="space-y-6">
               <div className="relative group">
@@ -142,7 +137,7 @@ const RecoverPassword: React.FC = () => {
                   placeholder="Seu e-mail cadastrado" 
                   className="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-900 dark:text-white font-medium shadow-sm transition-all"
                   required
-                  autoComplete="email" // Ajuda o navegador a saber que é email
+                  autoComplete="email" 
                 />
               </div>
 
@@ -156,10 +151,9 @@ const RecoverPassword: React.FC = () => {
             </form>
           )}
 
-          {/* --- FORMULÁRIO 2: EXECUTAR --- */}
+          {/* FORMULÁRIO 2: EXECUTAR  */}
           {step === 'RESET' && (
             <form onSubmit={handleExecuteReset} className="space-y-6" autoComplete="off">
-              {/* autoComplete="off" no form ajuda a prevenir preenchimento automático geral */}
               
               {/* Token */}
               <div className="relative group">
@@ -171,8 +165,8 @@ const RecoverPassword: React.FC = () => {
                   placeholder="Código (Token)" 
                   className="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-900 dark:text-white font-medium shadow-sm transition-all"
                   required
-                  autoComplete="off" // Impede preencher com o email anterior
-                  name="reset-token" // Nome único para não confundir com 'username'
+                  autoComplete="off" 
+                  name="reset-token" 
                 />
               </div>
 
@@ -187,7 +181,7 @@ const RecoverPassword: React.FC = () => {
                   className="w-full pl-12 pr-12 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-900 dark:text-white font-medium shadow-sm transition-all"
                   required
                   minLength={6}
-                  autoComplete="new-password" // Avisa que é uma NOVA senha (não login)
+                  autoComplete="new-password" 
                   name="new-password"
                 />
                 <button 
@@ -213,7 +207,7 @@ const RecoverPassword: React.FC = () => {
                       : 'border-slate-200 dark:border-slate-800'
                   }`}
                   required
-                  autoComplete="new-password" // Também é nova senha
+                  autoComplete="new-password" 
                   name="confirm-password"
                 />
               </div>

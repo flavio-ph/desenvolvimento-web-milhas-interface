@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   ShieldCheck, Plus, CreditCard, CheckCircle, XCircle,
   X, Check, Palette, Eye, Pencil, Trash2
-} from 'lucide-react'; // Adicionei Pencil e Trash2
+} from 'lucide-react'; 
 import api from '../../services/api';
 
 interface Bandeira {
@@ -27,7 +27,6 @@ const AdminBrands: React.FC = () => {
   const [brands, setBrands] = useState<Bandeira[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Estado para controlar Edição
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const [newBrand, setNewBrand] = useState({
@@ -44,8 +43,6 @@ const AdminBrands: React.FC = () => {
     try {
       setIsLoading(true);
       const response = await api.get('/bandeiras');
-      // O backend logo vai mandar o número certo de cartões.
-      // Por enquanto, se vier null, fica 0.
       const dadosMapeados = response.data.map((b: any) => ({
         ...b,
         cards: b.cards || 0
@@ -58,11 +55,9 @@ const AdminBrands: React.FC = () => {
     }
   };
 
-  // Prepara o modal para EDIÇÃO
   const handleEdit = (brand: Bandeira) => {
-    setEditingId(brand.id!); // Salva o ID que estamos mexendo
+    setEditingId(brand.id!); 
 
-    // Acha a cor certa no array de presets
     const corEncontrada = PRESET_COLORS.find(c => c.class === brand.cor) || PRESET_COLORS[0];
 
     setNewBrand({
@@ -73,14 +68,12 @@ const AdminBrands: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  // Prepara o modal para CRIAÇÃO (Limpa tudo)
   const handleNew = () => {
     setEditingId(null);
     setNewBrand({ nome: '', status: 'ACTIVE', colorObj: PRESET_COLORS[0] });
     setIsModalOpen(true);
   };
 
-  // EXCLUIR
   const handleDelete = async (id: number) => {
     if (!window.confirm("Tem certeza que deseja excluir esta bandeira?")) return;
 
@@ -92,7 +85,6 @@ const AdminBrands: React.FC = () => {
     }
   };
 
-  // SALVAR (Decide se é POST ou PUT)
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -103,10 +95,8 @@ const AdminBrands: React.FC = () => {
       };
 
       if (editingId) {
-        // SE TEM ID, É EDIÇÃO (PUT)
         await api.put(`/bandeiras/${editingId}`, payload);
       } else {
-        // SE NÃO TEM, É CRIAÇÃO (POST)
         await api.post('/bandeiras', payload);
       }
 
@@ -132,7 +122,7 @@ const AdminBrands: React.FC = () => {
           <p className="text-slate-500 dark:text-slate-400 mt-1">Configure as bandeiras de cartão aceitas.</p>
         </div>
         <button
-          onClick={handleNew} // Usa a função nova de limpar
+          onClick={handleNew} 
           className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all"
         >
           <Plus size={20} /> Nova Bandeira
@@ -201,7 +191,7 @@ const AdminBrands: React.FC = () => {
         </div>
       </div>
 
-      {/* O MODAL CONTINUA IGUAL, SÓ MUDA O TÍTULO PARA EDIÇÃO SE PRECISAR */}
+      {/* O MODAL SÓ MUDA O TÍTULO PARA EDIÇÃO SE PRECISAR */}
       {isModalOpen && (
         <div
           className="fixed top-0 left-0 w-screen h-screen z-[9999]"

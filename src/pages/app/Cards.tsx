@@ -3,14 +3,13 @@ import { Plus, CreditCard, Trash2, X, Check, Loader2, Coins, Edit2 } from 'lucid
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 
-// Interfaces ajustadas para bater com o Backend (CartaoResponse.java)
 interface Cartao {
   id: number;
   nomePersonalizado: string;
   ultimosDigitos: string;
   fatorConversao: number;
   nomeBandeira?: string;
-  nomeProgramaPontos?: string; // CORRIGIDO: O backend manda nomeProgramaPontos
+  nomeProgramaPontos?: string; 
   cor?: string;
 }
 
@@ -24,15 +23,14 @@ interface Programa {
   nome: string;
 }
 
-// Constante de cores
 const CARD_COLORS = [
-  '#820AD1', // Nubank Roxo
-  '#ec6708', // Itaú Laranja
-  '#cc092f', // Bradesco Vermelho
-  '#0056a6', // Azul Padrão
-  '#1a1a1a', // Preto/Carbon
-  '#eab308', // Dourado
-  '#10b981', // Verde
+  '#820AD1', 
+  '#ec6708', 
+  '#cc092f', 
+  '#0056a6', 
+  '#1a1a1a', 
+  '#eab308', 
+  '#10b981', 
 ];
 
 const CardsPage: React.FC = () => {
@@ -40,15 +38,12 @@ const CardsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Listas de dados
   const [cards, setCards] = useState<Cartao[]>([]);
   const [bandeiras, setBandeiras] = useState<Bandeira[]>([]);
   const [programas, setProgramas] = useState<Programa[]>([]);
 
-  // Estado para controlar a edição
   const [editingCardId, setEditingCardId] = useState<number | null>(null);
 
-  // Estado do Formulário
   const [formData, setFormData] = useState({
     nomePersonalizado: '',
     ultimosDigitos: '',
@@ -57,15 +52,12 @@ const CardsPage: React.FC = () => {
     programaPontosId: ''
   });
 
-  // Estado da cor selecionada
   const [selectedColor, setSelectedColor] = useState(CARD_COLORS[0]);
 
-  // Helper para escurecer a cor (para o gradiente)
   const adjustColor = (color: string, amount: number) => {
     return '#' + color.replace(/^#/, '').replace(/../g, color => ('0' + Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
   }
 
-  // 1. Buscar dados iniciais
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -89,11 +81,8 @@ const CardsPage: React.FC = () => {
     fetchData();
   }, []);
 
-  // --- FUNÇÕES DE MODAL ---
-
-  // Abrir modal para CRIAR
   const openCreateModal = () => {
-    setEditingCardId(null); // Limpa ID de edição
+    setEditingCardId(null); 
     setFormData({
       nomePersonalizado: '',
       ultimosDigitos: '',
@@ -105,13 +94,10 @@ const CardsPage: React.FC = () => {
     setShowModal(true);
   };
 
-  // Abrir modal para EDITAR
   const openEditModal = (card: Cartao) => {
     setEditingCardId(card.id);
 
-    // Encontrar os IDs baseados nos nomes que vieram da lista
     const bandeira = bandeiras.find(b => b.nome === card.nomeBandeira);
-    // CORRIGIDO: Usando nomeProgramaPontos para achar o ID correto
     const programa = programas.find(p => p.nome === card.nomeProgramaPontos);
 
     setFormData({
@@ -126,7 +112,6 @@ const CardsPage: React.FC = () => {
     setShowModal(true);
   };
 
-  // 2. Salvar cartão (Criar ou Atualizar)
   const handleSaveCard = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -146,20 +131,16 @@ const CardsPage: React.FC = () => {
       };
 
       if (editingCardId) {
-        // MODO EDIÇÃO (PUT)
         await api.put(`/cartoes/${editingCardId}`, payload);
       } else {
-        // MODO CRIAÇÃO (POST)
         await api.post('/cartoes', payload);
       }
 
-      // Sucesso
       setShowModal(false);
-      fetchData(); // Recarrega a lista
+      fetchData(); 
     } catch (error: any) {
       console.error('Erro ao salvar cartão:', error);
 
-      // Exibe mensagem amigável caso seja o bloqueio de edição por ter compras
       if (error.response && error.response.data && error.response.data.message) {
         alert(error.response.data.message);
       } else {
@@ -168,7 +149,6 @@ const CardsPage: React.FC = () => {
     }
   };
 
-  // 3. Deletar cartão
   const handleDeleteCard = async (id: number) => {
     if (!confirm('Tem certeza que deseja excluir este cartão?')) return;
     try {
@@ -180,7 +160,6 @@ const CardsPage: React.FC = () => {
     }
   };
 
-  // Helper visual para estilo do cartão (Listagem)
   const getCardStyle = (card: Cartao) => {
     if (card.cor) {
       return {
@@ -188,7 +167,6 @@ const CardsPage: React.FC = () => {
         color: '#fff'
       };
     }
-    // Fallback
     const n = card.nomePersonalizado?.toLowerCase() || '';
     if (n.includes('black') || n.includes('infinite')) return { background: 'linear-gradient(135deg, #1f2937 0%, #000 100%)', color: '#fff' };
     if (n.includes('platinum')) return { background: 'linear-gradient(135deg, #cbd5e1 0%, #64748b 100%)', color: '#fff' };
@@ -293,7 +271,6 @@ const CardsPage: React.FC = () => {
                     <div className="flex justify-between items-center text-sm mb-3">
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                        {/* CORREÇÃO AQUI: Usando nomeProgramaPontos */}
                         <span>{card.nomeProgramaPontos || 'Sem Programa'}</span>
                       </div>
                       <span className="text-indigo-600 font-bold text-xs">
@@ -448,7 +425,7 @@ const CardsPage: React.FC = () => {
               </form>
             </div>
 
-            {/* Coluna da Direita - Visualização (Preview) */}
+            {/* Coluna da Direita - Visualização */}
             <div className="hidden md:flex md:w-1/2 bg-slate-50 dark:bg-slate-950 items-center justify-center p-8 border-l border-slate-100 dark:border-slate-800 relative overflow-hidden">
               {/* Background Decorativo */}
               <div className="absolute inset-0 opacity-10" style={{
@@ -487,7 +464,6 @@ const CardsPage: React.FC = () => {
 
                   <div className="pt-4 border-t border-white/20 flex justify-between items-center text-xs text-white/70">
                     <span>
-                      {/* CORREÇÃO AQUI: Usando o ID do form para achar o nome no preview */}
                       {programas.find(p => p.id.toString() === formData.programaPontosId)?.nome || 'Programa'}
                     </span>
                     <div className="flex items-center gap-1 font-bold text-white">

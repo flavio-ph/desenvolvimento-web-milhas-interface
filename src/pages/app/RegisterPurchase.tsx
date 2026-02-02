@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Calculator, AlertCircle, CheckCircle2, Upload, Loader2, DollarSign, CreditCard } from 'lucide-react';
 import api from '../../services/api';
 
-// Interface exata do CartaoResponse.java
 interface Cartao {
   id: number;
-  nomePersonalizado: string; // Ajustado para bater com o DTO
-  ultimosDigitos: string;    // Ajustado para bater com o DTO
+  nomePersonalizado: string; 
+  ultimosDigitos: string;    
   fatorConversao: number;
 }
 
@@ -22,12 +21,10 @@ const RegisterPurchase: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
-  // 1. Buscar Cartões do Backend (GET /cartoes)
   useEffect(() => {
     api.get('/cartoes')
       .then(response => {
         setCards(response.data);
-        // Seleciona o primeiro cartão automaticamente se existir
         if (response.data.length > 0) {
           setSelectedCardId(response.data[0].id.toString());
         }
@@ -35,11 +32,9 @@ const RegisterPurchase: React.FC = () => {
       .catch(err => console.error("Erro ao buscar cartões", err));
   }, []);
 
-  // 2. Calcular pontos em tempo real (Visual)
   useEffect(() => {
     const card = cards.find(c => c.id.toString() === selectedCardId);
     if (card && amount) {
-      // Cálculo: Valor * Fator de Conversão do cartão
       const points = Math.floor(parseFloat(amount) * (card.fatorConversao || 1));
       setCalculatedPoints(points);
     } else {
@@ -60,15 +55,12 @@ const RegisterPurchase: React.FC = () => {
     setError('');
 
     try {
-      // Validação básica
       if (!selectedCardId) {
         setError("Selecione um cartão para continuar.");
         setIsSubmitting(false);
         return;
       }
 
-      // Passo A: Registrar a Compra (POST /compras)
-      // Payload bate com CompraRequest.java
       const compraBody = {
         descricao: description,
         valorGasto: parseFloat(amount),
@@ -76,24 +68,21 @@ const RegisterPurchase: React.FC = () => {
       };
 
       const resCompra = await api.post('/compras', compraBody);
-      const novaCompraId = resCompra.data.id; // Pega o ID retornado no CompraResponse
+      const novaCompraId = resCompra.data.id; 
 
-      // Passo B: Upload do Comprovante (POST /compras/{id}/upload-comprovante)
       if (selectedFile) {
         const formData = new FormData();
-        formData.append('arquivo', selectedFile); // Parametro "arquivo" exigido pelo Controller
+        formData.append('arquivo', selectedFile); 
 
         await api.post(`/compras/${novaCompraId}/upload-comprovante`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
       }
 
-      // Sucesso! Limpa o formulário
       setSuccess(true);
       setAmount('');
       setDescription('');
       setSelectedFile(null);
-      // Mantém o cartão selecionado para facilitar novos registros
       
     } catch (err: any) {
       console.error("Erro ao registrar compra:", err);
@@ -144,7 +133,7 @@ const RegisterPurchase: React.FC = () => {
                 />
               </div>
 
-              {/* Valor e Cartão (Grid) */}
+              {/* Valor e Cartão */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Valor (R$)</label>
@@ -175,7 +164,6 @@ const RegisterPurchase: React.FC = () => {
                       {cards.length === 0 && <option value="">Nenhum cartão encontrado</option>}
                       {cards.map(card => (
                         <option key={card.id} value={card.id}>
-                           {/* Mapeamento correto: nomePersonalizado e ultimosDigitos */}
                            {card.nomePersonalizado} (Final {card.ultimosDigitos})
                         </option>
                       ))}

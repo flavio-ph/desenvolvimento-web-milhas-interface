@@ -17,17 +17,13 @@ import AdminPromotions from './pages/admin/Promotions';
 import SearchResults from './pages/app/SearchResults';
 import { ThemeProvider } from './context/ThemeContext';
 
-// --- 1. CRIAMOS O COMPONENTE DE PROTEÇÃO ---
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-  // Verifica se existe o token no navegador
   const token = localStorage.getItem('token');
 
-  // Se NÃO tiver token, chuta o usuário para o /login
   if (!token) {
     return <Navigate to="/login" replace />;
   }
 
-  // Se tiver token, deixa entrar
   return <>{children}</>;
 };
 
@@ -36,13 +32,12 @@ const App: React.FC = () => {
     <ThemeProvider>
       <Router>
         <Routes>
-          {/* --- ROTAS PÚBLICAS (Qualquer um pode acessar) --- */}
+          {/* ROTAS PÚBLICAS */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/recover" element={<RecoverPassword />} />
 
-          {/* --- ROTAS PRIVADAS (Só com login) --- */}
-          {/* Envolvemos todas as páginas internas com o <PrivateRoute> */}
+          {/* ROTAS PRIVADAS */}
           
           <Route path="/" element={
             <PrivateRoute>
@@ -92,7 +87,7 @@ const App: React.FC = () => {
             </PrivateRoute>
           } />
 
-          {/* --- ROTAS DE ADMIN --- */}
+          {/* ROTAS DE ADMIN */}
           <Route path="/admin/brands" element={
             <PrivateRoute>
               <Layout><AdminBrands /></Layout>
@@ -111,7 +106,7 @@ const App: React.FC = () => {
             </PrivateRoute>
           } />
 
-          {/* Rota curinga: Se não achar nada, manda pra Home (que vai verificar o login) */}
+          {/* Rota curinga */}
           <Route path="*" element={<Navigate to="/" replace />} />
           
         </Routes>

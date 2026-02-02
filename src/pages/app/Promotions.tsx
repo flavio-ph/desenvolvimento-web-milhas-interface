@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Tag, Search, Clock, ArrowRight, Zap, Flame, Filter, CheckCircle2, AlertCircle, Loader2 
 } from 'lucide-react';
-import { getPromocoes, getProgramas, participarPromocao } from '../../services/api'; // Adicionado participarPromocao
+import { getPromocoes, getProgramas, participarPromocao } from '../../services/api'; 
 import { Promotion, LoyaltyProgram } from '../../types/types';
 
 const PromotionsPage: React.FC = () => {
@@ -12,7 +12,6 @@ const PromotionsPage: React.FC = () => {
   const [programs, setPrograms] = useState<LoyaltyProgram[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Estado para controlar qual promoção está sendo ativada no momento (loading do botão)
   const [activatingId, setActivatingId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -34,25 +33,20 @@ const PromotionsPage: React.FC = () => {
     fetchData();
   }, []);
 
-  // Lógica para ativar a promoção
   const handleParticipate = async (promo: Promotion) => {
     try {
       setActivatingId(promo.id);
       
-      // 1. Chama o backend para registrar a participação
       await participarPromocao(promo.id);
       
       alert(`Você agora está participando da promoção: ${promo.titulo}!`);
       
-      // 2. Redireciona para o link oficial (se houver) após o registro
       if (promo.urlPromocao) {
       }
     } catch (error: any) {
-      // Exibe a mensagem de erro vinda do backend (ex: "Já está participando")
       const msg = error.response?.data?.message || "Erro ao participar da promoção.";
       alert(msg);
       
-      // Se o erro for que já participa, ainda assim abrimos o link por conveniência
       if (msg.includes("já está participando") && promo.urlPromocao) {
         
       }
@@ -68,7 +62,6 @@ const PromotionsPage: React.FC = () => {
       const title = promo.titulo?.toLowerCase() || '';
       const desc = promo.descricao?.toLowerCase() || '';
       
-      // CORREÇÃO AQUI: Usar nomeProgramaPontos
       const programName = promo.nomeProgramaPontos || ''; 
       
       const searchLower = searchTerm.toLowerCase();
@@ -97,7 +90,7 @@ const PromotionsPage: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-fadeIn max-w-6xl mx-auto py-4">
-      {/* Hero Section e Filtros mantidos iguais... */}
+      {/* Hero Section */}
       <div className="relative overflow-hidden bg-indigo-600 rounded-[32px] p-8 lg:p-12 text-white shadow-2xl shadow-indigo-200 dark:shadow-none">
         <div className="absolute top-[-20%] right-[-10%] w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="relative z-10 max-w-2xl">
@@ -145,10 +138,8 @@ const PromotionsPage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {activePromotions.length > 0 ? (
           activePromotions.map((promo) => {
-            // Ajuste: usando 'dataFim' em vez de 'expiryDate' conforme types.ts
             const daysLeft = getDaysRemaining(promo.dataFim);
             const isUrgent = daysLeft <= 2;
-            // Ajuste: usando 'bonusPorcentagem' em vez de 'bonusPercentage'
             const isHighBonus = promo.bonusPorcentagem >= 100;
 
             return (
@@ -166,7 +157,6 @@ const PromotionsPage: React.FC = () => {
                 <div className="flex-1 p-8 flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-start mb-3">
-                      {/* Ajuste: usando 'titulo' */}
                       <h3 className="text-xl font-black text-slate-900 dark:text-white leading-tight pr-4">
                         {promo.titulo}
                       </h3>
@@ -177,7 +167,6 @@ const PromotionsPage: React.FC = () => {
                         </span>
                       )}
                     </div>
-                    {/* Ajuste: usando 'descricao' */}
                     <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-6">
                       {promo.descricao}
                     </p>
@@ -187,12 +176,11 @@ const PromotionsPage: React.FC = () => {
                     <div className="flex items-center gap-2 text-slate-400">
                       <Clock size={16} />
                       <span className="text-xs font-bold uppercase tracking-wider">
-                        {/* Ajuste: usando 'dataFim' */}
                         {promo.dataFim ? `Expira em ${new Date(promo.dataFim).toLocaleDateString('pt-BR')}` : 'Sem validade'}
                       </span>
                     </div>
                     
-                    {/* BOTÃO PARTICIPAR ATUALIZADO */}
+                    {/* BOTÃO PARTICIPAR */}
                     <button 
                       onClick={() => handleParticipate(promo)}
                       disabled={activatingId === promo.id}

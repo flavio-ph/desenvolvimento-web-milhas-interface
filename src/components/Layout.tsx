@@ -9,7 +9,7 @@ import {
   LogOut, 
   Check,
   ArrowRight,
-  LayoutDashboard, // Adicionei ícones para ilustrar o título se quiser
+  LayoutDashboard, 
   CreditCard,
   History
 } from 'lucide-react';
@@ -18,7 +18,6 @@ import { useTheme } from '../context/ThemeContext';
 import { getNotificacoes, marcarNotificacaoComoLida } from '../services/api';
 import { Notificacao } from '../types/types';
 import api from '../services/api';
-// Importação do Logo
 import { Logo } from './Logo';
 
 interface UserData {
@@ -34,13 +33,10 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   
-  // Estados para Notificações
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
   
-  // (REMOVIDO) Estado para Busca e função handleSearch
   
-  // Estado para Usuário 
   const [user, setUser] = useState<{ nome: string; fotoPerfil?: string; role?: string } | null>(null);
 
   const { isDarkMode, toggleDarkMode } = useTheme();
@@ -50,7 +46,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
-  // --- NOVA LÓGICA: TÍTULO DA PÁGINA ---
   const getPageTitle = (path: string) => {
     switch (path) {
       case '/': return 'Visão Geral';
@@ -60,7 +55,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       case '/new-purchase': return 'Registrar Nova Compra';
       case '/profile': return 'Meu Perfil';
       case '/notifications': return 'Central de Notificações';
-      // Rotas Admin
       case '/admin/programs': return 'Gerenciar Programas';
       case '/admin/brands': return 'Gerenciar Bandeiras';
       case '/admin/promotions': return 'Gerenciar Promoções';
@@ -70,7 +64,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const currentTitle = getPageTitle(location.pathname);
 
-  // --- LÓGICA DE NOTIFICAÇÕES ---
   const fetchNotificacoes = async () => {
     try {
       const data = await getNotificacoes();
@@ -115,7 +108,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     };
   }, [location.pathname]);
 
-  // Fecha o dropdown se clicar fora dele
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(event.target as Node)) {

@@ -37,7 +37,6 @@ const Register: React.FC = () => {
     telefone: ''
   });
 
-  // --- MÁSCARAS ---
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, '');
     if (value.length > 11) value = value.slice(0, 11);
@@ -101,7 +100,7 @@ const Register: React.FC = () => {
         <div className="w-full max-w-md space-y-8 animate-fadeIn relative z-10">
           <div className="text-center lg:text-left">
             
-            {/* LOGO MOBILE + NOME (Ajustado) */}
+            {/* LOGO MOBILE + NOME */}
             <div className="lg:hidden flex flex-col items-center gap-3 mb-8">
                <div className="w-16 h-auto">
                   <Logo className="w-full h-full drop-shadow-md" />

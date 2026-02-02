@@ -28,27 +28,21 @@ interface Transaction {
 const HistoryPage: React.FC = () => {
   const { isDarkMode } = useTheme();
 
-  // Estados de Dados
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [programsList, setProgramsList] = useState<LoyaltyProgram[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Estado para o Mês Selecionado (Formato YYYY-MM)
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
 
-  // Filtros
-  // Mudamos o nome para typeFilter para refletir o Backend
   const [typeFilter, setTypeFilter] = useState('ALL'); 
   const [programFilter, setProgramFilter] = useState('ALL');
 
-  // Resumos
   const [resumoPendentes, setResumoPendentes] = useState<ResumoPendentesResponse>({
     totalPontos: 0,
     diasParaProximoCredito: null
   });
   const [pontosExpirando, setPontosExpirando] = useState(0);
 
-  // 1. Carregar Programas para o Select
   useEffect(() => {
     const fetchPrograms = async () => {
       try {
@@ -61,7 +55,6 @@ const HistoryPage: React.FC = () => {
     fetchPrograms();
   }, []);
 
-  // 2. Buscar Transações (Logica ajustada para o Backend)
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -74,12 +67,10 @@ const HistoryPage: React.FC = () => {
           ano: year
         };
 
-        // Filtro de Programa
         if (programFilter !== 'ALL') {
           params.programa = programFilter; 
         }
 
-        // Filtro de Tipo (Substitui o antigo Status)
         if (typeFilter !== 'ALL') {
           params.tipo = typeFilter;
         }
@@ -88,7 +79,6 @@ const HistoryPage: React.FC = () => {
         
         setTransactions(response.data);
 
-        // Carregamento de resumos
         const pendentes = await getPontosPendentes();
         setResumoPendentes(pendentes);
 
@@ -111,16 +101,14 @@ const HistoryPage: React.FC = () => {
 
     return () => clearTimeout(delayDebounceFn);
 
-  }, [selectedMonth, programFilter, typeFilter]); // Dependências atualizadas
+  }, [selectedMonth, programFilter, typeFilter]); 
 
-  // Cálculo de acumulado visual
   const acumuladoMes = useMemo(() => {
     return transactions
       .filter(t => ['ACUMULO', 'BONUS', 'AJUSTE', 'TRANSFERENCIA_ENTRADA'].includes(t.tipo || 'ACUMULO'))
       .reduce((acc, curr) => acc + curr.quantidadePontos, 0);
   }, [transactions]);
 
-  // --- EXPORTAÇÃO ---
   const handleExportPdf = async () => {
     try {
       const response = await api.get('/relatorios/movimentacoes/pdf', { responseType: 'blob' });
@@ -245,7 +233,7 @@ const HistoryPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Barra de Filtros (REFEITA) */}
+      {/* Barra de Filtros */}
       <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
         
         {/* Label Visual */}
@@ -255,7 +243,7 @@ const HistoryPage: React.FC = () => {
         </div>
 
         <div className="flex flex-col md:flex-row w-full md:w-auto gap-3">
-          {/* 1. Select de Programas */}
+          {/* Select de Programas */}
           <select
             value={programFilter}
             onChange={(e) => setProgramFilter(e.target.value)}
@@ -266,10 +254,8 @@ const HistoryPage: React.FC = () => {
               <option key={prog.id} value={prog.nome}>{prog.nome}</option>
             ))}
           </select>
-
-          {/* 2. Select de Tipo (Antigo Status) */}
           
-          {/* 3. Seletor de Data */}
+          {/* Seletor de Data */}
           <div className="relative">
             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-600 dark:text-indigo-400 pointer-events-none">
               <CalendarIcon size={18} />
@@ -304,7 +290,7 @@ const HistoryPage: React.FC = () => {
 
                   return (
                     <tr key={tx.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-default">
-                      {/* 1. DATA */}
+                      {/* DATA */}
                       <td className="px-6 py-5 whitespace-nowrap">
                         <div className="flex flex-col items-center">
                           <span className="text-sm font-semibold dark:text-white">
@@ -316,7 +302,7 @@ const HistoryPage: React.FC = () => {
                         </div>
                       </td>
 
-                      {/* 2. DESCRIÇÃO */}
+                      {/* DESCRIÇÃO */}
                       <td className="px-6 py-5">
                         <div className="flex items-center justify-center gap-3">
                           <div className={`p-2 rounded-lg ${!isNegative ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600'}`}>
@@ -326,7 +312,7 @@ const HistoryPage: React.FC = () => {
                         </div>
                       </td>
 
-                      {/* 3. PROGRAMA */}
+                      {/* PROGRAMA */}
                       <td className="px-6 py-5">
                         <div className="flex items-center justify-center gap-2">
                           <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
@@ -334,14 +320,14 @@ const HistoryPage: React.FC = () => {
                         </div>
                       </td>
 
-                      {/* 4. PONTOS */}
+                      {/* PONTOS */}
                       <td className="px-6 py-5 text-center">
                         <span className={`text-sm font-bold ${!isNegative ? 'text-indigo-600 dark:text-indigo-400' : 'text-rose-500'}`}>
                           {!isNegative ? '+' : ''}{tx.quantidadePontos.toLocaleString('pt-BR')} pts
                         </span>
                       </td>
 
-                      {/* 5. STATUS */}
+                      {/* STATUS */}
                       <td className="px-6 py-5 text-center">
                         {tx.status === 'CREDITADO' || tx.status === 'FINALIZADA' ? (
                           <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tight bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30">

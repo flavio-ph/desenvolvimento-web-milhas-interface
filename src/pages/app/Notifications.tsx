@@ -17,7 +17,6 @@ import {
 import { getNotificacoes, marcarNotificacaoComoLida } from '../../services/api';
 import { Notificacao } from '../../types/types';
 
-// Tipos de filtro disponíveis
 type FilterType = 'ALL' | 'UNREAD' | 'IMPORTANT';
 
 const NotificationsPage: React.FC = () => {
@@ -43,49 +42,42 @@ const NotificationsPage: React.FC = () => {
 
   const handleMarkAsRead = async (id: number) => {
     try {
-      // 1. Primeiro garantimos a persistência no Backend
       await marcarNotificacaoComoLida(id);
       
-      // 2. Atualizamos o estado da página
       setNotificacoes(prev => prev.map(n => 
         n.id === id ? { ...n, lida: true } : n
       ));
 
-      // 3. DISPARAMOS O EVENTO para o Layout (Sino) saber que mudou
       window.dispatchEvent(new Event('notificacaoAtualizada'));
       
     } catch (error) {
       console.error("Erro ao marcar como lida na página", error);
-      // Se o erro persistir, verifique se o ID está chegando correto
       alert("Não foi possível marcar como lida. Tente novamente.");
     }
   };
 
   const markAllAsRead = async () => {
     const unread = notificacoes.filter(n => !n.lida);
-    // Idealmente seria um endpoint único no backend: /notificacoes/ler-todas
-    // Aqui faremos um loop simples para o exemplo visual
+
     for (const notif of unread) {
       handleMarkAsRead(notif.id);
     }
   };
 
-  // Lógica para definir o que é "Importante"
   const isImportant = (n: Notificacao) => {
     return (
       n.tipo === 'EXPIRACAO' || 
       n.tipo === 'TRANSFERENCIA' ||
-      n.tipo === 'AVISO_EXPIRACAO' || // <--- ADICIONE ESTE
-      n.tipo === 'PONTOS_EXPIRADOS'   // <--- ADICIONE ESTE
+      n.tipo === 'AVISO_EXPIRACAO' || 
+      n.tipo === 'PONTOS_EXPIRADOS'   
     );
   };
 
-  // Filtra as notificações com base na aba selecionada
   const filteredNotifications = useMemo(() => {
     return notificacoes.filter(n => {
       if (activeTab === 'UNREAD') return !n.lida;
       if (activeTab === 'IMPORTANT') return isImportant(n);
-      return true; // 'ALL'
+      return true;
     });
   }, [notificacoes, activeTab]);
 
@@ -95,18 +87,16 @@ const NotificationsPage: React.FC = () => {
       case 'TRANSFERENCIA': return <ArrowRightLeft size={20} className="text-emerald-500" />;
       case 'PROMOCAO': return <Tag size={20} className="text-purple-500" />;
       
-      // Mantive o antigo caso existir legado
       case 'EXPIRACAO': return <Clock size={20} className="text-rose-500" />;
 
-      // 👇 NOVOS CASOS DO BACKEND
       case 'AVISO_EXPIRACAO': 
-        return <AlertTriangle size={20} className="text-amber-500" />; // Amarelo (Alerta)
+        return <AlertTriangle size={20} className="text-amber-500" />; 
       
       case 'PONTOS_EXPIRADOS': 
-        return <XCircle size={20} className="text-red-500" />; // Vermelho (Perda)
+        return <XCircle size={20} className="text-red-500" />; 
         
       case 'CREDITO_REALIZADO':
-        return <CheckCircle2 size={20} className="text-emerald-500" />; // Verde (Ganho)
+        return <CheckCircle2 size={20} className="text-emerald-500" />; 
 
       default: return <Info size={20} className="text-slate-500" />;
     }

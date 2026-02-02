@@ -32,26 +32,20 @@ const SearchResults: React.FC = () => {
 
         const term = query.toLowerCase();
 
-        // --- FILTROS CORRIGIDOS (PORTUGUÊS) ---
-        
-        // 1. Compras: usa 'descricao'
         const filteredTransactions = comprasData.filter(t => 
           t.descricao && t.descricao.toLowerCase().includes(term)
         );
 
-        // 2. Cartões: usa 'nomePersonalizado' ou 'nomeBandeira'
         const filteredCards = cartoesData.filter(c => 
           (c.nomePersonalizado && c.nomePersonalizado.toLowerCase().includes(term)) || 
           (c.nomeBandeira && c.nomeBandeira.toLowerCase().includes(term))
         );
 
-        // 3. Promoções: usa 'titulo' ou 'descricao'
         const filteredPromotions = promocoesData.filter(p => 
           (p.titulo && p.titulo.toLowerCase().includes(term)) || 
           (p.descricao && p.descricao.toLowerCase().includes(term))
         );
 
-        // 4. Programas: usa 'nome'
         const filteredPrograms = programasData.filter(p => 
           p.nome && p.nome.toLowerCase().includes(term)
         );
@@ -138,7 +132,6 @@ const SearchResults: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {results.cards.map(card => (
               <div key={card.id} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-                {/* Campos corrigidos: nomePersonalizado e nomeBandeira */}
                 <p className="font-bold text-slate-800 dark:text-white">{card.nomePersonalizado}</p>
                 <p className="text-sm text-slate-500">{card.nomeBandeira} •••• {card.ultimosDigitos}</p>
               </div>
@@ -157,11 +150,9 @@ const SearchResults: React.FC = () => {
              {results.transactions.map((t, idx) => (
                <div key={t.id} className={`p-4 flex items-center justify-between ${idx !== results.transactions.length -1 ? 'border-b border-slate-100 dark:border-slate-800' : ''}`}>
                  <div>
-                   {/* Campos corrigidos: descricao e dataCompra */}
                    <p className="font-bold text-slate-900 dark:text-white">{t.descricao}</p>
                    <p className="text-xs text-slate-500">{t.dataCompra}</p>
                  </div>
-                 {/* Campos corrigidos: valorGasto */}
                  <span className="font-bold text-indigo-600">R$ {t.valorGasto.toFixed(2)}</span>
                </div>
              ))}

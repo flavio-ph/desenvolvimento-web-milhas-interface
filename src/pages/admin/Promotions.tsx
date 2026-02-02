@@ -3,12 +3,9 @@ import {
   Tag, Plus, Calendar, Trash2, Loader2, Pencil,
   ExternalLink, Zap, Clock, AlertCircle, Link as LinkIcon, Type, Percent
 } from 'lucide-react';
-// Importe o updatePromocao que criamos
 import { getPromocoes, getProgramas, createPromocao, deletePromocao, updatePromocao } from '../../services/api';
 import { Promotion, LoyaltyProgram } from '../../types/types';
 
-// Atualize a interface Promotion no types.ts ou use esta extensão local se precisar
-// interface Promotion { ... programaPontosId: number; ... }
 
 const AdminPromotions: React.FC = () => {
   const [promotions, setPromotions] = useState<Promotion[]>([]);
@@ -17,7 +14,6 @@ const AdminPromotions: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'gerenciar' | 'cadastrar'>('gerenciar');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Estado para controlar a edição
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const [formData, setFormData] = useState({
@@ -47,7 +43,6 @@ const AdminPromotions: React.FC = () => {
 
   useEffect(() => { fetchData(); }, []);
 
-  // FUNÇÃO PARA CARREGAR DADOS NO FORMULÁRIO
   const handleEdit = (promo: any) => {
     setFormData({
       titulo: promo.titulo,
@@ -55,10 +50,10 @@ const AdminPromotions: React.FC = () => {
       link: promo.urlPromocao,
       dataValidade: promo.dataFim,
       bonusPorcentagem: promo.bonusPorcentagem?.toString() || '',
-      programaPontosId: promo.programaPontosId?.toString() || '' // Usa o novo campo do DTO
+      programaPontosId: promo.programaPontosId?.toString() || '' 
     });
     setEditingId(promo.id);
-    setActiveTab('cadastrar'); // Muda para a aba do formulário
+    setActiveTab('cadastrar'); 
   };
 
   const handleCancelEdit = () => {
@@ -74,7 +69,6 @@ const AdminPromotions: React.FC = () => {
     try {
       setIsSubmitting(true);
 
-      // Preserva a data de início original se estiver editando, senão usa hoje
       const originalPromo = editingId ? promotions.find(p => p.id === editingId) : null;
       const dataInicio = originalPromo ? originalPromo.dataInicio : new Date().toISOString().split('T')[0];
 
@@ -89,17 +83,15 @@ const AdminPromotions: React.FC = () => {
       };
 
       if (editingId) {
-        // MODO EDIÇÃO
         await updatePromocao(editingId, payload);
         alert('Promoção atualizada com sucesso!');
       } else {
-        // MODO CRIAÇÃO
         await createPromocao(payload);
         alert('Promoção criada com sucesso!');
       }
 
-      handleCancelEdit(); // Limpa e volta
-      fetchData(); // Recarrega lista
+      handleCancelEdit(); 
+      fetchData(); 
     } catch (error) {
       console.error(error);
       alert('Erro ao salvar promoção.');
@@ -173,7 +165,7 @@ const AdminPromotions: React.FC = () => {
                     <td className="px-6 py-5 text-right">
                       <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
-                          onClick={() => handleEdit(promo)} // BOTÃO EDITAR CONECTADO
+                          onClick={() => handleEdit(promo)} 
                           className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
                           title="Editar"
                         >
@@ -191,7 +183,6 @@ const AdminPromotions: React.FC = () => {
           )}
         </div>
       ) : (
-        /* FORMULÁRIO (Mesmo layout anterior, mas com labels dinâmicos) */
         <div className="flex flex-col lg:flex-row gap-12 items-start animate-fadeIn">
           <form onSubmit={handleSubmit} className="flex-1 space-y-5 w-full">
             <div className="flex justify-between items-center mb-2">
@@ -209,7 +200,6 @@ const AdminPromotions: React.FC = () => {
               )}
             </div>
 
-            {/* ... (Mantenha os campos do formulário iguais ao anterior) ... */}
             <div className="grid grid-cols-2 gap-4">
               {/* Programa e Bônus */}
               <div className="space-y-1.5">
@@ -276,7 +266,7 @@ const AdminPromotions: React.FC = () => {
             </button>
           </form>
 
-          {/* Preview (igual ao anterior) */}
+          {/* Preview  */}
           <div className="w-full lg:w-[400px] flex flex-col items-center bg-slate-50 rounded-[2.5rem] p-10 border border-slate-100">
             <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-8 text-center">Preview no App</h4>
 

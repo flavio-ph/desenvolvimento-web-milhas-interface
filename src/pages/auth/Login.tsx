@@ -10,8 +10,8 @@ import {
   Chrome,
   TrendingUp,
   Zap,
-  Loader2,      // Importado para o loading
-  AlertCircle   // Importado para o erro
+  Loader2,      
+  AlertCircle   
 } from 'lucide-react';
 import api from '../../services/api';
 import { Logo } from '../../components/Logo';
@@ -19,7 +19,6 @@ import { Logo } from '../../components/Logo';
 const Login: React.FC = () => {
   const navigate = useNavigate();
 
-  // Estados
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -27,7 +26,6 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState(''); 
 
-  // Limpa token antigo ao abrir a tela (Evita erro 403 por token expirado)
   useEffect(() => {
     localStorage.removeItem('token');
   }, []);
@@ -38,19 +36,15 @@ const Login: React.FC = () => {
     setError('');
 
     try {
-      // 1. Chama o Backend
       const response = await api.post('/auth/login', { email, senha });
       
-      // 2. Salva o Token
       const { token } = response.data;
       localStorage.setItem('token', token);
       
-      // 3. Redireciona
       navigate('/');
     } catch (err: any) {
       console.error(err);
       
-      // Tratamento de erros
       if (err.response) {
         if (err.response.status === 401 || err.response.status === 403) {
           setError('E-mail ou senha incorretos.');
@@ -81,7 +75,7 @@ const Login: React.FC = () => {
         <div className="relative z-10 max-w-lg text-white space-y-8">
           <div className="space-y-4">
             
-            {/* LOGO + NOME (Lado a Lado) */}
+            {/* LOGO + NOME */}
             <div className="flex items-center gap-5">
               <div className="w-20 h-auto bg-white/20 backdrop-blur-lg rounded-2xl flex items-center justify-center border border-white/30 shadow-2xl p-2">
                  <Logo className="w-full h-full drop-shadow-lg" />
