@@ -41,7 +41,8 @@ export interface Promotion  {
   bonusPorcentagem: number;
   dataInicio: string; 
   dataFim: string;
-  nomePrograma: string;
+  nnomeProgramaPontos: string; 
+  programaPontosId: number;
 }
 
 export interface User {

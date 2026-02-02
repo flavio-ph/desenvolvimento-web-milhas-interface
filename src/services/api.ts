@@ -113,5 +113,9 @@ export const creditarCompra = async (id: number) => {
   await api.put(`/compras/${id}/creditar`);
 };
 
+export const participarPromocao = async (id: number) => {
+  await api.post(`/promocoes/${id}/participar`);
+};
+
 
 

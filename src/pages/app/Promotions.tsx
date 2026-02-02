@@ -1,34 +1,24 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
-  Tag, 
-  Search, 
-  Clock, 
-  ArrowRight, 
-  Zap, 
-  Flame, 
-  Filter,
-  CheckCircle2,
-  AlertCircle
+  Tag, Search, Clock, ArrowRight, Zap, Flame, Filter, CheckCircle2, AlertCircle, Loader2 
 } from 'lucide-react';
-// IMPORTANTE: Importando da API em vez dos Mocks
-import { getPromocoes, getProgramas } from '../../services/api';
+import { getPromocoes, getProgramas, participarPromocao } from '../../services/api'; // Adicionado participarPromocao
 import { Promotion, LoyaltyProgram } from '../../types/types';
 
 const PromotionsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProgram, setSelectedProgram] = useState('ALL');
-
-  // Estados para armazenar dados vindos do Backend
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [programs, setPrograms] = useState<LoyaltyProgram[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Estado para controlar qual promoção está sendo ativada no momento (loading do botão)
+  const [activatingId, setActivatingId] = useState<number | null>(null);
 
-  // Busca os dados reais ao carregar a página
   useEffect(() => {
     async function fetchData() {
       try {
         setIsLoading(true);
-        // Busca promoções e programas em paralelo
         const [promosData, programsData] = await Promise.all([
           getPromocoes(),
           getProgramas()
@@ -44,20 +34,46 @@ const PromotionsPage: React.FC = () => {
     fetchData();
   }, []);
 
+  // Lógica para ativar a promoção
+  const handleParticipate = async (promo: Promotion) => {
+    try {
+      setActivatingId(promo.id);
+      
+      // 1. Chama o backend para registrar a participação
+      await participarPromocao(promo.id);
+      
+      alert(`Você agora está participando da promoção: ${promo.titulo}!`);
+      
+      // 2. Redireciona para o link oficial (se houver) após o registro
+      if (promo.urlPromocao) {
+      }
+    } catch (error: any) {
+      // Exibe a mensagem de erro vinda do backend (ex: "Já está participando")
+      const msg = error.response?.data?.message || "Erro ao participar da promoção.";
+      alert(msg);
+      
+      // Se o erro for que já participa, ainda assim abrimos o link por conveniência
+      if (msg.includes("já está participando") && promo.urlPromocao) {
+        
+      }
+    } finally {
+      setActivatingId(null);
+    }
+  };
+
   const activePromotions = useMemo(() => {
-    // Garante que promotions é um array antes de filtrar
     if (!promotions) return [];
 
-    return promotions.filter(promo => {
-      // Proteção contra campos nulos (caso o backend retorne null em title/description)
-      const title = promo.title?.toLowerCase() || '';
-      const desc = promo.description?.toLowerCase() || '';
-      const searchLower = searchTerm.toLowerCase();
-
-      const matchesSearch = title.includes(searchLower) || desc.includes(searchLower);
+   return promotions.filter(promo => {
+      const title = promo.titulo?.toLowerCase() || '';
+      const desc = promo.descricao?.toLowerCase() || '';
       
-      const matchesProgram = selectedProgram === 'ALL' || 
-                             (promo.programName && promo.programName === selectedProgram);
+      // CORREÇÃO AQUI: Usar nomeProgramaPontos
+      const programName = promo.nomeProgramaPontos || ''; 
+      
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = title.includes(searchLower) || desc.includes(searchLower);
+      const matchesProgram = selectedProgram === 'ALL' || (programName === selectedProgram);
       
       return matchesSearch && matchesProgram;
     });
@@ -81,7 +97,7 @@ const PromotionsPage: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-fadeIn max-w-6xl mx-auto py-4">
-      {/* Hero Section */}
+      {/* Hero Section e Filtros mantidos iguais... */}
       <div className="relative overflow-hidden bg-indigo-600 rounded-[32px] p-8 lg:p-12 text-white shadow-2xl shadow-indigo-200 dark:shadow-none">
         <div className="absolute top-[-20%] right-[-10%] w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="relative z-10 max-w-2xl">
@@ -91,12 +107,11 @@ const PromotionsPage: React.FC = () => {
           </div>
           <h1 className="text-4xl lg:text-5xl font-black mb-4">Aproveite os melhores bônus do mercado.</h1>
           <p className="text-indigo-100 text-lg font-medium">
-            Monitoramos os principais programas 24h por dia para você nunca mais perder uma transferência de 100%.
+            Ative as promoções aqui para garantir o cálculo correto dos seus bônus automaticamente.
           </p>
         </div>
       </div>
 
-      {/* Filters Bar */}
       <div className="flex flex-col lg:flex-row gap-4 items-center">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
@@ -119,27 +134,31 @@ const PromotionsPage: React.FC = () => {
             >
               <option value="ALL">Todos os Programas</option>
               {programs.map(p => (
-                <option key={p.id} value={p.name}>{p.name}</option>
+                <option key={p.id} value={p.nome}>{p.nome}</option>
               ))}
             </select>
           </div>
         </div>
       </div>
 
-      {/* Promotions Grid */}
+      {/* Grid de Promoções */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {activePromotions.length > 0 ? (
           activePromotions.map((promo) => {
-            const daysLeft = getDaysRemaining(promo.expiryDate);
+            // Ajuste: usando 'dataFim' em vez de 'expiryDate' conforme types.ts
+            const daysLeft = getDaysRemaining(promo.dataFim);
             const isUrgent = daysLeft <= 2;
+            // Ajuste: usando 'bonusPorcentagem' em vez de 'bonusPercentage'
+            const isHighBonus = promo.bonusPorcentagem >= 100;
 
             return (
               <div key={promo.id} className="group bg-white dark:bg-slate-900 rounded-[32px] border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-2xl hover:translate-y-[-4px] transition-all duration-500 flex flex-col sm:flex-row">
+                
                 {/* Visual Badge Area */}
-                <div className={`sm:w-48 p-8 flex flex-col items-center justify-center text-white relative overflow-hidden transition-colors duration-500 ${promo.bonusPercentage >= 100 ? 'bg-gradient-to-br from-indigo-600 to-violet-700' : 'bg-gradient-to-br from-emerald-500 to-teal-600'}`}>
+                <div className={`sm:w-48 p-8 flex flex-col items-center justify-center text-white relative overflow-hidden transition-colors duration-500 ${isHighBonus ? 'bg-gradient-to-br from-indigo-600 to-violet-700' : 'bg-gradient-to-br from-emerald-500 to-teal-600'}`}>
                   <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   <span className="text-xs font-black uppercase tracking-[0.2em] opacity-80 mb-1">Bônus de</span>
-                  <h4 className="text-5xl font-black">{promo.bonusPercentage}%</h4>
+                  <h4 className="text-5xl font-black">{promo.bonusPorcentagem}%</h4>
                   <Zap className="mt-4 opacity-40 group-hover:scale-125 transition-transform" size={24} />
                 </div>
 
@@ -147,8 +166,9 @@ const PromotionsPage: React.FC = () => {
                 <div className="flex-1 p-8 flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-start mb-3">
+                      {/* Ajuste: usando 'titulo' */}
                       <h3 className="text-xl font-black text-slate-900 dark:text-white leading-tight pr-4">
-                        {promo.title}
+                        {promo.titulo}
                       </h3>
                       {isUrgent && (
                         <span className="shrink-0 flex items-center gap-1 px-2 py-1 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 text-[10px] font-black rounded-lg uppercase animate-pulse">
@@ -157,8 +177,9 @@ const PromotionsPage: React.FC = () => {
                         </span>
                       )}
                     </div>
+                    {/* Ajuste: usando 'descricao' */}
                     <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-6">
-                      {promo.description}
+                      {promo.descricao}
                     </p>
                   </div>
 
@@ -166,19 +187,29 @@ const PromotionsPage: React.FC = () => {
                     <div className="flex items-center gap-2 text-slate-400">
                       <Clock size={16} />
                       <span className="text-xs font-bold uppercase tracking-wider">
-                        {promo.expiryDate ? `Expira em ${new Date(promo.expiryDate).toLocaleDateString('pt-BR')}` : 'Sem validade'}
+                        {/* Ajuste: usando 'dataFim' */}
+                        {promo.dataFim ? `Expira em ${new Date(promo.dataFim).toLocaleDateString('pt-BR')}` : 'Sem validade'}
                       </span>
                     </div>
                     
-                    <a 
-                      href={promo.link || "#"} 
-                      target="_blank" 
-                      rel="noreferrer"
-                      className="flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl text-sm font-black hover:bg-indigo-600 hover:text-white transition-all"
+                    {/* BOTÃO PARTICIPAR ATUALIZADO */}
+                    <button 
+                      onClick={() => handleParticipate(promo)}
+                      disabled={activatingId === promo.id}
+                      className="flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl text-sm font-black hover:bg-indigo-600 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Participar
-                      <ArrowRight size={16} />
-                    </a>
+                      {activatingId === promo.id ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin" />
+                          Ativando...
+                        </>
+                      ) : (
+                        <>
+                          Participar
+                          <ArrowRight size={16} />
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -203,7 +234,6 @@ const PromotionsPage: React.FC = () => {
         )}
       </div>
 
-      {/* Info Card */}
       <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 p-6 rounded-3xl flex flex-col md:flex-row items-center gap-6">
         <div className="w-12 h-12 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center text-emerald-500 shrink-0 shadow-sm">
           <CheckCircle2 size={24} />
@@ -211,12 +241,9 @@ const PromotionsPage: React.FC = () => {
         <div className="flex-1 text-center md:text-left">
           <h4 className="font-bold text-emerald-900 dark:text-emerald-300">Dica de Especialista</h4>
           <p className="text-sm text-emerald-700 dark:text-emerald-400 mt-1">
-            Antes de transferir, verifique sempre o regulamento completo no site do parceiro. Algumas promoções exigem cadastro prévio no link oficial.
+            Sempre clique em "Participar" aqui antes de fazer transferências. Isso garante que o sistema registre seu bônus no cálculo automático.
           </p>
         </div>
-        <button className="whitespace-nowrap px-6 py-3 bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 font-bold rounded-2xl hover:shadow-lg transition-all">
-          Como funciona?
-        </button>
       </div>
     </div>
   );
