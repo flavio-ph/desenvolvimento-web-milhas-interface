@@ -80,7 +80,7 @@ const Login: React.FC = () => {
               <div className="w-20 h-auto bg-white/20 backdrop-blur-lg rounded-2xl flex items-center justify-center border border-white/30 shadow-2xl p-2">
                  <Logo className="w-full h-full drop-shadow-lg" />
               </div>
-              <span className="text-5xl font-black tracking-tight text-white">Horizo</span>
+              <span className="text-5xl font-black tracking-tight text-white">MilhasPro</span>
             </div>
 
             <h1 className="text-4xl font-black leading-tight">Domine suas milhas, conquiste o mundo.</h1>

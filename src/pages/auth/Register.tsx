@@ -247,7 +247,7 @@ const Register: React.FC = () => {
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-[40px] shadow-2xl relative overflow-hidden transition-all duration-500 hover:shadow-indigo-500/10 hover:border-white/20 hover:scale-[1.01]">
             <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
             
-            <h3 className="text-2xl font-black text-white mb-6">Por que escolher o Horizo?</h3>
+            <h3 className="text-2xl font-black text-white mb-6">Por que escolher o MilhasPro?</h3>
             
             <div className="space-y-4">
               {[

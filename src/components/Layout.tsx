@@ -9,6 +9,7 @@ import {
   LogOut, 
   Check,
   ArrowRight,
+  Plane,
   LayoutDashboard, 
   CreditCard,
   History
@@ -58,7 +59,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       case '/admin/programs': return 'Gerenciar Programas';
       case '/admin/brands': return 'Gerenciar Bandeiras';
       case '/admin/new-promotion': return 'Gerenciar Promoções';
-      default: return 'Horizo';
+      default: return 'MilhasPro';
     }
   };
 
@@ -139,13 +140,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       >
         <div className="flex flex-col h-full">
           {/* HEADER DA SIDEBAR COM LOGO */}
-          <div className="p-6 flex items-center justify-between mb-4">
+        <div className="p-6 flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-auto hover:scale-105 transition-transform duration-300">
-                 <Logo className="w-full h-full drop-shadow-md" />
+              
+              {/* SUBSTITUIÇÃO AQUI: Apenas o avião com cores do tema */}
+              <div className="hover:scale-105 transition-transform duration-300">
+                 <Plane className="w-9 h-9 text-indigo-600 dark:text-indigo-400" />
               </div>
+
               <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                Horizo
+                MilhasPro
               </span>
             </div>
             <button onClick={toggleSidebar} className="lg:hidden text-slate-500 hover:text-indigo-600 transition-colors">
