@@ -1,17 +1,19 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { 
-  Tag, Search, Clock, ArrowRight, Zap, Flame, Filter, CheckCircle2, AlertCircle, Loader2 
+import {
+  Tag, Search, Clock, ArrowRight, Zap, Flame, Filter, CheckCircle2, AlertCircle, Loader2
 } from 'lucide-react';
-import { getPromocoes, getProgramas, participarPromocao } from '../../services/api'; 
+import { getPromocoes, getProgramas, participarPromocao } from '../../services/api';
 import { Promotion, LoyaltyProgram } from '../../types/types';
+import { useToast } from '../../components/ToastContext';
 
 const PromotionsPage: React.FC = () => {
+  const { addToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProgram, setSelectedProgram] = useState('ALL');
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [programs, setPrograms] = useState<LoyaltyProgram[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const [activatingId, setActivatingId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -36,19 +38,27 @@ const PromotionsPage: React.FC = () => {
   const handleParticipate = async (promo: Promotion) => {
     try {
       setActivatingId(promo.id);
-      
+
       await participarPromocao(promo.id);
-      
-      alert(`Você agora está participando da promoção: ${promo.titulo}!`);
-      
+
+      addToast({
+        type: 'success',
+        title: 'Sucesso!',
+        description: `Você agora está participando da promoção: ${promo.titulo}!`
+      });
+
       if (promo.urlPromocao) {
       }
     } catch (error: any) {
       const msg = error.response?.data?.message || "Erro ao participar da promoção.";
-      alert(msg);
-      
+      addToast({
+        type: 'error',
+        title: 'Erro ao participar',
+        description: msg
+      });
+
       if (msg.includes("já está participando") && promo.urlPromocao) {
-        
+
       }
     } finally {
       setActivatingId(null);
@@ -58,16 +68,16 @@ const PromotionsPage: React.FC = () => {
   const activePromotions = useMemo(() => {
     if (!promotions) return [];
 
-   return promotions.filter(promo => {
+    return promotions.filter(promo => {
       const title = promo.titulo?.toLowerCase() || '';
       const desc = promo.descricao?.toLowerCase() || '';
-      
-      const programName = promo.nomeProgramaPontos || ''; 
-      
+
+      const programName = promo.nomeProgramaPontos || '';
+
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch = title.includes(searchLower) || desc.includes(searchLower);
       const matchesProgram = selectedProgram === 'ALL' || (programName === selectedProgram);
-      
+
       return matchesSearch && matchesProgram;
     });
   }, [searchTerm, selectedProgram, promotions]);
@@ -108,19 +118,19 @@ const PromotionsPage: React.FC = () => {
       <div className="flex flex-col lg:flex-row gap-4 items-center">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-          <input 
-            type="text" 
-            placeholder="Buscar promoção..." 
+          <input
+            type="text"
+            placeholder="Buscar promoção..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white shadow-sm transition-all"
           />
         </div>
-        
+
         <div className="flex gap-3 w-full lg:w-auto">
           <div className="relative flex-1 lg:flex-none">
             <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <select 
+            <select
               value={selectedProgram}
               onChange={(e) => setSelectedProgram(e.target.value)}
               className="w-full lg:w-64 pl-12 pr-4 py-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white shadow-sm transition-all appearance-none font-bold text-sm"
@@ -144,7 +154,7 @@ const PromotionsPage: React.FC = () => {
 
             return (
               <div key={promo.id} className="group bg-white dark:bg-slate-900 rounded-[32px] border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-2xl hover:translate-y-[-4px] transition-all duration-500 flex flex-col sm:flex-row">
-                
+
                 {/* Visual Badge Area */}
                 <div className={`sm:w-48 p-8 flex flex-col items-center justify-center text-white relative overflow-hidden transition-colors duration-500 ${isHighBonus ? 'bg-gradient-to-br from-indigo-600 to-violet-700' : 'bg-gradient-to-br from-emerald-500 to-teal-600'}`}>
                   <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -179,9 +189,9 @@ const PromotionsPage: React.FC = () => {
                         {promo.dataFim ? `Expira em ${new Date(promo.dataFim).toLocaleDateString('pt-BR')}` : 'Sem validade'}
                       </span>
                     </div>
-                    
+
                     {/* BOTÃO PARTICIPAR */}
-                    <button 
+                    <button
                       onClick={() => handleParticipate(promo)}
                       disabled={activatingId === promo.id}
                       className="flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl text-sm font-black hover:bg-indigo-600 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
@@ -212,8 +222,8 @@ const PromotionsPage: React.FC = () => {
             <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-sm">
               Tente ajustar seus filtros ou aguarde novas oportunidades cadastradas.
             </p>
-            <button 
-              onClick={() => {setSearchTerm(''); setSelectedProgram('ALL');}}
+            <button
+              onClick={() => { setSearchTerm(''); setSelectedProgram('ALL'); }}
               className="mt-6 text-indigo-600 font-bold hover:underline"
             >
               Limpar todos os filtros

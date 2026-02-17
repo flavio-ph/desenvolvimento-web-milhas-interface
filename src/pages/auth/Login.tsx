@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import { Logo } from '../../components/Logo';
+import { useToast } from '../../components/ToastContext';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();

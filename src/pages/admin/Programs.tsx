@@ -2,14 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { Globe, Plus, Trash2, ExternalLink, X, Check, Loader2, Link as LinkIcon } from 'lucide-react';
 import { getProgramas, createPrograma, deletePrograma } from '../../services/api';
 import { LoyaltyProgram } from '../../types/types';
+import { useToast } from '../../components/ToastContext';
+import { ConfirmModal } from '../../components/ConfirmModal';
 
 const PREVIEW_COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#3b82f6'];
 
 const AdminPrograms: React.FC = () => {
+  const { addToast } = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [programs, setPrograms] = useState<LoyaltyProgram[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Estados para o Modal de Exclusão
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [programToDelete, setProgramToDelete] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [formData, setFormData] = useState({
     nome: '',
@@ -23,6 +31,11 @@ const AdminPrograms: React.FC = () => {
       setPrograms(data || []);
     } catch (e) {
       console.error("Erro ao listar programas", e);
+      addToast({
+        type: 'error',
+        title: 'Erro ao carregar',
+        description: 'Não foi possível listar os programas.'
+      });
     } finally {
       setLoading(false);
     }
@@ -38,26 +51,56 @@ const AdminPrograms: React.FC = () => {
       setIsSubmitting(true);
       await createPrograma(formData);
 
-      alert('Programa criado com sucesso!');
+      addToast({
+        type: 'success',
+        title: 'Programa criado',
+        description: 'Programa de fidelidade adicionado com sucesso!'
+      });
       setIsModalOpen(false);
       setFormData({ nome: '', url: '' });
       loadPrograms();
     } catch (error) {
       console.error(error);
-      alert('Erro ao criar programa.');
+      addToast({
+        type: 'error',
+        title: 'Erro ao criar',
+        description: 'Não foi possível criar o programa.'
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Deseja realmente remover este programa?')) return;
+  const handleDelete = (id: number) => {
+    setProgramToDelete(id);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!programToDelete) return;
+
     try {
-      await deletePrograma(id);
-      setPrograms(programs.filter(p => p.id !== id));
+      setIsDeleting(true);
+      await deletePrograma(programToDelete);
+      setPrograms(programs.filter(p => p.id !== programToDelete));
+
+      addToast({
+        type: 'success',
+        title: 'Programa removido',
+        description: 'O programa foi excluído com sucesso.'
+      });
+
     } catch (error) {
       console.error(error);
-      alert('Erro ao remover programa.');
+      addToast({
+        type: 'error',
+        title: 'Erro ao remover',
+        description: 'Não foi possível excluir o programa.'
+      });
+    } finally {
+      setIsDeleting(false);
+      setDeleteModalOpen(false);
+      setProgramToDelete(null);
     }
   };
 
@@ -276,6 +319,19 @@ const AdminPrograms: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* MODAL DE CONFIRMAÇÃO DE EXCLUSÃO */}
+      <ConfirmModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="Excluir Programa"
+        description="Tem certeza que deseja remover este programa de fidelidade? Esta ação pode afetar promoções vinculadas."
+        confirmText="Sim, excluir"
+        cancelText="Cancelar"
+        isLoading={isDeleting}
+        variant="danger"
+      />
 
     </>
   );

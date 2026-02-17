@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { 
-  Mail, 
-  Lock, 
-  Key, 
-  ArrowRight, 
+import {
+  Mail,
+  Lock,
+  Key,
+  ArrowRight,
   ArrowLeft,
   CheckCircle2,
   Loader2,
@@ -12,10 +12,12 @@ import {
   AlertCircle
 } from 'lucide-react';
 import api from '../../services/api';
+import { useToast } from '../../components/ToastContext';
 
 const RecoverPassword: React.FC = () => {
   const navigate = useNavigate();
-  
+  const { addToast } = useToast();
+
   const [step, setStep] = useState<'REQUEST' | 'RESET'>('REQUEST');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -31,17 +33,17 @@ const RecoverPassword: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    
+
     try {
       await api.post('/auth/forgot-password', { email });
-      
+
       setSuccessMsg('Solicitação enviada! Verifique seu terminal/email.');
-      
+
       setToken('');
       setNewPassword('');
       setConfirmPassword('');
-      
-      setStep('RESET'); 
+
+      setStep('RESET');
     } catch (err: any) {
       console.error(err);
       setError('E-mail não encontrado ou erro no sistema.');
@@ -62,15 +64,20 @@ const RecoverPassword: React.FC = () => {
     setLoading(true);
 
     try {
-      await api.post('/auth/reset-password', { 
-        token: token, 
+      await api.post('/auth/reset-password', {
+        token: token,
         novaSenha: newPassword,
         confirmacaoSenha: confirmPassword
       });
 
-      alert('Senha alterada com sucesso! Faça login com a nova senha.');
+      addToast({
+        type: 'success',
+        title: 'Senha Redefinida',
+        description: 'Sua senha foi alterada com sucesso! Faça login com a nova senha.'
+      });
+
       navigate('/login');
-      
+
     } catch (err: any) {
       console.error(err);
       if (err.response && err.response.data && err.response.data.message) {
@@ -85,11 +92,11 @@ const RecoverPassword: React.FC = () => {
 
   return (
     <div className="min-h-screen flex bg-white dark:bg-slate-950 font-sans overflow-hidden">
-      
+
       {/* Lado Esquerdo: Formulário */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-slate-50 dark:bg-slate-950">
         <div className="w-full max-w-md space-y-8 animate-fadeIn">
-          
+
           {/* Cabeçalho */}
           <div className="text-center lg:text-left">
             <Link to="/login" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-indigo-600 mb-6 transition-colors">
@@ -99,8 +106,8 @@ const RecoverPassword: React.FC = () => {
               {step === 'REQUEST' ? 'Recuperar Senha' : 'Redefinir Senha'}
             </h2>
             <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
-              {step === 'REQUEST' 
-                ? 'Informe seu e-mail para receber o código de recuperação.' 
+              {step === 'REQUEST'
+                ? 'Informe seu e-mail para receber o código de recuperação.'
                 : 'Insira o código recebido e crie sua nova senha.'}
             </p>
           </div>
@@ -130,18 +137,18 @@ const RecoverPassword: React.FC = () => {
             <form onSubmit={handleRequestReset} className="space-y-6">
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Seu e-mail cadastrado" 
+                  placeholder="Seu e-mail cadastrado"
                   className="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-900 dark:text-white font-medium shadow-sm transition-all"
                   required
-                  autoComplete="email" 
+                  autoComplete="email"
                 />
               </div>
 
-              <button 
+              <button
                 type="submit"
                 disabled={loading}
                 className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl hover:bg-indigo-700 transition-all transform hover:scale-[1.01] active:scale-95 shadow-xl shadow-indigo-200 dark:shadow-none flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
@@ -154,38 +161,38 @@ const RecoverPassword: React.FC = () => {
           {/* FORMULÁRIO 2: EXECUTAR  */}
           {step === 'RESET' && (
             <form onSubmit={handleExecuteReset} className="space-y-6" autoComplete="off">
-              
+
               {/* Token */}
               <div className="relative group">
                 <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={token}
                   onChange={(e) => setToken(e.target.value)}
-                  placeholder="Código (Token)" 
+                  placeholder="Código (Token)"
                   className="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-900 dark:text-white font-medium shadow-sm transition-all"
                   required
-                  autoComplete="off" 
-                  name="reset-token" 
+                  autoComplete="off"
+                  name="reset-token"
                 />
               </div>
 
               {/* Nova Senha */}
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
-                <input 
-                  type={showPassword ? 'text' : 'password'} 
+                <input
+                  type={showPassword ? 'text' : 'password'}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Nova Senha (mín 6 caracteres)" 
+                  placeholder="Nova Senha (mín 6 caracteres)"
                   className="w-full pl-12 pr-12 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-900 dark:text-white font-medium shadow-sm transition-all"
                   required
                   minLength={6}
-                  autoComplete="new-password" 
+                  autoComplete="new-password"
                   name="new-password"
                 />
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors"
                 >
@@ -196,23 +203,22 @@ const RecoverPassword: React.FC = () => {
               {/* Confirmar Senha */}
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
-                <input 
-                  type={showPassword ? 'text' : 'password'} 
+                <input
+                  type={showPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirme a Nova Senha" 
-                  className={`w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-900 border rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-900 dark:text-white font-medium shadow-sm transition-all ${
-                    confirmPassword && newPassword !== confirmPassword 
-                      ? 'border-red-300 focus:ring-red-500' 
-                      : 'border-slate-200 dark:border-slate-800'
-                  }`}
+                  placeholder="Confirme a Nova Senha"
+                  className={`w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-900 border rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-900 dark:text-white font-medium shadow-sm transition-all ${confirmPassword && newPassword !== confirmPassword
+                    ? 'border-red-300 focus:ring-red-500'
+                    : 'border-slate-200 dark:border-slate-800'
+                    }`}
                   required
-                  autoComplete="new-password" 
+                  autoComplete="new-password"
                   name="confirm-password"
                 />
               </div>
 
-              <button 
+              <button
                 type="submit"
                 disabled={loading}
                 className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl hover:bg-indigo-700 transition-all transform hover:scale-[1.01] active:scale-95 shadow-xl shadow-indigo-200 dark:shadow-none flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Plus, CreditCard, Trash2, X, Check, Loader2, Coins, Edit2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import { useToast } from '../../components/ToastContext';
+import { ConfirmModal } from '../../components/ConfirmModal'; // Importando o Modal
 
 interface Cartao {
   id: number;
@@ -11,6 +13,7 @@ interface Cartao {
   nomeBandeira?: string;
   nomeProgramaPontos?: string; 
   cor?: string;
+  possuiCompras?: boolean; // Campo necessário para o bloqueio
 }
 
 interface Bandeira {
@@ -34,6 +37,7 @@ const CARD_COLORS = [
 ];
 
 const CardsPage: React.FC = () => {
+  const { addToast } = useToast(); 
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -43,6 +47,11 @@ const CardsPage: React.FC = () => {
   const [programas, setProgramas] = useState<Programa[]>([]);
 
   const [editingCardId, setEditingCardId] = useState<number | null>(null);
+
+  // Estados para o Modal de Exclusão
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [cardToDelete, setCardToDelete] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [formData, setFormData] = useState({
     nomePersonalizado: '',
@@ -63,7 +72,7 @@ const CardsPage: React.FC = () => {
       setLoading(true);
       const [cardsRes, bandeirasRes, programasRes] = await Promise.all([
         api.get('/cartoes'),
-        api.get('/bandeiras'),
+        api.get('/bandeiras/ativas'),
         api.get('/programas')
       ]);
 
@@ -95,6 +104,16 @@ const CardsPage: React.FC = () => {
   };
 
   const openEditModal = (card: Cartao) => {
+    // NOVA LÓGICA: Verifica se o cartão tem compras antes de abrir
+    if (card.possuiCompras) {
+      addToast({
+        type: 'info', // ou 'warning'
+        title: 'Edição não permitida',
+        description: 'Não é possível editar este cartão pois ele já possui compras registradas.'
+      });
+      return; // Interrompe a abertura do modal
+    }
+
     setEditingCardId(card.id);
 
     const bandeira = bandeiras.find(b => b.nome === card.nomeBandeira);
@@ -116,7 +135,11 @@ const CardsPage: React.FC = () => {
     e.preventDefault();
 
     if (!formData.bandeiraId || !formData.programaPontosId) {
-      alert("Selecione uma bandeira e um programa de pontos.");
+      addToast({
+        type: 'warning',
+        title: 'Campos obrigatórios',
+        description: 'Selecione uma bandeira e um programa de pontos.'
+      });
       return;
     }
 
@@ -138,25 +161,62 @@ const CardsPage: React.FC = () => {
 
       setShowModal(false);
       fetchData(); 
+      
+      addToast({
+        type: 'success',
+        title: 'Sucesso!',
+        description: editingCardId ? 'O cartão foi atualizado com sucesso.' : 'Novo cartão adicionado à sua carteira.'
+      });
+
     } catch (error: any) {
       console.error('Erro ao salvar cartão:', error);
 
-      if (error.response && error.response.data && error.response.data.message) {
-        alert(error.response.data.message);
-      } else {
-        alert('Erro ao salvar cartão. Verifique os dados.');
-      }
+      const msg = error.response?.data?.message || 'Verifique os dados e tente novamente.';
+
+      addToast({
+        type: 'error',
+        title: 'Erro ao salvar',
+        description: msg
+      });
     }
   };
 
-  const handleDeleteCard = async (id: number) => {
-    if (!confirm('Tem certeza que deseja excluir este cartão?')) return;
+  // Abre o modal de confirmação em vez de usar window.confirm
+  const handleDeleteCard = (id: number) => {
+    setCardToDelete(id);
+    setDeleteModalOpen(true);
+  };
+
+  // Função executada ao confirmar no modal
+  const confirmDelete = async () => {
+    if (!cardToDelete) return;
+
     try {
-      await api.delete(`/cartoes/${id}`);
-      setCards(cards.filter(c => c.id !== id));
+      setIsDeleting(true);
+      await api.delete(`/cartoes/${cardToDelete}`);
+      setCards(cards.filter(c => c.id !== cardToDelete));
+      
+      addToast({
+        type: 'success',
+        title: 'Cartão removido',
+        description: 'O cartão foi excluído com sucesso.'
+      });
+      
+      setDeleteModalOpen(false);
+
     } catch (error) {
       console.error('Erro ao deletar cartão:', error);
-      alert("Não foi possível excluir. Verifique se existem compras vinculadas.");
+      
+      addToast({
+        type: 'error',
+        title: 'Não foi possível excluir',
+        description: 'Verifique se existem compras vinculadas a este cartão.'
+      });
+      
+      setDeleteModalOpen(false);
+    } finally {
+      setIsDeleting(false);
+      setCardToDelete(null);
     }
   };
 
@@ -295,7 +355,7 @@ const CardsPage: React.FC = () => {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Modal de Cadastro/Edição */}
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setShowModal(false)} />
@@ -482,6 +542,19 @@ const CardsPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* MODAL DE CONFIRMAÇÃO DE EXCLUSÃO */}
+      <ConfirmModal 
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="Excluir Cartão"
+        description="Tem certeza que deseja remover este cartão? Esta ação não poderá ser desfeita e removerá o histórico associado."
+        confirmText="Sim, excluir"
+        cancelText="Cancelar"
+        isLoading={isDeleting}
+        variant="danger"
+      />
     </>
   );
 };

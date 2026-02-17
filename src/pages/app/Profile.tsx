@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  Shield, 
-  Bell, 
-  CreditCard, 
-  Camera, 
+import {
+  User,
+  Mail,
+  Phone,
+  Shield,
+  Bell,
+  CreditCard,
+  Camera,
   Check,
   CheckCircle,
   Lock,
@@ -25,6 +25,8 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
+import { useToast } from '../../components/ToastContext';
+import { ConfirmModal } from '../../components/ConfirmModal';
 
 interface UserProfile {
   nome: string;
@@ -45,12 +47,25 @@ interface PlanOption {
 
 const ProfilePage: React.FC = () => {
   const { isDarkMode } = useTheme();
-  
+  const { addToast } = useToast();
+
   const [user, setUser] = useState<UserProfile | null>(null);
   const [totalPontos, setTotalPontos] = useState(0);
-  
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  // Estados para Modal de Confirmação Genérico
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState({
+    title: '',
+    description: '',
+    confirmText: 'Confirmar',
+    cancelText: 'Cancelar',
+    variant: 'primary' as 'primary' | 'danger',
+    onConfirm: async () => { }
+  });
 
   const [formData, setFormData] = useState({
     nome: '',
@@ -78,7 +93,7 @@ const ProfilePage: React.FC = () => {
   const [faLoading, setFaLoading] = useState(false);
 
   const [showSubModal, setShowSubModal] = useState(false);
-  const [currentPlan, setCurrentPlan] = useState('premium'); 
+  const [currentPlan, setCurrentPlan] = useState('premium');
   const [subLoading, setSubLoading] = useState(false);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -115,25 +130,25 @@ const ProfilePage: React.FC = () => {
       try {
         const userRes = await api.get('/usuarios/me');
         const userData = userRes.data;
-        
+
         setUser(userData);
 
         if (userData.fotoPerfil) {
-        setPreviewUrl(`http://localhost:8080/uploads/${userData.fotoPerfil}`);
+          setPreviewUrl(`http://localhost:8080/uploads/${userData.fotoPerfil}`);
         }
 
         setFormData({
           nome: userData.nome || '',
           email: userData.email || '',
-          telefone: userData.telefone || '', 
+          telefone: userData.telefone || '',
           cpf: userData.cpf || ''
         });
 
         try {
           const dashRes = await api.get('/dashboard');
           if (dashRes.data && dashRes.data.pontosPorCartao) {
-             const total = dashRes.data.pontosPorCartao.reduce((acc: number, curr: any) => acc + curr.totalPontos, 0);
-             setTotalPontos(total);
+            const total = dashRes.data.pontosPorCartao.reduce((acc: number, curr: any) => acc + curr.totalPontos, 0);
+            setTotalPontos(total);
           }
         } catch (e) {
           console.warn("Não foi possível carregar saldo");
@@ -150,70 +165,112 @@ const ProfilePage: React.FC = () => {
   }, []);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  if (e.target.files && e.target.files[0]) {
-    const file = e.target.files[0];
-    setSelectedFile(file);
-    setPreviewUrl(URL.createObjectURL(file)); 
-  }
-};
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
 
   const handleSaveProfile = async () => {
-  setSaving(true);
-  try {
-    const payload = {
-      nome: formData.nome,
-      telefone: formData.telefone,
-      cpf: formData.cpf
-    };
-    await api.put('/usuarios/me', payload);
+    setSaving(true);
+    try {
+      const payload = {
+        nome: formData.nome,
+        telefone: formData.telefone,
+        cpf: formData.cpf
+      };
+      await api.put('/usuarios/me', payload);
 
-    if (selectedFile) {
-      const photoData = new FormData();
-      photoData.append('foto', selectedFile); 
-      await api.post('/usuarios/me/upload-foto', photoData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+      if (selectedFile) {
+        const photoData = new FormData();
+        photoData.append('foto', selectedFile);
+        await api.post('/usuarios/me/upload-foto', photoData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      }
+
+      addToast({
+        type: 'success',
+        title: 'Perfil salvo',
+        description: 'Suas informações foram atualizadas com sucesso.'
       });
-    }
 
-    alert('Perfil atualizado com sucesso!');
-  } catch (error) {
-    console.error(error);
-    alert("Erro ao salvar alterações.");
-  } finally {
-    setSaving(false);
-  }
-};
+    } catch (error) {
+      console.error(error);
+      addToast({
+        type: 'error',
+        title: 'Erro ao salvar',
+        description: 'Não foi possível atualizar o perfil.'
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleUpdatePassword = async () => {
     if (!passwordForm.nova || !passwordForm.confirmacao) {
-      alert("Preencha todos os campos.");
+      addToast({
+        type: 'warning',
+        title: 'Campos vazios',
+        description: 'Preencha todos os campos de senha.'
+      });
       return;
     }
     if (passwordForm.nova !== passwordForm.confirmacao) {
-      alert("As senhas não conferem.");
+      addToast({
+        type: 'error',
+        title: 'Senhas divergentes',
+        description: 'A nova senha e a confirmação não conferem.'
+      });
       return;
     }
     setPasswordLoading(true);
     try {
-      await api.put('/usuarios/me', { 
-        nome: formData.nome, 
-        senha: passwordForm.nova 
+      await api.put('/usuarios/me', {
+        nome: formData.nome,
+        senha: passwordForm.nova
       });
-      
-      alert("Senha alterada com sucesso!");
+
+      addToast({
+        type: 'success',
+        title: 'Senha alterada',
+        description: 'Sua senha foi atualizada com sucesso!'
+      });
+
       setShowPasswordModal(false);
       setPasswordForm({ nova: '', confirmacao: '' });
     } catch (error: any) {
       console.error(error);
       const msg = error.response?.data?.message || "Erro ao alterar senha.";
-      alert(msg);
+      addToast({
+        type: 'error',
+        title: 'Erro na alteração',
+        description: msg
+      });
     } finally {
       setPasswordLoading(false);
     }
   };
   const handleToggle2FA = () => {
     if (is2FAEnabled) {
-      if(window.confirm("Desativar 2FA?")) setIs2FAEnabled(false);
+      setConfirmConfig({
+        title: 'Desativar 2FA?',
+        description: 'Tem certeza que deseja desativar a Autenticação de Dois Fatores? Sua conta ficará menos segura.',
+        confirmText: 'Sim, desativar',
+        cancelText: 'Cancelar',
+        variant: 'danger',
+        onConfirm: async () => {
+          setIs2FAEnabled(false);
+          setConfirmModalOpen(false);
+          addToast({
+            type: 'success',
+            title: '2FA Desativado',
+            description: 'A autenticação de dois fatores foi removida.'
+          });
+        }
+      });
+      setConfirmModalOpen(true);
     } else {
       setStep2FA('intro');
       setShow2FAModal(true);
@@ -223,40 +280,80 @@ const ProfilePage: React.FC = () => {
   const handleVerifyOTP = async () => {
     if (otpCode.length < 6) return;
     setFaLoading(true);
-    
+
     try {
-        await api.post('/usuarios/me/2fa/verify', { code: parseInt(otpCode) });
-        setIs2FAEnabled(true);
-        setShow2FAModal(false);
-        setOtpCode('');
-        alert("Autenticação de Dois Fatores ativada com sucesso!");
+      await api.post('/usuarios/me/2fa/verify', { code: parseInt(otpCode) });
+      setIs2FAEnabled(true);
+      setShow2FAModal(false);
+      setOtpCode('');
+
+      addToast({
+        type: 'success',
+        title: '2FA Ativado!',
+        description: 'Sua conta agora está protegida com autenticação de dois fatores.'
+      });
+
     } catch (e) {
-        alert("Código incorreto ou expirado.");
+      addToast({
+        type: 'error',
+        title: 'Código inválido',
+        description: 'O código informado está incorreto ou expirou.'
+      });
     } finally {
-        setFaLoading(false);
+      setFaLoading(false);
     }
   };
+
   const handleStartSetup = async () => {
-      setFaLoading(true);
-      try {
-          await api.get('/usuarios/me/2fa/generate');
-          setStep2FA('verify'); 
-      } catch (error) {
-          alert("Erro ao solicitar código. Verifique o console do backend.");
-      } finally {
-          setFaLoading(false);
-      }
+    setFaLoading(true);
+    try {
+      await api.get('/usuarios/me/2fa/generate');
+      setStep2FA('verify');
+    } catch (error) {
+      addToast({
+        type: 'error',
+        title: 'Erro no servidor',
+        description: 'Não foi possível gerar o código. Tente novamente mais tarde.'
+      });
+    } finally {
+      setFaLoading(false);
+    }
   };
+
+  const executeConfirmAction = async () => {
+    try {
+      setConfirmLoading(true);
+      await confirmConfig.onConfirm();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setConfirmLoading(false);
+    }
+  };
+
   const handleChangePlan = (planId: string) => {
     if (planId === currentPlan) return;
-    if (window.confirm(`Deseja alterar seu plano para ${planId.toUpperCase()}?`)) {
-      setSubLoading(true);
-      setTimeout(() => {
+
+    setConfirmConfig({
+      title: `Mudar para plano ${planId.toUpperCase()}?`,
+      description: `Deseja realmente alterar seu plano para ${availablePlans.find(p => p.id === planId)?.name}? Os benefícios serão atualizados imediatamente.`,
+      confirmText: 'Confirmar alteração',
+      cancelText: 'Cancelar',
+      variant: 'primary',
+      onConfirm: async () => {
+        // Simulação de chamada de API
+        await new Promise(resolve => setTimeout(resolve, 1000));
         setCurrentPlan(planId);
-        setSubLoading(false);
-        alert("Plano atualizado com sucesso!");
-      }, 1500);
-    }
+        setConfirmModalOpen(false);
+
+        addToast({
+          type: 'success',
+          title: 'Plano Atualizado',
+          description: `Você agora faz parte do plano ${availablePlans.find(p => p.id === planId)?.name}!`
+        });
+      }
+    });
+    setConfirmModalOpen(true);
   };
 
   if (loading) {
@@ -274,26 +371,26 @@ const ProfilePage: React.FC = () => {
         {/* HEADER */}
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center gap-8">
           <div className="relative group">
-            <img 
-              src={previewUrl || "https://github.com/shadcn.png"} 
-              alt="Profile" 
+            <img
+              src={previewUrl || "https://github.com/shadcn.png"}
+              alt="Profile"
               className="w-32 h-32 rounded-full object-cover ring-4 ring-indigo-50 dark:ring-indigo-900/30"
             />
-            <label 
-              htmlFor="photo-upload" 
+            <label
+              htmlFor="photo-upload"
               className="absolute bottom-0 right-0 p-2 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition-transform group-hover:scale-110 cursor-pointer"
             >
               <Camera size={18} />
-              <input 
-                type="file" 
-                id="photo-upload" 
-                className="hidden" 
-                accept="image/*" 
-                onChange={handlePhotoChange} 
+              <input
+                type="file"
+                id="photo-upload"
+                className="hidden"
+                accept="image/*"
+                onChange={handlePhotoChange}
               />
             </label>
           </div>
-          
+
           <div className="text-center md:text-left flex-1">
             <div className="flex flex-col md:flex-row md:items-center gap-2 mb-2">
               <h1 className="text-3xl font-bold dark:text-white text-slate-900">
@@ -307,7 +404,7 @@ const ProfilePage: React.FC = () => {
             <p className="text-slate-500 dark:text-slate-400">
               {user?.email} • Desde {user?.dataCadastro ? new Date(user.dataCadastro).getFullYear() : new Date().getFullYear()}
             </p>
-            
+
             <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-4">
               <div className="text-center px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl">
                 <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Total Acumulado</p>
@@ -319,8 +416,8 @@ const ProfilePage: React.FC = () => {
               </div>
             </div>
           </div>
-          
-          <button 
+
+          <button
             onClick={handleSaveProfile}
             disabled={saving}
             className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 dark:shadow-none flex items-center gap-2 disabled:opacity-70"
@@ -331,7 +428,7 @@ const ProfilePage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* COLUNA ESQUERDA do Formulário  */}
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm">
@@ -344,7 +441,7 @@ const ProfilePage: React.FC = () => {
                   <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Nome Completo</label>
                   <div className="relative">
                     <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <input type="text" value={formData.nome} onChange={e => setFormData({...formData, nome: e.target.value})} className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white" />
+                    <input type="text" value={formData.nome} onChange={e => setFormData({ ...formData, nome: e.target.value })} className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white" />
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -355,21 +452,21 @@ const ProfilePage: React.FC = () => {
                   </div>
                 </div>
                 {/* CAMPO TELEFONE Opcional */}
-                 <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                     Telefone <span className="text-slate-400 font-normal text-xs">(Opcional)</span>
-                    </label>
-                    <div className="relative">
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                      <input 
-                        type="text" 
-                        placeholder="(00) 00000-0000"
-                        value={formData.telefone}
-                        onChange={e => setFormData({...formData, telefone: e.target.value})}
-                        className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all" 
-                              />
-                    </div>
-                   </div>
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <input
+                      type="text"
+                      placeholder="(00) 00000-0000"
+                      value={formData.telefone}
+                      onChange={e => setFormData({ ...formData, telefone: e.target.value })}
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all"
+                    />
+                  </div>
+                </div>
                 {/* CAMPO CPF Opcional */}
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
@@ -377,18 +474,18 @@ const ProfilePage: React.FC = () => {
                   </label>
                   <div className="relative">
                     <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                      <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="000.000.000-00"
-                      value={formData.cpf} 
-                      onChange={e => setFormData({...formData, cpf: e.target.value})}
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all" 
-                      />
-                    </div>
+                      value={formData.cpf}
+                      onChange={e => setFormData({ ...formData, cpf: e.target.value })}
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-              
+
 
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm">
               <h3 className="text-lg font-bold dark:text-white mb-6 flex items-center gap-2">
@@ -412,7 +509,7 @@ const ProfilePage: React.FC = () => {
 
           {/* --- COLUNA DIREITA --- */}
           <div className="space-y-8">
-            
+
             {/* CARD DO PLANO */}
             <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 text-white shadow-xl shadow-slate-200 dark:shadow-none relative overflow-hidden">
               <div className="absolute top-[-20%] right-[-10%] w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl"></div>
@@ -434,9 +531,9 @@ const ProfilePage: React.FC = () => {
                 )}
                 <div className="flex items-center gap-2 text-sm"><div className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></div>Acesso ao sistema</div>
               </div>
-              
+
               {/* BOTÃO DO MODAL */}
-              <button 
+              <button
                 onClick={() => setShowSubModal(true)}
                 className="w-full py-3 bg-white text-slate-900 font-bold rounded-2xl hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
               >
@@ -459,7 +556,7 @@ const ProfilePage: React.FC = () => {
                       <p className="text-sm font-bold dark:text-white">{item.label}</p>
                       <p className="text-xs text-slate-500">{item.desc}</p>
                     </div>
-                    <button 
+                    <button
                       onClick={() => toggleNotification(item.id as any)}
                       className={`w-12 h-6 rounded-full relative transition-colors duration-200 ${notifications[item.id as keyof typeof notifications] ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}
                     >
@@ -486,19 +583,19 @@ const ProfilePage: React.FC = () => {
                 <X size={24} />
               </button>
             </div>
-            
+
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Nova Senha</label>
                 <div className="relative">
-                  <input 
+                  <input
                     type={showPassword ? "text" : "password"}
                     value={passwordForm.nova}
-                    onChange={(e) => setPasswordForm({...passwordForm, nova: e.target.value})}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, nova: e.target.value })}
                     className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white"
                     placeholder="Mínimo de 6 caracteres"
                   />
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -511,17 +608,17 @@ const ProfilePage: React.FC = () => {
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Confirmar Nova Senha</label>
                 <div className="relative">
-                  <input 
+                  <input
                     type={showPassword ? "text" : "password"}
                     value={passwordForm.confirmacao}
-                    onChange={(e) => setPasswordForm({...passwordForm, confirmacao: e.target.value})}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, confirmacao: e.target.value })}
                     className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white"
                     placeholder="Repita a nova senha"
                   />
                 </div>
               </div>
 
-              <button 
+              <button
                 onClick={handleUpdatePassword}
                 disabled={passwordLoading}
                 className="w-full py-3 mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
@@ -536,90 +633,90 @@ const ProfilePage: React.FC = () => {
 
       {/*  MODAL DE 2FA */}
       {show2FAModal && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-md w-full p-6 relative">
-      <button 
-        onClick={() => setShow2FAModal(false)}
-        className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-      >
-        ✕
-      </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-md w-full p-6 relative">
+            <button
+              onClick={() => setShow2FAModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            >
+              ✕
+            </button>
 
-      <div className="text-center mb-6">
-        <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Shield className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-        </div>
-        <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-          Autenticação de Dois Fatores
-        </h3>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-          Proteja sua conta com uma camada extra de segurança.
-        </p>
-      </div>
-
-      {step2FA === 'intro' ? (
-        <div className="space-y-4">
-          <p className="text-sm text-slate-600 dark:text-slate-300 text-center">
-            Ao ativar, enviaremos um código de verificação para o seu e-mail cadastrado.
-          </p>
-          <button
-            onClick={handleStartSetup}
-            disabled={faLoading}
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold transition-all shadow-lg shadow-indigo-500/20"
-          >
-            {faLoading ? 'Enviando...' : 'Enviar Código'}
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-5">
-          {/* Caixa de Aviso de Simulação */}
-          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 flex items-start gap-3">
-            <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
-            <div>
-              <h4 className="text-sm font-bold text-blue-900 dark:text-blue-100">
-                Código Enviado!
-              </h4>
-              <p className="text-xs text-blue-700 dark:text-blue-300 mt-1 leading-relaxed">
-                Como estamos em ambiente de desenvolvimento, o e-mail foi simulado.
-                <br/>
-                <strong>Verifique o Terminal/Console onde o Java está rodando</strong> para ver o código de 6 dígitos.
+            <div className="text-center mb-6">
+              <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Shield className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                Autenticação de Dois Fatores
+              </h3>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                Proteja sua conta com uma camada extra de segurança.
               </p>
             </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 text-center">
-              Digite o código recebido
-            </label>
-            <input
-              type="text"
-              maxLength={6}
-              value={otpCode}
-              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-              className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-center text-2xl tracking-[0.5em] font-mono transition-all"
-              placeholder="000000"
-              autoFocus
-            />
-          </div>
+            {step2FA === 'intro' ? (
+              <div className="space-y-4">
+                <p className="text-sm text-slate-600 dark:text-slate-300 text-center">
+                  Ao ativar, enviaremos um código de verificação para o seu e-mail cadastrado.
+                </p>
+                <button
+                  onClick={handleStartSetup}
+                  disabled={faLoading}
+                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold transition-all shadow-lg shadow-indigo-500/20"
+                >
+                  {faLoading ? 'Enviando...' : 'Enviar Código'}
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-5">
+                {/* Caixa de Aviso de Simulação */}
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 flex items-start gap-3">
+                  <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-sm font-bold text-blue-900 dark:text-blue-100">
+                      Código Enviado!
+                    </h4>
+                    <p className="text-xs text-blue-700 dark:text-blue-300 mt-1 leading-relaxed">
+                      Como estamos em ambiente de desenvolvimento, o e-mail foi simulado.
+                      <br />
+                      <strong>Verifique o Terminal/Console onde o Java está rodando</strong> para ver o código de 6 dígitos.
+                    </p>
+                  </div>
+                </div>
 
-          <button
-            onClick={handleVerifyOTP}
-            disabled={otpCode.length < 6 || faLoading}
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {faLoading ? 'Verificando...' : 'Confirmar Código'}
-          </button>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 text-center">
+                    Digite o código recebido
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-center text-2xl tracking-[0.5em] font-mono transition-all"
+                    placeholder="000000"
+                    autoFocus
+                  />
+                </div>
+
+                <button
+                  onClick={handleVerifyOTP}
+                  disabled={otpCode.length < 6 || faLoading}
+                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {faLoading ? 'Verificando...' : 'Confirmar Código'}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
-    </div>
-  </div>
-)}
 
       {/* MODAL DE GERENCIAR ASSINATURA  */}
       {showSubModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
           <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-4xl p-0 shadow-2xl border border-slate-100 dark:border-slate-800 animate-fadeIn my-8 overflow-hidden flex flex-col">
-            
+
             {/* Header do Modal */}
             <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 z-10 relative">
               <div>
@@ -635,10 +732,10 @@ const ProfilePage: React.FC = () => {
             </div>
 
             <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
-              
+
               {/* Sidebar do Modal */}
               <div className="w-full md:w-1/3 bg-slate-50 dark:bg-slate-800/50 p-6 border-r border-slate-100 dark:border-slate-800 space-y-6 overflow-y-auto">
-                
+
                 {/* Status Atual */}
                 <div className="space-y-2">
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Plano Atual</p>
@@ -698,17 +795,16 @@ const ProfilePage: React.FC = () => {
                 </div>
               </div>
 
-             {/* Conteúdo Principal  */}
-<div className="flex-1 p-6 overflow-y-auto max-h-[70vh] md:max-h-[600px] scrollbar-thin scrollbar-thumb-indigo-500 dark:scrollbar-thumb-indigo-600 scrollbar-track-indigo-50 dark:scrollbar-track-slate-800"> <h3 className="text-lg font-bold dark:text-white mb-4">Mudar de Plano</h3>
+              {/* Conteúdo Principal  */}
+              <div className="flex-1 p-6 overflow-y-auto max-h-[70vh] md:max-h-[600px] scrollbar-thin scrollbar-thumb-indigo-500 dark:scrollbar-thumb-indigo-600 scrollbar-track-indigo-50 dark:scrollbar-track-slate-800"> <h3 className="text-lg font-bold dark:text-white mb-4">Mudar de Plano</h3>
                 <div className="space-y-4">
                   {availablePlans.map((plan) => (
-                    <div 
+                    <div
                       key={plan.id}
-                      className={`relative rounded-2xl border-2 p-5 transition-all cursor-pointer ${
-                        currentPlan === plan.id 
-                          ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/10 dark:border-indigo-500' 
-                          : 'border-slate-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-slate-600'
-                      }`}
+                      className={`relative rounded-2xl border-2 p-5 transition-all cursor-pointer ${currentPlan === plan.id
+                        ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/10 dark:border-indigo-500'
+                        : 'border-slate-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-slate-600'
+                        }`}
                       onClick={() => handleChangePlan(plan.id)}
                     >
                       {/* Badge de Atual */}
@@ -717,7 +813,7 @@ const ProfilePage: React.FC = () => {
                           Plano Atual
                         </span>
                       )}
-                      
+
                       <div className="flex justify-between items-start mb-4">
                         <div>
                           <h4 className="font-bold text-lg dark:text-white">{plan.name}</h4>
@@ -738,13 +834,13 @@ const ProfilePage: React.FC = () => {
                       </div>
 
                       {currentPlan !== plan.id && (
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); handleChangePlan(plan.id); }}
-                            disabled={subLoading}
-                            className="mt-4 w-full py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                          >
-                            {subLoading ? 'Processando...' : plan.id === 'free' ? 'Fazer Downgrade' : 'Selecionar este Plano'}
-                          </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleChangePlan(plan.id); }}
+                          disabled={subLoading}
+                          className="mt-4 w-full py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                        >
+                          {subLoading ? 'Processando...' : plan.id === 'free' ? 'Fazer Downgrade' : 'Selecionar este Plano'}
+                        </button>
                       )}
                     </div>
                   ))}
@@ -752,7 +848,7 @@ const ProfilePage: React.FC = () => {
 
                 {currentPlan !== 'free' && (
                   <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
-                    <button 
+                    <button
                       onClick={() => alert("Função de cancelamento seria acionada aqui.")}
                       className="flex items-center gap-2 text-red-500 text-sm font-bold hover:text-red-600 transition-colors"
                     >
@@ -769,6 +865,19 @@ const ProfilePage: React.FC = () => {
           </div>
         </div>
       )}
+      {/* CONFIRM MODAL (GENÉRICO) */}
+      <ConfirmModal
+        isOpen={confirmModalOpen}
+        onClose={() => setConfirmModalOpen(false)}
+        onConfirm={executeConfirmAction}
+        title={confirmConfig.title}
+        description={confirmConfig.description}
+        confirmText={confirmConfig.confirmText}
+        cancelText={confirmConfig.cancelText}
+        isLoading={confirmLoading}
+        variant={confirmConfig.variant}
+      />
+
     </>
   );
 };
