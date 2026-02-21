@@ -10,23 +10,23 @@ import {
   Check,
   CheckCircle,
   Lock,
-  Smartphone,
   ChevronRight,
   ExternalLink,
   Loader2,
   X,
   Eye,
   EyeOff,
-  QrCode,
   CheckCircle2,
   AlertCircle,
   Calendar,
   Download
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
-import api from '../../services/api';
+import { useUser } from '../../context/UserContext';
+import api, { API_BASE_URL } from '../../services/api';
 import { useToast } from '../../components/ToastContext';
 import { ConfirmModal } from '../../components/ConfirmModal';
+import UserAvatar from '../../components/UserAvatar';
 
 interface UserProfile {
   nome: string;
@@ -48,6 +48,7 @@ interface PlanOption {
 const ProfilePage: React.FC = () => {
   const { isDarkMode } = useTheme();
   const { addToast } = useToast();
+  const { user: contextUser, refetchUser, getAvatarUrl, getUserInitials } = useUser();
 
   const [user, setUser] = useState<UserProfile | null>(null);
   const [totalPontos, setTotalPontos] = useState(0);
@@ -128,41 +129,55 @@ const ProfilePage: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const userRes = await api.get('/usuarios/me');
-        const userData = userRes.data;
+        // Usa dados já carregados pelo UserContext quando disponíveis
+        if (contextUser) {
+          setUser(contextUser);
+          setFormData({
+            nome: contextUser.nome || '',
+            email: contextUser.email || '',
+            telefone: contextUser.telefone || '',
+            cpf: contextUser.cpf || ''
+          });
 
-        setUser(userData);
-
-        if (userData.fotoPerfil) {
-          setPreviewUrl(`http://localhost:8080/uploads/${userData.fotoPerfil}`);
+          if (contextUser.fotoPerfil) {
+            setPreviewUrl(`${API_BASE_URL}/uploads/${contextUser.fotoPerfil}`);
+          }
+        } else {
+          // Fallback: busca direto da API se o contexto ainda não carregou
+          const userRes = await api.get('/usuarios/me');
+          const userData = userRes.data;
+          setUser(userData);
+          setFormData({
+            nome: userData.nome || '',
+            email: userData.email || '',
+            telefone: userData.telefone || '',
+            cpf: userData.cpf || ''
+          });
+          if (userData.fotoPerfil) {
+            setPreviewUrl(`${API_BASE_URL}/uploads/${userData.fotoPerfil}`);
+          }
         }
 
-        setFormData({
-          nome: userData.nome || '',
-          email: userData.email || '',
-          telefone: userData.telefone || '',
-          cpf: userData.cpf || ''
-        });
-
+        // Busca total de pontos separadamente
         try {
           const dashRes = await api.get('/dashboard');
-          if (dashRes.data && dashRes.data.pontosPorCartao) {
+          if (dashRes.data?.pontosPorCartao) {
             const total = dashRes.data.pontosPorCartao.reduce((acc: number, curr: any) => acc + curr.totalPontos, 0);
             setTotalPontos(total);
           }
-        } catch (e) {
-          console.warn("Não foi possível carregar saldo");
+        } catch {
+          // Saldo indisponível — não bloqueia a página
         }
 
       } catch (error) {
-        console.error("Erro ao carregar perfil:", error);
+        console.error('Erro ao carregar perfil:', error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [contextUser]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -189,6 +204,9 @@ const ProfilePage: React.FC = () => {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
       }
+
+      // Atualiza o UserContext globalmente após salvar
+      await refetchUser();
 
       addToast({
         type: 'success',
@@ -371,11 +389,20 @@ const ProfilePage: React.FC = () => {
         {/* HEADER */}
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center gap-8">
           <div className="relative group">
-            <img
-              src={previewUrl || "https://github.com/shadcn.png"}
-              alt="Profile"
-              className="w-32 h-32 rounded-full object-cover ring-4 ring-indigo-50 dark:ring-indigo-900/30"
-            />
+            {previewUrl ? (
+              <img
+                src={previewUrl}
+                alt="Profile"
+                className="w-32 h-32 rounded-full object-cover ring-4 ring-indigo-50 dark:ring-indigo-900/30"
+              />
+            ) : (
+              <UserAvatar
+                imageUrl={getAvatarUrl()}
+                initials={getUserInitials()}
+                size="lg"
+                className="ring-4 ring-indigo-50 dark:ring-indigo-900/30 rounded-full"
+              />
+            )}
             <label
               htmlFor="photo-upload"
               className="absolute bottom-0 right-0 p-2 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition-transform group-hover:scale-110 cursor-pointer"

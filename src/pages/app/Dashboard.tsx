@@ -1,22 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  TrendingUp, 
-  CreditCard as CardIcon, 
-  ArrowUpRight, 
+import {
+  TrendingUp,
+  CreditCard as CardIcon,
+  ArrowUpRight,
   ArrowDownRight,
   Wallet,
   Clock,
   Download,
   AlertCircle,
-  FileSpreadsheet 
+  FileSpreadsheet
 } from 'lucide-react';
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -88,9 +88,9 @@ const Dashboard: React.FC = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
+      window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Erro ao baixar PDF", error);
-      alert("Erro ao gerar relatório PDF.");
+      console.error('Erro ao baixar PDF', error);
     }
   };
 
@@ -104,9 +104,9 @@ const Dashboard: React.FC = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
+      window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Erro ao baixar Excel", error);
-      alert("Erro ao gerar planilha Excel.");
+      console.error('Erro ao baixar Excel', error);
     }
   };
 
@@ -132,7 +132,7 @@ const Dashboard: React.FC = () => {
         <AlertCircle size={48} className="text-red-400 mb-4" />
         <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300">Não foi possível carregar o dashboard</h3>
         <p className="mb-4">Ocorreu um erro ao comunicar com o servidor.</p>
-        <button 
+        <button
           onClick={() => window.location.reload()}
           className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
         >
@@ -150,18 +150,18 @@ const Dashboard: React.FC = () => {
           <h1 className="text-3xl font-bold dark:text-white">Dashboard</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Visão geral em tempo real.</p>
         </div>
-        
+
         {/* BOTÕES DE EXPORTAÇÃO */}
         <div className="flex gap-2">
-          <button 
+          <button
             onClick={handleExportExcel}
             className="flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-lg text-sm font-bold hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all shadow-sm"
           >
             <FileSpreadsheet size={18} />
             Excel
           </button>
-          
-          <button 
+
+          <button
             onClick={handleExportPdf}
             className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm font-medium dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
           >
@@ -173,29 +173,29 @@ const Dashboard: React.FC = () => {
 
       {/* Cards Superiores */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-        <StatCard 
-          title="Total Acumulado" 
-          value={totalPontos.toLocaleString('pt-BR')} 
-          icon={<Wallet className="text-indigo-600" />} 
-          color="indigo" 
+        <StatCard
+          title="Total Acumulado"
+          value={totalPontos.toLocaleString('pt-BR')}
+          icon={<Wallet className="text-indigo-600" />}
+          color="indigo"
         />
-        <StatCard 
-          title="Prazo Médio" 
-          value={`${prazoMedio} dias`} 
-          icon={<Clock className="text-emerald-600" />} 
-          color="emerald" 
+        <StatCard
+          title="Prazo Médio"
+          value={`${prazoMedio} dias`}
+          icon={<Clock className="text-emerald-600" />}
+          color="emerald"
         />
-        <StatCard 
-          title="Programas Ativos" 
-          value={qtdCartoes.toString()} 
-          icon={<CardIcon className="text-amber-600" />} 
-          color="amber" 
+        <StatCard
+          title="Programas Ativos"
+          value={qtdCartoes.toString()}
+          icon={<CardIcon className="text-amber-600" />}
+          color="amber"
         />
-        <StatCard 
-          title="Vencendo em 30d" 
-          value={expirando.toLocaleString('pt-BR')} 
-          icon={<TrendingUp className="text-rose-600" />} 
-          color="rose" 
+        <StatCard
+          title="Vencendo em 30d"
+          value={expirando.toLocaleString('pt-BR')}
+          icon={<TrendingUp className="text-rose-600" />}
+          color="rose"
           subText={expirando > 0 ? "Atenção necessária" : undefined}
         />
       </div>
@@ -203,38 +203,38 @@ const Dashboard: React.FC = () => {
       {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Histórico - Gráfico de Linha */}
-          <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
-            <h3 className="text-lg font-bold dark:text-white mb-6">Gráfico de Pontos</h3>
-            <div className="h-[300px] w-full">
-              {areaData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={areaData}> {/* LineChart */}
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDarkMode ? '#1e293b' : '#e2e8f0'} />
-                    <XAxis 
-                      dataKey="month" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{fill: '#94a3b8', fontSize: 12}} 
-                    />
-                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
-                    <Line 
-                      type="monotone" 
-                      dataKey="points" 
-                      stroke="#4f46e5" 
-                      strokeWidth={3} 
-                      dot={{ r: 4, fill: '#f14714', strokeWidth: 2, stroke: '#e9da0d' }} 
-                      activeDot={{ r: 6, strokeWidth: 0 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                  <p>Sem dados de histórico suficientes.</p>
-                </div>
-              )}
-            </div>
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
+          <h3 className="text-lg font-bold dark:text-white mb-6">Gráfico de Pontos</h3>
+          <div className="h-[300px] w-full">
+            {areaData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={areaData}> {/* LineChart */}
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDarkMode ? '#1e293b' : '#e2e8f0'} />
+                  <XAxis
+                    dataKey="month"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#94a3b8', fontSize: 12 }}
+                  />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                  <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
+                  <Line
+                    type="monotone"
+                    dataKey="points"
+                    stroke="#4f46e5"
+                    strokeWidth={3}
+                    dot={{ r: 4, fill: '#f14714', strokeWidth: 2, stroke: '#e9da0d' }}
+                    activeDot={{ r: 6, strokeWidth: 0 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                <p>Sem dados de histórico suficientes.</p>
+              </div>
+            )}
           </div>
+        </div>
 
         {/* Pizza */}
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
@@ -256,7 +256,7 @@ const Dashboard: React.FC = () => {
                 Sem cartões cadastrados.
               </div>
             )}
-            
+
             {pieData.length > 0 && (
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-2xl font-bold dark:text-white">
@@ -334,10 +334,16 @@ const Dashboard: React.FC = () => {
   );
 };
 
-// --- ALTERAÇÃO AQUI EMBAIXO ---
-const StatCard = ({ title, value, icon, color, subText }: any) => {
-  const borderColors: Record<string, string> = {
-    // ALTERAÇÃO AQUI: Adicionamos a classe 'dark:border-l-...' para garantir a cor no modo escuro
+interface StatCardProps {
+  title: string;
+  value: string;
+  icon: React.ReactNode;
+  color: 'indigo' | 'emerald' | 'amber' | 'rose';
+  subText?: string;
+}
+
+const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, subText }) => {
+  const borderColors: Record<StatCardProps['color'], string> = {
     indigo: 'border-l-indigo-500 dark:border-l-indigo-500',
     emerald: 'border-l-emerald-500 dark:border-l-emerald-500',
     amber: 'border-l-amber-500 dark:border-l-amber-500',
@@ -345,7 +351,7 @@ const StatCard = ({ title, value, icon, color, subText }: any) => {
   };
 
   return (
-    <div className={`bg-white dark:bg-slate-900 p-2 rounded-2xl border-l-4 ${borderColors[color] || 'border-l-gray-500'} shadow-sm border-slate-100 dark:border-slate-800`}>
+    <div className={`bg-white dark:bg-slate-900 p-4 rounded-2xl border-l-4 ${borderColors[color]} shadow-sm border border-slate-100 dark:border-slate-800`}>
       <div className="flex justify-between items-start mb-4">
         <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl">{icon}</div>
       </div>

@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { UserUpdateData, Promotion, LoyaltyProgram, Notificacao, Transaction, CreditCard, ResumoPendentesResponse } from '../types/types';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+
 const api = axios.create({
-  baseURL: 'http://localhost:8080', 
+  baseURL: API_URL,
 });
 
 api.interceptors.request.use((config) => {
@@ -13,8 +15,21 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Interceptor de resposta para lidar com tokens expirados globalmente
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;
 
+export const API_BASE_URL = API_URL;
 
 export const uploadFile = async (file: File): Promise<string> => {
   const formData = new FormData();
@@ -69,12 +84,11 @@ export const getNotificacoes = async () => {
 };
 
 export const marcarNotificacaoComoLida = async (id: number) => {
-  console.log("Enviando PATCH para ID:", id);
   await api.patch(`/notificacoes/${id}/lida`);
 };
 
 export const getCompras = async () => {
-  const response = await api.get<Transaction[]>('/compras'); 
+  const response = await api.get<Transaction[]>('/compras');
   return response.data;
 };
 
@@ -82,16 +96,19 @@ export const getCartoes = async () => {
   const response = await api.get<CreditCard[]>('/cartoes');
   return response.data;
 };
+
 export const getPontosPendentes = async (): Promise<ResumoPendentesResponse> => {
   const response = await api.get<ResumoPendentesResponse>('/compras/pendentes/total');
   return response.data;
 };
+
 export const getPontosExpirando = async (dias: number = 30): Promise<number> => {
   const response = await api.get<number>('/movimentacoes/expirando', {
-    params: { dias } 
+    params: { dias }
   });
   return response.data;
 };
+
 export const creditarCompra = async (id: number) => {
   await api.put(`/compras/${id}/creditar`);
 };
@@ -99,6 +116,3 @@ export const creditarCompra = async (id: number) => {
 export const participarPromocao = async (id: number) => {
   await api.post(`/promocoes/${id}/participar`);
 };
-
-
-

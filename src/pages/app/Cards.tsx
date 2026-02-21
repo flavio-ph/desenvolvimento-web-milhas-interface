@@ -11,7 +11,7 @@ interface Cartao {
   ultimosDigitos: string;
   fatorConversao: number;
   nomeBandeira?: string;
-  nomeProgramaPontos?: string; 
+  nomeProgramaPontos?: string;
   cor?: string;
   possuiCompras?: boolean; // Campo necessário para o bloqueio
 }
@@ -27,17 +27,17 @@ interface Programa {
 }
 
 const CARD_COLORS = [
-  '#820AD1', 
-  '#ec6708', 
-  '#cc092f', 
-  '#0056a6', 
-  '#1a1a1a', 
-  '#eab308', 
-  '#10b981', 
+  '#820AD1',
+  '#ec6708',
+  '#cc092f',
+  '#0056a6',
+  '#1a1a1a',
+  '#eab308',
+  '#10b981',
 ];
 
 const CardsPage: React.FC = () => {
-  const { addToast } = useToast(); 
+  const { addToast } = useToast();
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -91,7 +91,7 @@ const CardsPage: React.FC = () => {
   }, []);
 
   const openCreateModal = () => {
-    setEditingCardId(null); 
+    setEditingCardId(null);
     setFormData({
       nomePersonalizado: '',
       ultimosDigitos: '',
@@ -143,6 +143,15 @@ const CardsPage: React.FC = () => {
       return;
     }
 
+    if (formData.ultimosDigitos.length !== 4) {
+      addToast({
+        type: 'warning',
+        title: 'Dígitos inválidos',
+        description: 'Informe exatamente os 4 últimos dígitos do cartão.'
+      });
+      return;
+    }
+
     try {
       const payload = {
         nomePersonalizado: formData.nomePersonalizado,
@@ -160,8 +169,8 @@ const CardsPage: React.FC = () => {
       }
 
       setShowModal(false);
-      fetchData(); 
-      
+      fetchData();
+
       addToast({
         type: 'success',
         title: 'Sucesso!',
@@ -170,9 +179,7 @@ const CardsPage: React.FC = () => {
 
     } catch (error: any) {
       console.error('Erro ao salvar cartão:', error);
-
       const msg = error.response?.data?.message || 'Verifique os dados e tente novamente.';
-
       addToast({
         type: 'error',
         title: 'Erro ao salvar',
@@ -180,6 +187,7 @@ const CardsPage: React.FC = () => {
       });
     }
   };
+
 
   // Abre o modal de confirmação em vez de usar window.confirm
   const handleDeleteCard = (id: number) => {
@@ -195,24 +203,24 @@ const CardsPage: React.FC = () => {
       setIsDeleting(true);
       await api.delete(`/cartoes/${cardToDelete}`);
       setCards(cards.filter(c => c.id !== cardToDelete));
-      
+
       addToast({
         type: 'success',
         title: 'Cartão removido',
         description: 'O cartão foi excluído com sucesso.'
       });
-      
+
       setDeleteModalOpen(false);
 
     } catch (error) {
       console.error('Erro ao deletar cartão:', error);
-      
+
       addToast({
         type: 'error',
         title: 'Não foi possível excluir',
         description: 'Verifique se existem compras vinculadas a este cartão.'
       });
-      
+
       setDeleteModalOpen(false);
     } finally {
       setIsDeleting(false);
@@ -417,12 +425,19 @@ const CardsPage: React.FC = () => {
                       <input
                         type="text"
                         maxLength={4}
+                        minLength={4}
                         value={formData.ultimosDigitos}
                         onChange={e => setFormData({ ...formData, ultimosDigitos: e.target.value.replace(/\D/g, '') })}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-center tracking-widest font-mono"
+                        className={`w-full px-4 py-3 rounded-xl border bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-center tracking-widest font-mono ${formData.ultimosDigitos.length > 0 && formData.ultimosDigitos.length < 4
+                          ? 'border-amber-400 dark:border-amber-600'
+                          : 'border-slate-200 dark:border-slate-800'
+                          }`}
                         placeholder="0000"
                         required
                       />
+                      {formData.ultimosDigitos.length > 0 && formData.ultimosDigitos.length < 4 && (
+                        <p className="text-xs text-amber-500 mt-1">Informe os 4 dígitos completos</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Pontos por $</label>
@@ -544,7 +559,7 @@ const CardsPage: React.FC = () => {
       )}
 
       {/* MODAL DE CONFIRMAÇÃO DE EXCLUSÃO */}
-      <ConfirmModal 
+      <ConfirmModal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={confirmDelete}
