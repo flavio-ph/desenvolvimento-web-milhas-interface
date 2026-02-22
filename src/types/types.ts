@@ -7,9 +7,9 @@ export enum CardBrand {
 }
 
 export interface LoyaltyProgram {
-  id: number; 
-  nome: string; 
-  points?: number; 
+  id: number;
+  nome: string;
+  points?: number;
   color?: string;
 }
 
@@ -24,28 +24,38 @@ export interface CreditCard {
   brand: CardBrand;
   lastFour: string;
   programId: string;
-  multiplier: number; 
+  multiplier: number;
 }
 
 export interface Transaction {
-  id: number; 
+  id: number;
   descricao: string;
   quantidadePontos: number;
   dataMovimentacao: string;
   tipo: 'ACUMULO' | 'USO' | 'BONUS' | 'EXPIRACAO' | 'AJUSTE' | 'TRANSFERENCIA_ENTRADA' | 'TRANSFERENCIA_SAIDA';
-  status: 'PENDENTE' | 'CREDITADO' | 'EXPIRADO'; 
+  status: 'PENDENTE' | 'CREDITADO' | 'EXPIRADO';
   nomePrograma: string;
 }
 
-export interface Promotion  {
+export interface Promotion {
   id: number;
   titulo: string;
   descricao: string;
   urlPromocao: string;
   bonusPorcentagem: number;
-  dataInicio: string; 
+  dataInicio: string;
   dataFim: string;
-  nnomeProgramaPontos: string; 
+  nomeProgramaPontos: string;
+  programaPontosId: number;
+}
+
+export interface PromotionPayload {
+  titulo: string;
+  descricao: string;
+  urlPromocao?: string;
+  bonusPorcentagem: number;
+  dataInicio: string;
+  dataFim: string;
   programaPontosId: number;
 }
 
@@ -53,7 +63,7 @@ export interface User {
   id: number;
   nome: string;
   email: string;
-  fotoPerfil?: string; 
+  fotoPerfil?: string;
   role: 'USER' | 'ADMIN';
 }
 
@@ -61,7 +71,7 @@ export interface UserUpdateData {
   nome?: string;
   telefone?: string;
   cpf?: string;
-  fotoPerfil?: string; 
+  fotoPerfil?: string;
 }
 
 export interface Notificacao {

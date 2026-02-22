@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './components/ToastContext';
 import { UserProvider } from './context/UserContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Lazy loading de todas as páginas para melhor performance
 const Dashboard = lazy(() => import('./pages/app/Dashboard'));
@@ -53,94 +54,96 @@ const PageLoader = () => (
 
 const App: React.FC = () => {
   return (
-    <ThemeProvider>
-      <ToastProvider>
-        <UserProvider>
-          <Router>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                {/* ROTAS PÚBLICAS */}
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/recover" element={<RecoverPassword />} />
+    <ErrorBoundary>
+      <ThemeProvider>
+        <ToastProvider>
+          <UserProvider>
+            <Router>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  {/* ROTAS PÚBLICAS */}
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/recover" element={<RecoverPassword />} />
 
-                {/* ROTAS PRIVADAS */}
-                <Route path="/" element={
-                  <PrivateRoute>
-                    <Layout><Dashboard /></Layout>
-                  </PrivateRoute>
-                } />
+                  {/* ROTAS PRIVADAS */}
+                  <Route path="/" element={
+                    <PrivateRoute>
+                      <Layout><Dashboard /></Layout>
+                    </PrivateRoute>
+                  } />
 
-                <Route path="/cards" element={
-                  <PrivateRoute>
-                    <Layout><CardsPage /></Layout>
-                  </PrivateRoute>
-                } />
+                  <Route path="/cards" element={
+                    <PrivateRoute>
+                      <Layout><CardsPage /></Layout>
+                    </PrivateRoute>
+                  } />
 
-                <Route path="/new-purchase" element={
-                  <PrivateRoute>
-                    <Layout><RegisterPurchase /></Layout>
-                  </PrivateRoute>
-                } />
+                  <Route path="/new-purchase" element={
+                    <PrivateRoute>
+                      <Layout><RegisterPurchase /></Layout>
+                    </PrivateRoute>
+                  } />
 
-                <Route path="/history" element={
-                  <PrivateRoute>
-                    <Layout><HistoryPage /></Layout>
-                  </PrivateRoute>
-                } />
+                  <Route path="/history" element={
+                    <PrivateRoute>
+                      <Layout><HistoryPage /></Layout>
+                    </PrivateRoute>
+                  } />
 
-                <Route path="/promotions" element={
-                  <PrivateRoute>
-                    <Layout><PromotionsPage /></Layout>
-                  </PrivateRoute>
-                } />
+                  <Route path="/promotions" element={
+                    <PrivateRoute>
+                      <Layout><PromotionsPage /></Layout>
+                    </PrivateRoute>
+                  } />
 
-                <Route path="/profile" element={
-                  <PrivateRoute>
-                    <Layout><ProfilePage /></Layout>
-                  </PrivateRoute>
-                } />
+                  <Route path="/profile" element={
+                    <PrivateRoute>
+                      <Layout><ProfilePage /></Layout>
+                    </PrivateRoute>
+                  } />
 
-                <Route path="/notifications" element={
-                  <PrivateRoute>
-                    <Layout><NotificationsPage /></Layout>
-                  </PrivateRoute>
-                } />
+                  <Route path="/notifications" element={
+                    <PrivateRoute>
+                      <Layout><NotificationsPage /></Layout>
+                    </PrivateRoute>
+                  } />
 
-                <Route path="/search" element={
-                  <PrivateRoute>
-                    <Layout><SearchResults /></Layout>
-                  </PrivateRoute>
-                } />
+                  <Route path="/search" element={
+                    <PrivateRoute>
+                      <Layout><SearchResults /></Layout>
+                    </PrivateRoute>
+                  } />
 
-                {/* ROTAS DE ADMIN */}
-                <Route path="/admin/brands" element={
-                  <PrivateRoute>
-                    <Layout><AdminBrands /></Layout>
-                  </PrivateRoute>
-                } />
+                  {/* ROTAS DE ADMIN */}
+                  <Route path="/admin/brands" element={
+                    <PrivateRoute>
+                      <Layout><AdminBrands /></Layout>
+                    </PrivateRoute>
+                  } />
 
-                <Route path="/admin/programs" element={
-                  <PrivateRoute>
-                    <Layout><AdminPrograms /></Layout>
-                  </PrivateRoute>
-                } />
+                  <Route path="/admin/programs" element={
+                    <PrivateRoute>
+                      <Layout><AdminPrograms /></Layout>
+                    </PrivateRoute>
+                  } />
 
-                <Route path="/admin/new-promotion" element={
-                  <PrivateRoute>
-                    <Layout><AdminPromotions /></Layout>
-                  </PrivateRoute>
-                } />
+                  <Route path="/admin/new-promotion" element={
+                    <PrivateRoute>
+                      <Layout><AdminPromotions /></Layout>
+                    </PrivateRoute>
+                  } />
 
-                {/* Rota 404 */}
-                <Route path="*" element={<NotFoundPage />} />
+                  {/* Rota 404 */}
+                  <Route path="*" element={<NotFoundPage />} />
 
-              </Routes>
-            </Suspense>
-          </Router>
-        </UserProvider>
-      </ToastProvider>
-    </ThemeProvider>
+                </Routes>
+              </Suspense>
+            </Router>
+          </UserProvider>
+        </ToastProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 };
 

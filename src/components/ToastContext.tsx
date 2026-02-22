@@ -17,14 +17,20 @@ interface ToastContextData {
 
 const ToastContext = createContext<ToastContextData>({} as ToastContextData);
 
+const MAX_TOASTS = 4;
+
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [messages, setMessages] = useState<ToastMessage[]>([]);
 
   const addToast = useCallback(({ type, title, description }: Omit<ToastMessage, 'id'>) => {
-    const id = Math.random().toString(36).substring(2); // ID simples
+    const id = Math.random().toString(36).substring(2);
     const toast = { id, type, title, description };
 
-    setMessages((state) => [...state, toast]);
+    setMessages((state) => {
+      // Remove o mais antigo se já atingiu o limite
+      const trimmed = state.length >= MAX_TOASTS ? state.slice(1) : state;
+      return [...trimmed, toast];
+    });
 
     setTimeout(() => {
       setMessages((state) => state.filter((message) => message.id !== id));
@@ -38,7 +44,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   return (
     <ToastContext.Provider value={{ addToast, removeToast }}>
       {children}
-      
+
       {/* Container dos Toasts (Fica flutuando na tela) */}
       <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full p-4 pointer-events-none">
         {messages.map((message) => (
@@ -52,8 +58,8 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 const ToastItem: React.FC<{ message: ToastMessage; onRemove: (id: string) => void }> = ({ message, onRemove }) => {
   const styles = {
     success: { bg: 'bg-emerald-50 dark:bg-emerald-900/20', border: 'border-emerald-200 dark:border-emerald-800', text: 'text-emerald-800 dark:text-emerald-300', icon: <CheckCircle size={20} className="text-emerald-500" /> },
-    error:   { bg: 'bg-rose-50 dark:bg-rose-900/20', border: 'border-rose-200 dark:border-rose-800', text: 'text-rose-800 dark:text-rose-300', icon: <AlertCircle size={20} className="text-rose-500" /> },
-    info:    { bg: 'bg-indigo-50 dark:bg-indigo-900/20', border: 'border-indigo-200 dark:border-indigo-800', text: 'text-indigo-800 dark:text-indigo-300', icon: <Info size={20} className="text-indigo-500" /> },
+    error: { bg: 'bg-rose-50 dark:bg-rose-900/20', border: 'border-rose-200 dark:border-rose-800', text: 'text-rose-800 dark:text-rose-300', icon: <AlertCircle size={20} className="text-rose-500" /> },
+    info: { bg: 'bg-indigo-50 dark:bg-indigo-900/20', border: 'border-indigo-200 dark:border-indigo-800', text: 'text-indigo-800 dark:text-indigo-300', icon: <Info size={20} className="text-indigo-500" /> },
     warning: { bg: 'bg-amber-50 dark:bg-amber-900/20', border: 'border-amber-200 dark:border-amber-800', text: 'text-amber-800 dark:text-amber-300', icon: <AlertTriangle size={20} className="text-amber-500" /> },
   };
 

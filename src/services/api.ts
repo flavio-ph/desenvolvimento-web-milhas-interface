@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { UserUpdateData, Promotion, LoyaltyProgram, Notificacao, Transaction, CreditCard, ResumoPendentesResponse } from '../types/types';
+import { UserUpdateData, Promotion, PromotionPayload, LoyaltyProgram, Notificacao, Transaction, CreditCard, ResumoPendentesResponse } from '../types/types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
@@ -50,7 +50,7 @@ export const getPromocoes = async () => {
   return response.data;
 };
 
-export const createPromocao = async (data: any) => {
+export const createPromocao = async (data: PromotionPayload) => {
   const response = await api.post('/promocoes', data);
   return response.data;
 };
@@ -59,7 +59,7 @@ export const deletePromocao = async (id: number) => {
   await api.delete(`/promocoes/${id}`);
 };
 
-export const updatePromocao = async (id: number, data: any) => {
+export const updatePromocao = async (id: number, data: Partial<PromotionPayload>) => {
   const response = await api.put(`/promocoes/${id}`, data);
   return response.data;
 };

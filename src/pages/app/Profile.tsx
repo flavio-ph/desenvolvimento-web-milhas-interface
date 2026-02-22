@@ -37,6 +37,38 @@ interface UserProfile {
   dataCadastro?: string;
 }
 
+// ── Helpers de máscara ───────────────────────────────────────────────
+const maskCPF = (v: string) =>
+  v.replace(/\D/g, '')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+    .slice(0, 14);
+
+const maskPhone = (v: string) => {
+  const d = v.replace(/\D/g, '').slice(0, 11);
+  if (d.length <= 10)
+    return d.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+  return d.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
+};
+
+// ── Indicador de força de senha ───────────────────────────────────
+const getPasswordStrength = (password: string): { score: number; label: string; color: string } => {
+  if (!password) return { score: 0, label: '', color: '' };
+  let score = 0;
+  if (password.length >= 8) score++;
+  if (password.length >= 12) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+
+  if (score <= 1) return { score, label: 'Muito fraca', color: 'bg-rose-500' };
+  if (score === 2) return { score, label: 'Fraca', color: 'bg-orange-400' };
+  if (score === 3) return { score, label: 'Média', color: 'bg-amber-400' };
+  if (score === 4) return { score, label: 'Forte', color: 'bg-emerald-500' };
+  return { score, label: 'Muito forte', color: 'bg-emerald-600' };
+};
+
 interface PlanOption {
   id: string;
   name: string;
@@ -489,7 +521,7 @@ const ProfilePage: React.FC = () => {
                       type="text"
                       placeholder="(00) 00000-0000"
                       value={formData.telefone}
-                      onChange={e => setFormData({ ...formData, telefone: e.target.value })}
+                      onChange={e => setFormData({ ...formData, telefone: maskPhone(e.target.value) })}
                       className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all"
                     />
                   </div>
@@ -505,7 +537,7 @@ const ProfilePage: React.FC = () => {
                       type="text"
                       placeholder="000.000.000-00"
                       value={formData.cpf}
-                      onChange={e => setFormData({ ...formData, cpf: e.target.value })}
+                      onChange={e => setFormData({ ...formData, cpf: maskCPF(e.target.value) })}
                       className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white transition-all"
                     />
                   </div>
@@ -620,7 +652,7 @@ const ProfilePage: React.FC = () => {
                     value={passwordForm.nova}
                     onChange={(e) => setPasswordForm({ ...passwordForm, nova: e.target.value })}
                     className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white"
-                    placeholder="Mínimo de 6 caracteres"
+                    placeholder="Mínimo de 8 caracteres"
                   />
                   <button
                     type="button"
@@ -630,6 +662,26 @@ const ProfilePage: React.FC = () => {
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
+                {/* Indicador de força */}
+                {passwordForm.nova && (() => {
+                  const strength = getPasswordStrength(passwordForm.nova);
+                  return (
+                    <div className="space-y-1">
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map(i => (
+                          <div
+                            key={i}
+                            className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${i <= strength.score ? strength.color : 'bg-slate-200 dark:bg-slate-700'}`}
+                          />
+                        ))}
+                      </div>
+                      <p className={`text-xs font-semibold ${strength.score <= 1 ? 'text-rose-500' :
+                          strength.score === 2 ? 'text-orange-400' :
+                            strength.score === 3 ? 'text-amber-400' : 'text-emerald-500'
+                        }`}>{strength.label}</p>
+                    </div>
+                  );
+                })()}
               </div>
 
               <div className="space-y-2">

@@ -70,11 +70,25 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
   };
 
-  // Polling de notificações: iniciado uma única vez, não depende de location.pathname
+  // Polling de notificações: pausa quando aba está em background
   useEffect(() => {
     fetchNotificacoes();
-    const interval = setInterval(fetchNotificacoes, POLLING_INTERVAL_MS);
-    return () => clearInterval(interval);
+    let interval = setInterval(fetchNotificacoes, POLLING_INTERVAL_MS);
+
+    const handleVisibility = () => {
+      if (document.hidden) {
+        clearInterval(interval);
+      } else {
+        fetchNotificacoes();
+        interval = setInterval(fetchNotificacoes, POLLING_INTERVAL_MS);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
 
   // Atualiza notificações ao receber evento personalizado (ex: marcar como lida em outra página)
@@ -188,35 +202,40 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </Link>
             ))}
 
-            {!isCollapsed && (
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-10 mb-3 px-4 animate-fadeIn">
-                Administrativo
-              </div>
-            )}
-            {isCollapsed && <div className="my-4 border-t border-slate-100 dark:border-slate-800 w-10 mx-auto"></div>}
-
-            {ADMIN_MENU_ITEMS.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                title={isCollapsed ? item.label : ''}
-                className={`
-                  flex items-center gap-3 px-4 py-3 mx-2 rounded-xl transition-all duration-300 group font-medium
-                  ${location.pathname === item.path
-                    ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-lg shadow-emerald-200 dark:shadow-emerald-900/20'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-emerald-600 dark:hover:text-emerald-400'
-                  }
-                  ${isCollapsed ? 'justify-center px-0 mx-0' : ''}
-                `}
-              >
-                <div className={`${location.pathname === item.path ? 'text-white' : 'group-hover:scale-110 transition-transform duration-200'}`}>
-                  {item.icon}
-                </div>
+            {/* Menu Administrativo: só visível para ADMIN */}
+            {user?.role === 'ADMIN' && (
+              <>
                 {!isCollapsed && (
-                  <span className="whitespace-nowrap">{item.label}</span>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-10 mb-3 px-4 animate-fadeIn">
+                    Administrativo
+                  </div>
                 )}
-              </Link>
-            ))}
+                {isCollapsed && <div className="my-4 border-t border-slate-100 dark:border-slate-800 w-10 mx-auto"></div>}
+
+                {ADMIN_MENU_ITEMS.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    title={isCollapsed ? item.label : ''}
+                    className={`
+                      flex items-center gap-3 px-4 py-3 mx-2 rounded-xl transition-all duration-300 group font-medium
+                      ${location.pathname === item.path
+                        ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-lg shadow-emerald-200 dark:shadow-emerald-900/20'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-emerald-600 dark:hover:text-emerald-400'
+                      }
+                      ${isCollapsed ? 'justify-center px-0 mx-0' : ''}
+                    `}
+                  >
+                    <div className={`${location.pathname === item.path ? 'text-white' : 'group-hover:scale-110 transition-transform duration-200'}`}>
+                      {item.icon}
+                    </div>
+                    {!isCollapsed && (
+                      <span className="whitespace-nowrap">{item.label}</span>
+                    )}
+                  </Link>
+                ))}
+              </>
+            )}
           </nav>
 
           {/* Footer Sidebar (Logout) */}
@@ -292,7 +311,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               >
                 <Bell size={20} />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 inline-flex items-center justify-center min-w-[10px] h-[10px] bg-red-500 border-2 border-white dark:border-slate-900 rounded-full animate-pulse">
+                  <span className="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-red-500 border-2 border-white dark:border-slate-900 rounded-full text-[10px] font-bold text-white">
+                    {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
               </button>

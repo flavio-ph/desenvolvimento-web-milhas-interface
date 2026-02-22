@@ -119,11 +119,7 @@ const Dashboard: React.FC = () => {
   const areaData = data?.historicoPontos?.map(h => ({ month: h.mes, points: h.pontos })) || [];
 
   if (loading) {
-    return (
-      <div className="flex h-96 items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (error || !data) {
@@ -361,5 +357,77 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, subText 
     </div>
   );
 };
+
+// ── Skeleton Screen ──────────────────────────────────────────────────────────
+const Shimmer = ({ className }: { className?: string }) => (
+  <div className={`animate-pulse bg-slate-200 dark:bg-slate-700 rounded-xl ${className ?? ''}`} />
+);
+
+const DashboardSkeleton: React.FC = () => (
+  <div className="space-y-8 pb-10">
+    {/* Header skeleton */}
+    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="space-y-2">
+        <Shimmer className="h-8 w-48" />
+        <Shimmer className="h-4 w-64" />
+      </div>
+      <div className="flex gap-2">
+        <Shimmer className="h-9 w-24" />
+        <Shimmer className="h-9 w-20" />
+      </div>
+    </div>
+
+    {/* Stat cards skeleton */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+      {[0, 1, 2, 3].map(i => (
+        <div key={i} className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+          <Shimmer className="h-10 w-10" />
+          <Shimmer className="h-3 w-28" />
+          <Shimmer className="h-8 w-20" />
+        </div>
+      ))}
+    </div>
+
+    {/* Charts skeleton */}
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
+        <Shimmer className="h-5 w-40 mb-6" />
+        <Shimmer className="h-[300px] w-full" />
+      </div>
+      <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
+        <Shimmer className="h-5 w-32 mb-4" />
+        <Shimmer className="h-[250px] w-full rounded-full mx-auto" />
+        <div className="mt-4 space-y-3">
+          {[0, 1, 2].map(i => (
+            <div key={i} className="flex justify-between items-center">
+              <Shimmer className="h-3 w-24" />
+              <Shimmer className="h-3 w-12" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    {/* Table skeleton */}
+    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+      <div className="p-6 border-b border-slate-100 dark:border-slate-800">
+        <Shimmer className="h-5 w-48" />
+      </div>
+      <div className="divide-y divide-slate-100 dark:divide-slate-800">
+        {[0, 1, 2, 3, 4].map(i => (
+          <div key={i} className="px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Shimmer className="h-8 w-8" />
+              <Shimmer className="h-4 w-40" />
+            </div>
+            <Shimmer className="h-4 w-20" />
+            <Shimmer className="h-4 w-16" />
+            <Shimmer className="h-4 w-24" />
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
 
 export default Dashboard;
