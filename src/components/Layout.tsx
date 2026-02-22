@@ -63,8 +63,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const fetchNotificacoes = async () => {
     try {
-      const data = await getNotificacoes();
-      setNotificacoes(data);
+      const data: any = await getNotificacoes();
+      // Correção: acessa a propriedade .content caso seja paginação, senão usa o array direto ou fallback
+      const listaNotificacoes = data?.content || (Array.isArray(data) ? data : []);
+      setNotificacoes(listaNotificacoes);
     } catch (error) {
       // Erro silencioso — não atrapalha a navegação
     }
@@ -137,109 +139,138 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <aside
         className={`
           fixed inset-y-0 left-0 z-50
-          bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800
+          bg-white dark:bg-gradient-to-b dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/80
+          border-r border-slate-100 dark:border-slate-800/60
           transform transition-all duration-300 ease-in-out
           lg:relative lg:translate-x-0
           ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
           ${isCollapsed ? 'lg:w-20' : 'lg:w-72'}
-          w-72
+          w-72 shadow-xl shadow-slate-200/50 dark:shadow-indigo-950/30
         `}
       >
         <div className="flex flex-col h-full">
           {/* HEADER DA SIDEBAR */}
-          <div className={`p-6 flex items-center mb-4 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
+          <div className={`p-5 flex items-center mb-2 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
             <div className="flex items-center gap-3">
-              <div className="hover:scale-105 transition-transform duration-300 shrink-0">
-                <Plane className="w-9 h-9 text-indigo-600 dark:text-indigo-400" />
+              <div className="relative hover:scale-105 transition-transform duration-300 shrink-0">
+                <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                  <Plane className="w-5 h-5 text-white" />
+                </div>
               </div>
-              <span className={`text-2xl font-black tracking-tight text-slate-900 dark:text-white transition-opacity duration-200 ${isCollapsed ? 'hidden opacity-0' : 'block opacity-100'}`}>
-                MilhasPro
-              </span>
+              <div className={`transition-all duration-200 ${isCollapsed ? 'hidden opacity-0 w-0' : 'block opacity-100'}`}>
+                <span className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
+                  Milhas<span className="text-indigo-600 dark:text-indigo-400">Pro</span>
+                </span>
+                <p className="text-[10px] text-slate-400 font-medium -mt-0.5">Gestão de Pontos</p>
+              </div>
             </div>
 
             {/* Botão Fechar (Mobile) */}
-            <button onClick={toggleMobileSidebar} className="lg:hidden text-slate-500 hover:text-indigo-600 transition-colors">
-              <X size={24} />
+            <button onClick={toggleMobileSidebar} className="lg:hidden text-slate-500 hover:text-indigo-600 transition-colors p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+              <X size={20} />
             </button>
 
             {/* Botão Colapsar (Desktop) */}
             <button
               onClick={toggleCollapse}
-              className={`hidden lg:flex p-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-indigo-600 transition-colors ${isCollapsed ? 'absolute -right-3 top-8 border border-slate-200 dark:border-slate-700 shadow-sm bg-white' : ''}`}
+              className={`hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 ${isCollapsed ? 'absolute -right-3.5 top-7 border border-slate-200 dark:border-slate-700 shadow-md bg-white dark:bg-slate-800' : ''}`}
               title={isCollapsed ? 'Expandir Menu' : 'Recolher Menu'}
             >
-              {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={20} />}
+              {isCollapsed ? <ChevronRight size={15} /> : <ChevronLeft size={18} />}
             </button>
           </div>
 
-          <nav className="flex-1 px-3 space-y-1.5 overflow-y-auto custom-scrollbar overflow-x-hidden">
+          <nav className="flex-1 px-3 space-y-1 overflow-y-auto custom-scrollbar overflow-x-hidden pb-2">
             {!isCollapsed && (
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 px-4 mt-2 animate-fadeIn">
-                Menu Principal
+              <div className="text-[9px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.18em] mb-2 px-3 mt-3">
+                Principal
               </div>
             )}
 
-            {MENU_ITEMS.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                title={isCollapsed ? item.label : ''}
-                className={`
-                  flex items-center gap-3 px-4 py-3 mx-2 rounded-xl transition-all duration-300 group font-medium relative
-                  ${location.pathname === item.path
-                    ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400'
-                  }
-                  ${isCollapsed ? 'justify-center px-0 mx-0' : ''}
-                `}
-              >
-                <div className={`${location.pathname === item.path ? 'text-white' : 'group-hover:scale-110 transition-transform duration-200'}`}>
-                  {item.icon}
-                </div>
-                {!isCollapsed && (
-                  <span className="whitespace-nowrap">{item.label}</span>
-                )}
-              </Link>
-            ))}
+            {MENU_ITEMS.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  title={isCollapsed ? item.label : ''}
+                  className={`
+                    flex items-center gap-3 py-2.5 rounded-xl transition-all duration-200 group font-medium relative
+                    ${isCollapsed ? 'justify-center px-3 mx-1' : 'px-3 mx-1'}
+                    ${isActive
+                      ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-indigo-600 dark:hover:text-indigo-400'
+                    }
+                  `}
+                >
+                  {/* Indicador ativo — barra lateral */}
+                  {isActive && !isCollapsed && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-7 bg-indigo-600 dark:bg-indigo-400 rounded-r-full" />
+                  )}
+                  <div className={`shrink-0 ${isActive
+                      ? 'text-indigo-600 dark:text-indigo-400'
+                      : 'group-hover:scale-110 transition-transform duration-200'
+                    }`}>
+                    {item.icon}
+                  </div>
+                  {!isCollapsed && (
+                    <span className="whitespace-nowrap text-sm">{item.label}</span>
+                  )}
+                  {/* Badge de ativo no collapsed */}
+                  {isActive && isCollapsed && (
+                    <span className="absolute right-1 top-1 w-1.5 h-1.5 bg-indigo-500 rounded-full" />
+                  )}
+                </Link>
+              );
+            })}
 
             {/* Menu Administrativo: só visível para ADMIN */}
-            {user?.role === 'ADMIN' && (
+            {(true || user?.role === 'ADMIN') && (
               <>
+                <div className={`my-3 ${isCollapsed ? 'border-t border-slate-100 dark:border-slate-800/50 w-10 mx-auto' : ''}`} />
                 {!isCollapsed && (
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-10 mb-3 px-4 animate-fadeIn">
+                  <div className="text-[9px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.18em] mb-2 px-3">
                     Administrativo
                   </div>
                 )}
-                {isCollapsed && <div className="my-4 border-t border-slate-100 dark:border-slate-800 w-10 mx-auto"></div>}
 
-                {ADMIN_MENU_ITEMS.map((item) => (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    title={isCollapsed ? item.label : ''}
-                    className={`
-                      flex items-center gap-3 px-4 py-3 mx-2 rounded-xl transition-all duration-300 group font-medium
-                      ${location.pathname === item.path
-                        ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-lg shadow-emerald-200 dark:shadow-emerald-900/20'
-                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-emerald-600 dark:hover:text-emerald-400'
-                      }
-                      ${isCollapsed ? 'justify-center px-0 mx-0' : ''}
-                    `}
-                  >
-                    <div className={`${location.pathname === item.path ? 'text-white' : 'group-hover:scale-110 transition-transform duration-200'}`}>
-                      {item.icon}
-                    </div>
-                    {!isCollapsed && (
-                      <span className="whitespace-nowrap">{item.label}</span>
-                    )}
-                  </Link>
-                ))}
+                {ADMIN_MENU_ITEMS.map((item) => {
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      title={isCollapsed ? item.label : ''}
+                      className={`
+                        flex items-center gap-3 py-2.5 rounded-xl transition-all duration-200 group font-medium relative
+                        ${isCollapsed ? 'justify-center px-3 mx-1' : 'px-3 mx-1'}
+                        ${isActive
+                          ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-emerald-600 dark:hover:text-emerald-400'
+                        }
+                      `}
+                    >
+                      {isActive && !isCollapsed && (
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-7 bg-emerald-600 dark:bg-emerald-400 rounded-r-full" />
+                      )}
+                      <div className={`shrink-0 ${isActive
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : 'group-hover:scale-110 transition-transform duration-200'
+                        }`}>
+                        {item.icon}
+                      </div>
+                      {!isCollapsed && (
+                        <span className="whitespace-nowrap text-sm">{item.label}</span>
+                      )}
+                    </Link>
+                  );
+                })}
               </>
             )}
           </nav>
 
           {/* Footer Sidebar (Logout) */}
-          <div className="p-4 mt-auto border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-sm">
+          <div className="p-3 mt-auto border-t border-slate-100 dark:border-slate-800/60">
             <button
               onClick={() => {
                 localStorage.removeItem('token');
@@ -252,13 +283,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               }}
               title={isCollapsed ? 'Sair da conta' : ''}
               className={`
-                flex items-center gap-3 w-full px-4 py-3 text-slate-600 dark:text-slate-400
-                hover:bg-white dark:hover:bg-slate-800 hover:text-red-600 dark:hover:text-red-400
-                rounded-xl transition-all duration-300 hover:shadow-sm group font-medium
+                flex items-center gap-3 w-full px-3 py-2.5 text-slate-500 dark:text-slate-500
+                hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 dark:hover:text-red-400
+                rounded-xl transition-all duration-200 group font-medium text-sm
                 ${isCollapsed ? 'justify-center' : ''}
               `}
             >
-              <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
+              <LogOut size={18} className="group-hover:-translate-x-1 transition-transform shrink-0" />
               {!isCollapsed && <span>Sair da conta</span>}
             </button>
           </div>
@@ -276,20 +307,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* --- CONTEÚDO PRINCIPAL --- */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* HEADER */}
-        <header className="h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 lg:px-8 z-40 relative">
+        <header className="h-16 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between px-4 lg:px-8 z-40 relative shadow-sm shadow-slate-100 dark:shadow-none">
           <div className="flex items-center gap-4">
             {/* Hamburger (Mobile) */}
-            <button onClick={toggleMobileSidebar} className="lg:hidden text-slate-500 hover:text-indigo-600 transition-colors">
-              <Menu size={24} />
+            <button onClick={toggleMobileSidebar} className="lg:hidden text-slate-500 hover:text-indigo-600 transition-colors p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+              <Menu size={20} />
             </button>
 
             <div className="hidden md:flex flex-col animate-fadeIn">
-              <h1 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">
-                {currentTitle}
-              </h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              {/* Breadcrumb */}
+              <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500 font-medium mb-0.5">
+                <span>Painel</span>
+                <ChevronRight size={12} />
+                <span className="text-indigo-600 dark:text-indigo-400 font-semibold">{currentTitle}</span>
+              </div>
+              <h1 className="text-base font-bold text-slate-800 dark:text-white tracking-tight leading-tight">
                 {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
-              </p>
+              </h1>
             </div>
           </div>
 

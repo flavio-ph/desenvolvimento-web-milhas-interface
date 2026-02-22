@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { 
+import {
   User,
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  ArrowRight, 
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowRight,
   ShieldCheck,
   CreditCard,
   Gift,
@@ -20,11 +20,11 @@ import { Logo } from '../../components/Logo';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
-  
+
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   useEffect(() => {
     localStorage.removeItem('token');
   }, []);
@@ -73,13 +73,13 @@ const Register: React.FC = () => {
 
       alert('Conta criada com sucesso! Faça login para continuar.');
       navigate('/login');
-      
+
     } catch (err: any) {
       console.error(err);
       if (err.response && err.response.data && err.response.data.message) {
-         setError(err.response.data.message);
+        setError(err.response.data.message);
       } else {
-         setError('Erro ao criar conta. Verifique os dados.');
+        setError('Erro ao criar conta. Verifique os dados.');
       }
     } finally {
       setLoading(false);
@@ -88,24 +88,24 @@ const Register: React.FC = () => {
 
   return (
     <div className="min-h-screen flex bg-white dark:bg-slate-950 font-sans overflow-hidden">
-      
+
       {/* Form Side */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-slate-50 dark:bg-slate-950 relative">
         {/* Abstract Background for Mobile only */}
         <div className="lg:hidden absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-50">
-            <div className="absolute -top-20 -right-20 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl"></div>
-            <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute -top-20 -right-20 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl"></div>
         </div>
 
         <div className="w-full max-w-md space-y-8 animate-fadeIn relative z-10">
           <div className="text-center lg:text-left">
-            
+
             {/* LOGO MOBILE + NOME */}
             <div className="lg:hidden flex flex-col items-center gap-3 mb-8">
-               <div className="w-16 h-auto">
-                  <Logo className="w-full h-full drop-shadow-md" />
-               </div>
-               <span className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Horizo</span>
+              <div className="w-16 h-auto">
+                <Logo className="w-full h-full drop-shadow-md" />
+              </div>
+              <span className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Horizo</span>
             </div>
 
             <h2 className="text-3xl font-black text-slate-900 dark:text-white">Crie sua conta</h2>
@@ -113,7 +113,7 @@ const Register: React.FC = () => {
           </div>
 
           <form onSubmit={handleRegister} className="space-y-5">
-            
+
             {error && (
               <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl flex items-start gap-3 animate-slideIn">
                 <AlertCircle className="text-red-600 dark:text-red-400 shrink-0 mt-0.5" size={18} />
@@ -124,15 +124,15 @@ const Register: React.FC = () => {
             )}
 
             <div className="space-y-4">
-              
+
               {/* Nome */}
               <div className="relative group transition-all duration-300 hover:-translate-y-0.5">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
-                <input 
-                  type="text" 
-                  placeholder="Nome completo" 
+                <input
+                  type="text"
+                  placeholder="Nome completo"
                   value={formData.nome}
-                  onChange={(e) => setFormData({...formData, nome: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                   className="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-900 dark:text-white font-medium shadow-sm transition-all group-hover:shadow-md"
                   required
                 />
@@ -141,11 +141,11 @@ const Register: React.FC = () => {
               {/* Email */}
               <div className="relative group transition-all duration-300 hover:-translate-y-0.5">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
-                <input 
-                  type="email" 
-                  placeholder="Seu melhor e-mail" 
+                <input
+                  type="email"
+                  placeholder="Seu melhor e-mail"
                   value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-900 dark:text-white font-medium shadow-sm transition-all group-hover:shadow-md"
                   required
                 />
@@ -155,9 +155,9 @@ const Register: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="relative group transition-all duration-300 hover:-translate-y-0.5">
                   <FileText className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
-                  <input 
-                    type="text" 
-                    placeholder="CPF" 
+                  <input
+                    type="text"
+                    placeholder="CPF"
                     value={formData.cpf}
                     onChange={handleCpfChange}
                     maxLength={14}
@@ -167,9 +167,9 @@ const Register: React.FC = () => {
                 </div>
                 <div className="relative group transition-all duration-300 hover:-translate-y-0.5">
                   <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
-                  <input 
-                    type="text" 
-                    placeholder="Telefone" 
+                  <input
+                    type="text"
+                    placeholder="Telefone"
                     value={formData.telefone}
                     onChange={handlePhoneChange}
                     maxLength={15}
@@ -182,17 +182,17 @@ const Register: React.FC = () => {
               {/* Senha */}
               <div className="relative group transition-all duration-300 hover:-translate-y-0.5">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
-                <input 
-                  type={showPassword ? 'text' : 'password'} 
-                  placeholder="Crie uma senha forte" 
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Crie uma senha forte"
                   value={formData.senha}
-                  onChange={(e) => setFormData({...formData, senha: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
                   className="w-full pl-12 pr-12 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-900 dark:text-white font-medium shadow-sm transition-all group-hover:shadow-md"
                   required
                   minLength={6}
                 />
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors p-1"
                 >
@@ -210,10 +210,10 @@ const Register: React.FC = () => {
               </label>
             </div>
 
-            <button 
+            <button
               type="submit"
               disabled={loading}
-              className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl hover:bg-indigo-700 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-indigo-500/30 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 text-white font-black py-4 rounded-2xl hover:from-indigo-500 hover:to-indigo-600 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-indigo-500/30 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {loading ? (
                 <>
@@ -238,7 +238,7 @@ const Register: React.FC = () => {
       {/* Visual Side Panel (Desktop) */}
       <div className="hidden lg:flex lg:w-1/2 bg-slate-900 relative overflow-hidden items-center justify-center p-12">
         <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-900 to-indigo-950"></div>
-        
+
         {/* Glow Effects Enhanced */}
         <div className="absolute top-[20%] left-[-10%] w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-[100px] animate-pulse"></div>
         <div className="absolute bottom-[10%] right-[-10%] w-[400px] h-[400px] bg-purple-600/20 rounded-full blur-[100px]"></div>
@@ -246,17 +246,17 @@ const Register: React.FC = () => {
         <div className="relative z-10 max-w-md w-full space-y-8">
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-[40px] shadow-2xl relative overflow-hidden transition-all duration-500 hover:shadow-indigo-500/10 hover:border-white/20 hover:scale-[1.01]">
             <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
-            
+
             <h3 className="text-2xl font-black text-white mb-6">Por que escolher o MilhasPro?</h3>
-            
+
             <div className="space-y-4">
               {[
                 { icon: <ShieldCheck size={20} />, title: "Segurança Bancária", text: "Seus dados protegidos com criptografia de ponta." },
                 { icon: <CreditCard size={20} />, title: "Multi-Cartões", text: "Gerencie quantos cartões desejar em um só lugar." },
                 { icon: <Gift size={20} />, title: "Promoções em Primeira Mão", text: "Receba alertas antes de todo mundo." }
               ].map((item, i) => (
-                <div 
-                  key={i} 
+                <div
+                  key={i}
                   className="flex gap-4 p-3 rounded-2xl transition-all duration-300 hover:bg-white/10 hover:translate-x-2 cursor-default group"
                 >
                   <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-indigo-400 shrink-0 group-hover:bg-indigo-500 group-hover:text-white transition-colors duration-300 shadow-lg shadow-transparent group-hover:shadow-indigo-500/20">

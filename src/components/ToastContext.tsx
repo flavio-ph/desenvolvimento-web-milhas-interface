@@ -57,26 +57,68 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
 const ToastItem: React.FC<{ message: ToastMessage; onRemove: (id: string) => void }> = ({ message, onRemove }) => {
   const styles = {
-    success: { bg: 'bg-emerald-50 dark:bg-emerald-900/20', border: 'border-emerald-200 dark:border-emerald-800', text: 'text-emerald-800 dark:text-emerald-300', icon: <CheckCircle size={20} className="text-emerald-500" /> },
-    error: { bg: 'bg-rose-50 dark:bg-rose-900/20', border: 'border-rose-200 dark:border-rose-800', text: 'text-rose-800 dark:text-rose-300', icon: <AlertCircle size={20} className="text-rose-500" /> },
-    info: { bg: 'bg-indigo-50 dark:bg-indigo-900/20', border: 'border-indigo-200 dark:border-indigo-800', text: 'text-indigo-800 dark:text-indigo-300', icon: <Info size={20} className="text-indigo-500" /> },
-    warning: { bg: 'bg-amber-50 dark:bg-amber-900/20', border: 'border-amber-200 dark:border-amber-800', text: 'text-amber-800 dark:text-amber-300', icon: <AlertTriangle size={20} className="text-amber-500" /> },
+    success: {
+      wrapper: 'border-l-4 border-l-emerald-500 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800',
+      iconBg: 'bg-emerald-50 dark:bg-emerald-900/20',
+      icon: <CheckCircle size={18} className="text-emerald-500" />,
+      title: 'text-slate-900 dark:text-white',
+      desc: 'text-slate-500 dark:text-slate-400',
+      bar: 'bg-emerald-500',
+    },
+    error: {
+      wrapper: 'border-l-4 border-l-rose-500 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800',
+      iconBg: 'bg-rose-50 dark:bg-rose-900/20',
+      icon: <AlertCircle size={18} className="text-rose-500" />,
+      title: 'text-slate-900 dark:text-white',
+      desc: 'text-slate-500 dark:text-slate-400',
+      bar: 'bg-rose-500',
+    },
+    info: {
+      wrapper: 'border-l-4 border-l-indigo-500 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800',
+      iconBg: 'bg-indigo-50 dark:bg-indigo-900/20',
+      icon: <Info size={18} className="text-indigo-500" />,
+      title: 'text-slate-900 dark:text-white',
+      desc: 'text-slate-500 dark:text-slate-400',
+      bar: 'bg-indigo-500',
+    },
+    warning: {
+      wrapper: 'border-l-4 border-l-amber-500 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800',
+      iconBg: 'bg-amber-50 dark:bg-amber-900/20',
+      icon: <AlertTriangle size={18} className="text-amber-500" />,
+      title: 'text-slate-900 dark:text-white',
+      desc: 'text-slate-500 dark:text-slate-400',
+      bar: 'bg-amber-500',
+    },
   };
 
   const style = styles[message.type];
 
   return (
-    <div className={`pointer-events-auto flex w-full shadow-lg rounded-2xl border ${style.bg} ${style.border} p-4 transition-all duration-300 animate-slideIn`}>
-      <div className="shrink-0 mr-3 mt-0.5">{style.icon}</div>
-      <div className="flex-1">
-        <strong className={`block font-bold text-sm ${style.text}`}>{message.title}</strong>
-        {message.description && (
-          <p className={`mt-1 text-xs opacity-90 ${style.text}`}>{message.description}</p>
-        )}
+    <div className={`relative pointer-events-auto flex w-full shadow-lg rounded-2xl overflow-hidden ${style.wrapper} animate-slideIn`}>
+      <div className="flex flex-1 p-4 gap-3">
+        <div className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${style.iconBg}`}>
+          {style.icon}
+        </div>
+        <div className="flex-1 min-w-0">
+          <strong className={`block font-bold text-sm ${style.title}`}>{message.title}</strong>
+          {message.description && (
+            <p className={`mt-0.5 text-xs leading-relaxed ${style.desc}`}>{message.description}</p>
+          )}
+        </div>
+        <button
+          onClick={() => onRemove(message.id)}
+          className="shrink-0 text-slate-300 hover:text-slate-500 dark:hover:text-slate-200 transition-colors ml-2 mt-0.5"
+        >
+          <X size={15} />
+        </button>
       </div>
-      <button onClick={() => onRemove(message.id)} className="ml-4 shrink-0 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
-        <X size={16} />
-      </button>
+      {/* Barra de progresso */}
+      <div className="h-0.5 w-full absolute bottom-0 left-0 overflow-hidden rounded-full opacity-60">
+        <div
+          className={`h-full ${style.bar} animate-[shrink_4s_linear_forwards]`}
+          style={{ animation: 'shrink 4s linear forwards' }}
+        />
+      </div>
     </div>
   );
 };

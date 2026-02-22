@@ -91,9 +91,9 @@ const PromotionsPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-        <p className="mt-4 text-slate-500">Buscando melhores ofertas...</p>
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <Loader2 className="animate-spin text-indigo-600" size={40} />
+        <p className="text-slate-500 text-sm font-medium">Buscando melhores ofertas...</p>
       </div>
     );
   }
@@ -101,14 +101,20 @@ const PromotionsPage: React.FC = () => {
   return (
     <div className="space-y-8 animate-fadeIn max-w-6xl mx-auto py-4">
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-indigo-600 rounded-[32px] p-8 lg:p-12 text-white shadow-2xl shadow-indigo-200 dark:shadow-none">
-        <div className="absolute top-[-20%] right-[-10%] w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-700 via-indigo-600 to-violet-600 rounded-[32px] p-8 lg:p-12 text-white shadow-2xl shadow-indigo-300/40 dark:shadow-indigo-950/50">
+        {/* Textura de grade */}
+        <div className="absolute inset-0 opacity-[0.06]" style={{
+          backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)',
+          backgroundSize: '28px 28px'
+        }} />
+        <div className="absolute top-[-20%] right-[-10%] w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-[-15%] left-[20%] w-64 h-64 bg-violet-400/20 rounded-full blur-2xl" />
         <div className="relative z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-widest mb-6">
-            <Flame size={14} className="text-orange-400" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/15 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-widest mb-6 border border-white/20">
+            <Flame size={14} className="text-orange-300" />
             Oportunidades quentes
           </div>
-          <h1 className="text-4xl lg:text-5xl font-black mb-4">Aproveite os melhores bônus do mercado.</h1>
+          <h1 className="text-4xl lg:text-5xl font-black mb-4 leading-tight">Aproveite os melhores bônus do mercado.</h1>
           <p className="text-indigo-100 text-lg font-medium">
             Ative as promoções aqui para garantir o cálculo correto dos seus bônus automaticamente.
           </p>
@@ -153,14 +159,22 @@ const PromotionsPage: React.FC = () => {
             const isHighBonus = promo.bonusPorcentagem >= 100;
 
             return (
-              <div key={promo.id} className="group bg-white dark:bg-slate-900 rounded-[32px] border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-2xl hover:translate-y-[-4px] transition-all duration-500 flex flex-col sm:flex-row">
+              <div key={promo.id} className="group bg-white dark:bg-slate-900 rounded-[28px] border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 flex flex-col sm:flex-row">
 
                 {/* Visual Badge Area */}
-                <div className={`sm:w-48 p-8 flex flex-col items-center justify-center text-white relative overflow-hidden transition-colors duration-500 ${isHighBonus ? 'bg-gradient-to-br from-indigo-600 to-violet-700' : 'bg-gradient-to-br from-emerald-500 to-teal-600'}`}>
-                  <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  <span className="text-xs font-black uppercase tracking-[0.2em] opacity-80 mb-1">Bônus de</span>
-                  <h4 className="text-5xl font-black">{promo.bonusPorcentagem}%</h4>
-                  <Zap className="mt-4 opacity-40 group-hover:scale-125 transition-transform" size={24} />
+                <div className={`sm:w-44 p-6 sm:p-8 flex flex-col items-center justify-center text-white relative overflow-hidden transition-colors duration-500 ${isHighBonus
+                  ? 'bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700'
+                  : 'bg-gradient-to-br from-emerald-500 to-teal-600'
+                  }`}>
+                  {/* Textura */}
+                  <div className="absolute inset-0 opacity-10" style={{
+                    backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)',
+                    backgroundSize: '20px 20px'
+                  }} />
+                  <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <span className="relative z-10 text-xs font-black uppercase tracking-[0.2em] opacity-80 mb-1">Bônus de</span>
+                  <h4 className="relative z-10 text-5xl font-black">{promo.bonusPorcentagem}%</h4>
+                  <Zap className="relative z-10 mt-3 opacity-50 group-hover:scale-125 group-hover:opacity-80 transition-all" size={20} />
                 </div>
 
                 {/* Content Area */}

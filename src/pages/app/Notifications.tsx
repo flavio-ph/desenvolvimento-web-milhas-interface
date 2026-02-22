@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { 
-  Bell, 
-  CheckCircle2, 
-  ShoppingBag, 
-  ArrowRightLeft, 
-  Tag, 
-  Clock, 
+import {
+  Bell,
+  CheckCircle2,
+  ShoppingBag,
+  ArrowRightLeft,
+  Tag,
+  Clock,
   Info,
   Check,
   Loader2,
@@ -16,10 +16,12 @@ import {
 } from 'lucide-react';
 import { getNotificacoes, marcarNotificacaoComoLida } from '../../services/api';
 import { Notificacao } from '../../types/types';
+import { useToast } from '../../components/ToastContext';
 
 type FilterType = 'ALL' | 'UNREAD' | 'IMPORTANT';
 
 const NotificationsPage: React.FC = () => {
+  const { addToast } = useToast();
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<FilterType>('ALL');
@@ -31,8 +33,9 @@ const NotificationsPage: React.FC = () => {
   const carregarNotificacoes = async () => {
     try {
       setLoading(true);
-      const data = await getNotificacoes();
-      setNotificacoes(data);
+      const data: any = await getNotificacoes();
+      const listaNotificacoes = data?.content || (Array.isArray(data) ? data : []);
+      setNotificacoes(listaNotificacoes);
     } catch (error) {
       console.error("Erro ao carregar notificações", error);
     } finally {
@@ -43,16 +46,16 @@ const NotificationsPage: React.FC = () => {
   const handleMarkAsRead = async (id: number) => {
     try {
       await marcarNotificacaoComoLida(id);
-      
-      setNotificacoes(prev => prev.map(n => 
+
+      setNotificacoes(prev => prev.map(n =>
         n.id === id ? { ...n, lida: true } : n
       ));
 
       window.dispatchEvent(new Event('notificacaoAtualizada'));
-      
+
     } catch (error) {
       console.error("Erro ao marcar como lida na página", error);
-      alert("Não foi possível marcar como lida. Tente novamente.");
+      addToast({ type: 'error', title: 'Erro', description: 'Não foi possível marcar como lida. Tente novamente.' });
     }
   };
 
@@ -66,10 +69,10 @@ const NotificationsPage: React.FC = () => {
 
   const isImportant = (n: Notificacao) => {
     return (
-      n.tipo === 'EXPIRACAO' || 
+      n.tipo === 'EXPIRACAO' ||
       n.tipo === 'TRANSFERENCIA' ||
-      n.tipo === 'AVISO_EXPIRACAO' || 
-      n.tipo === 'PONTOS_EXPIRADOS'   
+      n.tipo === 'AVISO_EXPIRACAO' ||
+      n.tipo === 'PONTOS_EXPIRADOS'
     );
   };
 
@@ -86,17 +89,17 @@ const NotificationsPage: React.FC = () => {
       case 'COMPRA': return <ShoppingBag size={20} className="text-blue-500" />;
       case 'TRANSFERENCIA': return <ArrowRightLeft size={20} className="text-emerald-500" />;
       case 'PROMOCAO': return <Tag size={20} className="text-purple-500" />;
-      
+
       case 'EXPIRACAO': return <Clock size={20} className="text-rose-500" />;
 
-      case 'AVISO_EXPIRACAO': 
-        return <AlertTriangle size={20} className="text-amber-500" />; 
-      
-      case 'PONTOS_EXPIRADOS': 
-        return <XCircle size={20} className="text-red-500" />; 
-        
+      case 'AVISO_EXPIRACAO':
+        return <AlertTriangle size={20} className="text-amber-500" />;
+
+      case 'PONTOS_EXPIRADOS':
+        return <XCircle size={20} className="text-red-500" />;
+
       case 'CREDITO_REALIZADO':
-        return <CheckCircle2 size={20} className="text-emerald-500" />; 
+        return <CheckCircle2 size={20} className="text-emerald-500" />;
 
       default: return <Info size={20} className="text-slate-500" />;
     }
@@ -128,16 +131,16 @@ const NotificationsPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold dark:text-white flex items-center gap-3">
-            <Bell className="text-indigo-600" />
+          <h1 className="text-3xl font-bold dark:text-white">
             Notificações
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-2">
+            <Bell size={14} className="text-indigo-500" />
             Fique por dentro de tudo que acontece com seus pontos.
           </p>
         </div>
         {unreadCount > 0 && (
-          <button 
+          <button
             onClick={markAllAsRead}
             className="flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-colors"
           >
@@ -149,23 +152,21 @@ const NotificationsPage: React.FC = () => {
 
       {/* Tabs de Filtro */}
       <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl w-full md:w-fit">
-        <button 
+        <button
           onClick={() => setActiveTab('ALL')}
-          className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-bold transition-all ${
-            activeTab === 'ALL' 
-              ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' 
-              : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
-          }`}
+          className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'ALL'
+            ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm'
+            : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+            }`}
         >
           Todas
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab('UNREAD')}
-          className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${
-            activeTab === 'UNREAD' 
-              ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' 
-              : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
-          }`}
+          className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${activeTab === 'UNREAD'
+            ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm'
+            : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+            }`}
         >
           Não lidas
           {unreadCount > 0 && (
@@ -174,13 +175,12 @@ const NotificationsPage: React.FC = () => {
             </span>
           )}
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab('IMPORTANT')}
-          className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${
-            activeTab === 'IMPORTANT' 
-              ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' 
-              : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
-          }`}
+          className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${activeTab === 'IMPORTANT'
+            ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm'
+            : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+            }`}
         >
           Importantes
           <AlertTriangle size={14} className={activeTab === 'IMPORTANT' ? 'text-indigo-600' : 'text-slate-400'} />
@@ -191,13 +191,12 @@ const NotificationsPage: React.FC = () => {
       <div className="space-y-4">
         {filteredNotifications.length > 0 ? (
           filteredNotifications.map((notificacao) => (
-            <div 
-              key={notificacao.id} 
-              className={`relative p-6 rounded-3xl border transition-all duration-300 ${
-                notificacao.lida 
-                  ? 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 opacity-75' 
-                  : 'bg-white dark:bg-slate-900 border-indigo-100 dark:border-indigo-900/50 shadow-lg shadow-indigo-100/50 dark:shadow-none scale-[1.01]'
-              }`}
+            <div
+              key={notificacao.id}
+              className={`relative p-6 rounded-3xl border transition-all duration-300 ${notificacao.lida
+                ? 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 opacity-75'
+                : 'bg-white dark:bg-slate-900 border-indigo-100 dark:border-indigo-900/50 shadow-lg shadow-indigo-100/50 dark:shadow-none scale-[1.01]'
+                }`}
             >
               {!notificacao.lida && (
                 <div className="absolute top-6 right-6 w-3 h-3 bg-indigo-500 rounded-full animate-pulse shadow-lg shadow-indigo-500/50"></div>
@@ -207,7 +206,7 @@ const NotificationsPage: React.FC = () => {
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${notificacao.lida ? 'bg-slate-50 dark:bg-slate-800' : 'bg-indigo-50 dark:bg-slate-800'}`}>
                   {getIcon(notificacao.tipo)}
                 </div>
-                
+
                 <div className="flex-1">
                   <div className="flex justify-between items-start pr-6">
                     <p className={`text-base font-semibold mb-1 ${notificacao.lida ? 'text-slate-600 dark:text-slate-400' : 'text-slate-900 dark:text-white'}`}>
@@ -216,18 +215,18 @@ const NotificationsPage: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-3 mt-1">
                     <p className="text-xs font-medium text-slate-400 flex items-center gap-1">
-                       {formatTimeAgo(notificacao.dataEnvio)}
+                      {formatTimeAgo(notificacao.dataEnvio)}
                     </p>
                     {isImportant(notificacao) && (
-                       <span className="text-[10px] font-bold uppercase tracking-wider text-rose-500 bg-rose-50 dark:bg-rose-900/20 px-2 py-0.5 rounded-full">
-                         Importante
-                       </span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-rose-500 bg-rose-50 dark:bg-rose-900/20 px-2 py-0.5 rounded-full">
+                        Importante
+                      </span>
                     )}
                   </div>
                 </div>
 
                 {!notificacao.lida && (
-                  <button 
+                  <button
                     onClick={() => handleMarkAsRead(notificacao.id)}
                     className="self-center p-2 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-full transition-colors tooltip"
                     title="Marcar como lida"
@@ -244,15 +243,15 @@ const NotificationsPage: React.FC = () => {
               {activeTab === 'IMPORTANT' ? <AlertTriangle size={40} /> : <CheckCircle2 size={40} />}
             </div>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-              {activeTab === 'IMPORTANT' 
-                ? 'Nenhuma notificação importante' 
-                : activeTab === 'UNREAD' 
-                  ? 'Você leu tudo!' 
+              {activeTab === 'IMPORTANT'
+                ? 'Nenhuma notificação importante'
+                : activeTab === 'UNREAD'
+                  ? 'Você leu tudo!'
                   : 'Tudo limpo por aqui!'}
             </h3>
             <p className="text-slate-500 dark:text-slate-400 mt-2">
-              {activeTab === 'IMPORTANT' 
-                ? 'Fique tranquilo, nada urgente pendente.' 
+              {activeTab === 'IMPORTANT'
+                ? 'Fique tranquilo, nada urgente pendente.'
                 : 'Você não tem novas notificações neste filtro.'}
             </p>
           </div>

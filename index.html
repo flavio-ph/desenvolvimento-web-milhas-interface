@@ -1,57 +1,138 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MilhasPro - Gestão de Pontos</title>
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <script>
         tailwind.config = {
-            darkMode: 'class', 
+            darkMode: 'class',
         }
     </script>
-    
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cstyle%3E path %7B fill: %234f46e5; %7D @media (prefers-color-scheme: dark) %7B path %7B fill: %23818cf8; %7D %7D %3C/style%3E%3Cpath d='M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z'/%3E%3C/svg%3E">
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cstyle%3E path %7B fill: %234f46e5; %7D @media (prefers-color-scheme: dark) %7B path %7B fill: %23818cf8; %7D %7D %3C/style%3E%3Cpath d='M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z'/%3E%3C/svg%3E">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
     <style type="text/tailwindcss">
         @layer utilities {
 
+            /* ─── Scrollbar ─── */
             ::-webkit-scrollbar {
-                width: 8px;   
-                height: 8px;  
+                width: 6px;
+                height: 6px;
             }
-
             ::-webkit-scrollbar-track {
                 @apply bg-transparent;
             }
-
             ::-webkit-scrollbar-thumb {
-                @apply bg-slate-300 dark:bg-slate-700 rounded-full border-2 border-transparent bg-clip-padding;
+                @apply bg-slate-200 dark:bg-slate-700 rounded-full;
             }
-
             ::-webkit-scrollbar-thumb:hover {
-                @apply bg-slate-400 dark:bg-slate-600;
+                @apply bg-indigo-400 dark:bg-indigo-600;
             }
-
             ::-webkit-scrollbar-corner {
                 @apply bg-transparent;
             }
-
             * {
                 scrollbar-width: thin;
                 scrollbar-color: theme('colors.slate.300') transparent;
             }
-
             .dark * {
                 scrollbar-color: theme('colors.slate.700') transparent;
             }
+
+            /* ─── Animações ─── */
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(8px); }
+                to   { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes fadeInUp {
+                from { opacity: 0; transform: translateY(20px); }
+                to   { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes slideIn {
+                from { opacity: 0; transform: translateX(20px); }
+                to   { opacity: 1; transform: translateX(0); }
+            }
+            @keyframes scaleIn {
+                from { opacity: 0; transform: scale(0.95); }
+                to   { opacity: 1; transform: scale(1); }
+            }
+            @keyframes shine {
+                0%   { transform: translateX(-100%) skewX(-15deg); }
+                100% { transform: translateX(200%) skewX(-15deg); }
+            }
+            @keyframes float {
+                0%, 100% { transform: translateY(0px); }
+                50%       { transform: translateY(-8px); }
+            }
+            @keyframes slideInCard1 {
+                from { opacity: 0; transform: translateX(-30px); }
+                to   { opacity: 1; transform: translateX(0); }
+            }
+            @keyframes slideInCard2 {
+                from { opacity: 0; transform: translateX(30px); }
+                to   { opacity: 1; transform: translateX(8px); }
+            }
+
+            .animate-fadeIn      { animation: fadeIn 0.4s ease-out both; }
+            .animate-fadeInUp    { animation: fadeInUp 0.5s ease-out both; }
+            .animate-slideIn     { animation: slideIn 0.35s ease-out both; }
+            .animate-scaleIn     { animation: scaleIn 0.25s ease-out both; }
+            .animate-float       { animation: float 4s ease-in-out infinite; }
+            .animate-slideInCard1 { animation: slideInCard1 0.6s ease-out 0.3s both; }
+            .animate-slideInCard2 { animation: slideInCard2 0.6s ease-out 0.6s both; }
+
+            /* ─── Shine (efeito de brilho nos cartões) ─── */
+            .card-shine {
+                position: relative;
+                overflow: hidden;
+            }
+            .card-shine::after {
+                content: '';
+                position: absolute;
+                top: -50%;
+                left: -60%;
+                width: 40%;
+                height: 200%;
+                background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%);
+                transform: skewX(-15deg);
+                transition: none;
+            }
+            .card-shine:hover::after {
+                animation: shine 0.7s ease-in-out;
+            }
+
+            /* ─── Glassmorphism ─── */
+            .glass {
+                background: rgba(255,255,255,0.08);
+                backdrop-filter: blur(12px);
+                border: 1px solid rgba(255,255,255,0.15);
+            }
+            .dark .glass {
+                background: rgba(15,23,42,0.6);
+                border: 1px solid rgba(255,255,255,0.07);
+            }
+
+            @keyframes shrink {
+                from { width: 100%; }
+                to   { width: 0%; }
+            }
+
+            /* ─── Tipografia aprimorada ─── */
+            body { font-family: 'Inter', sans-serif; font-feature-settings: 'cv11', 'ss01'; }
         }
     </style>
-    </head>
-<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 transition-colors duration-300"> <div id="root"></div>
+</head>
+
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 transition-colors duration-300">
+    <div id="root"></div>
     <script type="module" src="/src/index.tsx"></script>
 </body>
 

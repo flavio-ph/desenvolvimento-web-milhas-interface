@@ -12,8 +12,9 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
-import api, { getPontosPendentes, getPontosExpirando, getProgramas,  } from '../../services/api';
-import { LoyaltyProgram, ResumoPendentesResponse} from '../../types/types';
+import api, { getPontosPendentes, getPontosExpirando, getProgramas } from '../../services/api';
+import { LoyaltyProgram, ResumoPendentesResponse } from '../../types/types';
+import { useToast } from '../../components/ToastContext';
 
 interface Transaction {
   id: number;
@@ -27,6 +28,7 @@ interface Transaction {
 
 const HistoryPage: React.FC = () => {
   const { isDarkMode } = useTheme();
+  const { addToast } = useToast();
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [programsList, setProgramsList] = useState<LoyaltyProgram[]>([]);
@@ -34,7 +36,7 @@ const HistoryPage: React.FC = () => {
 
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
 
-  const [typeFilter, setTypeFilter] = useState('ALL'); 
+  const [typeFilter, setTypeFilter] = useState('ALL');
   const [programFilter, setProgramFilter] = useState('ALL');
 
   const [resumoPendentes, setResumoPendentes] = useState<ResumoPendentesResponse>({
@@ -68,7 +70,7 @@ const HistoryPage: React.FC = () => {
         };
 
         if (programFilter !== 'ALL') {
-          params.programa = programFilter; 
+          params.programa = programFilter;
         }
 
         if (typeFilter !== 'ALL') {
@@ -76,8 +78,10 @@ const HistoryPage: React.FC = () => {
         }
 
         const response = await api.get('/movimentacoes', { params });
-        
-        setTransactions(response.data);
+
+        // Correção: Extração de array paginado ou compatibilidade com array direto
+        const dados = response.data?.content || (Array.isArray(response.data) ? response.data : []);
+        setTransactions(dados);
 
         const pendentes = await getPontosPendentes();
         setResumoPendentes(pendentes);
@@ -101,7 +105,7 @@ const HistoryPage: React.FC = () => {
 
     return () => clearTimeout(delayDebounceFn);
 
-  }, [selectedMonth, programFilter, typeFilter]); 
+  }, [selectedMonth, programFilter, typeFilter]);
 
   const acumuladoMes = useMemo(() => {
     return transactions
@@ -121,7 +125,7 @@ const HistoryPage: React.FC = () => {
       link.remove();
     } catch (error) {
       console.error("Erro ao baixar PDF", error);
-      alert("Erro ao gerar relatório PDF.");
+      addToast({ type: 'error', title: 'Erro ao exportar', description: 'Não foi possível gerar o relatório PDF.' });
     }
   };
 
@@ -137,13 +141,13 @@ const HistoryPage: React.FC = () => {
       link.remove();
     } catch (error) {
       console.error("Erro ao baixar Excel", error);
-      alert("Erro ao gerar planilha Excel.");
+      addToast({ type: 'error', title: 'Erro ao exportar', description: 'Não foi possível gerar a planilha Excel.' });
     }
   };
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+      <div className="flex h-[60vh] items-center justify-center">
         <Loader2 className="animate-spin text-indigo-600" size={40} />
       </div>
     );
@@ -220,7 +224,7 @@ const HistoryPage: React.FC = () => {
             </div>
             <span className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Expirando em Breve</span>
           </div>
-          
+
           <h3 className="text-2xl font-bold dark:text-white">
             {pontosExpirando.toLocaleString('pt-BR')} pts
           </h3>
@@ -235,11 +239,11 @@ const HistoryPage: React.FC = () => {
 
       {/* Barra de Filtros */}
       <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-        
+
         {/* Label Visual */}
         <div className="hidden md:flex items-center gap-2 text-slate-500">
-             <Filter size={20} />
-             <span className="font-medium text-sm">Filtros</span>
+          <Filter size={20} />
+          <span className="font-medium text-sm">Filtros</span>
         </div>
 
         <div className="flex flex-col md:flex-row w-full md:w-auto gap-3">
@@ -254,7 +258,7 @@ const HistoryPage: React.FC = () => {
               <option key={prog.id} value={prog.nome}>{prog.nome}</option>
             ))}
           </select>
-          
+
           {/* Seletor de Data */}
           <div className="relative">
             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-600 dark:text-indigo-400 pointer-events-none">

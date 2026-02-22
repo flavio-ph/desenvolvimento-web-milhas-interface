@@ -12,6 +12,7 @@ const Login = lazy(() => import('./pages/auth/Login'));
 const Register = lazy(() => import('./pages/auth/Register'));
 const RecoverPassword = lazy(() => import('./pages/auth/RecoverPassword'));
 const CardsPage = lazy(() => import('./pages/app/Cards'));
+const CardDetailPage = lazy(() => import('./pages/app/CardDetail'));
 const RegisterPurchase = lazy(() => import('./pages/app/RegisterPurchase'));
 const HistoryPage = lazy(() => import('./pages/app/History'));
 const ProfilePage = lazy(() => import('./pages/app/Profile'));
@@ -76,6 +77,12 @@ const App: React.FC = () => {
                   <Route path="/cards" element={
                     <PrivateRoute>
                       <Layout><CardsPage /></Layout>
+                    </PrivateRoute>
+                  } />
+
+                  <Route path="/cards/:id" element={
+                    <PrivateRoute>
+                      <Layout><CardDetailPage /></Layout>
                     </PrivateRoute>
                   } />
 

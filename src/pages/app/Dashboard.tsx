@@ -168,29 +168,29 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Cards Superiores */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Acumulado"
           value={totalPontos.toLocaleString('pt-BR')}
-          icon={<Wallet className="text-indigo-600" />}
+          icon={<Wallet />}
           color="indigo"
         />
         <StatCard
           title="Prazo Médio"
           value={`${prazoMedio} dias`}
-          icon={<Clock className="text-emerald-600" />}
+          icon={<Clock />}
           color="emerald"
         />
         <StatCard
           title="Programas Ativos"
           value={qtdCartoes.toString()}
-          icon={<CardIcon className="text-amber-600" />}
+          icon={<CardIcon />}
           color="amber"
         />
         <StatCard
           title="Vencendo em 30d"
           value={expirando.toLocaleString('pt-BR')}
-          icon={<TrendingUp className="text-rose-600" />}
+          icon={<TrendingUp />}
           color="rose"
           subText={expirando > 0 ? "Atenção necessária" : undefined}
         />
@@ -339,21 +339,45 @@ interface StatCardProps {
 }
 
 const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, subText }) => {
-  const borderColors: Record<StatCardProps['color'], string> = {
-    indigo: 'border-l-indigo-500 dark:border-l-indigo-500',
-    emerald: 'border-l-emerald-500 dark:border-l-emerald-500',
-    amber: 'border-l-amber-500 dark:border-l-amber-500',
-    rose: 'border-l-rose-500 dark:border-l-rose-500',
+  const gradients: Record<StatCardProps['color'], string> = {
+    indigo: 'from-indigo-500 to-indigo-600',
+    emerald: 'from-emerald-500 to-emerald-600',
+    amber: 'from-amber-400 to-amber-500',
+    rose: 'from-rose-500 to-rose-600',
+  };
+  const shadows: Record<StatCardProps['color'], string> = {
+    indigo: 'shadow-indigo-200 dark:shadow-indigo-900/30',
+    emerald: 'shadow-emerald-200 dark:shadow-emerald-900/30',
+    amber: 'shadow-amber-200 dark:shadow-amber-900/30',
+    rose: 'shadow-rose-200 dark:shadow-rose-900/30',
+  };
+  const lightBg: Record<StatCardProps['color'], string> = {
+    indigo: 'bg-indigo-50 dark:bg-indigo-900/20',
+    emerald: 'bg-emerald-50 dark:bg-emerald-900/20',
+    amber: 'bg-amber-50 dark:bg-amber-900/20',
+    rose: 'bg-rose-50 dark:bg-rose-900/20',
   };
 
   return (
-    <div className={`bg-white dark:bg-slate-900 p-4 rounded-2xl border-l-4 ${borderColors[color]} shadow-sm border border-slate-100 dark:border-slate-800`}>
+    <div className="group bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
       <div className="flex justify-between items-start mb-4">
-        <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl">{icon}</div>
+        <div className={`p-2.5 rounded-xl bg-gradient-to-br ${gradients[color]} shadow-md ${shadows[color]}`}>
+          <div className="text-white [&>svg]:w-5 [&>svg]:h-5">{icon}</div>
+        </div>
+        <div className={`text-xs font-bold px-2 py-1 rounded-full ${lightBg[color]}`}>
+          <span className={`
+            ${color === 'indigo' ? 'text-indigo-600 dark:text-indigo-400' :
+              color === 'emerald' ? 'text-emerald-600 dark:text-emerald-400' :
+                color === 'amber' ? 'text-amber-600 dark:text-amber-400' :
+                  'text-rose-600 dark:text-rose-400'}
+          `}>
+            ↑ Ativo
+          </span>
+        </div>
       </div>
-      <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">{title}</p>
-      <h3 className="text-2xl font-bold dark:text-white mt-1">{value}</h3>
-      {subText && <p className="text-xs text-rose-500 font-medium mt-1">{subText}</p>}
+      <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold uppercase tracking-wider">{title}</p>
+      <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1 tracking-tight">{value}</h3>
+      {subText && <p className="text-xs text-rose-500 font-semibold mt-1.5 flex items-center gap-1"><span>⚠</span>{subText}</p>}
     </div>
   );
 };

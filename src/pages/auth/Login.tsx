@@ -83,7 +83,7 @@ const Login: React.FC = () => {
 
             {/* LOGO + NOME */}
             <div className="flex items-center gap-5">
-              <div className="w-20 h-auto bg-white/20 backdrop-blur-lg rounded-2xl flex items-center justify-center border border-white/30 shadow-2xl p-2">
+              <div className="w-20 h-auto bg-white/20 backdrop-blur-lg rounded-2xl flex items-center justify-center border border-white/30 shadow-2xl p-2 animate-float">
                 <Logo className="w-full h-full drop-shadow-lg" />
               </div>
               <span className="text-5xl font-black tracking-tight text-white">MilhasPro</span>
@@ -95,22 +95,22 @@ const Login: React.FC = () => {
 
           {/* Floating Feature Cards */}
           <div className="space-y-4 pt-8">
-            <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 flex items-center gap-4 transform hover:scale-105 transition-transform cursor-default">
-              <div className="w-12 h-12 bg-emerald-400/20 rounded-xl flex items-center justify-center text-emerald-400">
+            <div className="animate-slideInCard1 bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 flex items-center gap-4 hover:bg-white/15 transition-colors cursor-default">
+              <div className="w-12 h-12 bg-emerald-400/20 rounded-xl flex items-center justify-center text-emerald-400 shrink-0">
                 <TrendingUp size={24} />
               </div>
               <div>
                 <p className="font-bold text-sm">Cálculo Automático</p>
-                <p className="text-xs text-indigo-100">Saiba exatamente quanto ganhou em cada compra.</p>
+                <p className="text-xs text-indigo-100 mt-0.5">Saiba exatamente quanto ganhou em cada compra.</p>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 flex items-center gap-4 transform translate-x-8 hover:scale-105 transition-transform cursor-default">
-              <div className="w-12 h-12 bg-amber-400/20 rounded-xl flex items-center justify-center text-amber-400">
+            <div className="animate-slideInCard2 bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 flex items-center gap-4 hover:bg-white/15 transition-colors cursor-default">
+              <div className="w-12 h-12 bg-amber-400/20 rounded-xl flex items-center justify-center text-amber-400 shrink-0">
                 <Zap size={24} />
               </div>
               <div>
                 <p className="font-bold text-sm">Alertas Premium</p>
-                <p className="text-xs text-indigo-100">Notificações de 100% bônus em tempo real.</p>
+                <p className="text-xs text-indigo-100 mt-0.5">Notificações de 100% bônus em tempo real.</p>
               </div>
             </div>
           </div>
@@ -184,7 +184,7 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl hover:bg-indigo-700 transition-all transform hover:scale-[1.01] active:scale-95 shadow-xl shadow-indigo-200 dark:shadow-none flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 text-white font-black py-4 rounded-2xl hover:from-indigo-500 hover:to-indigo-600 transition-all transform hover:scale-[1.01] active:scale-95 shadow-xl shadow-indigo-200 dark:shadow-indigo-900/30 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
