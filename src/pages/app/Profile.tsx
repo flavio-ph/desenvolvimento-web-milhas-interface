@@ -91,12 +91,19 @@ const ProfilePage: React.FC = () => {
   // Estados para Modal de Confirmação Genérico
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
-  const [confirmConfig, setConfirmConfig] = useState({
+  const [confirmConfig, setConfirmConfig] = useState<{
+    title: string;
+    description: string;
+    confirmText: string;
+    cancelText: string;
+    variant: 'danger' | 'info' | 'warning';
+    onConfirm: () => Promise<void>;
+  }>({
     title: '',
     description: '',
     confirmText: 'Confirmar',
     cancelText: 'Cancelar',
-    variant: 'primary' as 'primary' | 'danger',
+    variant: 'info',
     onConfirm: async () => { }
   });
 
@@ -389,7 +396,7 @@ const ProfilePage: React.FC = () => {
       description: `Deseja realmente alterar seu plano para ${availablePlans.find(p => p.id === planId)?.name}? Os benefícios serão atualizados imediatamente.`,
       confirmText: 'Confirmar alteração',
       cancelText: 'Cancelar',
-      variant: 'primary',
+      variant: 'info',
       onConfirm: async () => {
         // Simulação de chamada de API
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -676,8 +683,8 @@ const ProfilePage: React.FC = () => {
                         ))}
                       </div>
                       <p className={`text-xs font-semibold ${strength.score <= 1 ? 'text-rose-500' :
-                          strength.score === 2 ? 'text-orange-400' :
-                            strength.score === 3 ? 'text-amber-400' : 'text-emerald-500'
+                        strength.score === 2 ? 'text-orange-400' :
+                          strength.score === 3 ? 'text-amber-400' : 'text-emerald-500'
                         }`}>{strength.label}</p>
                     </div>
                   );

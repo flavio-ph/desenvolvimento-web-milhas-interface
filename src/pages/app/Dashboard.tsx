@@ -258,7 +258,7 @@ const Dashboard: React.FC = () => {
             {pieData.length > 0 && (
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-2xl font-bold dark:text-white">
-                  {totalPontos > 1000 ? `${(totalPontos / 1000).toFixed(1)}k` : totalPontos}
+                  {Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 }).format(totalPontos)}
                 </span>
                 <span className="text-[10px] text-slate-500 uppercase font-bold">Total</span>
               </div>
@@ -308,7 +308,7 @@ const Dashboard: React.FC = () => {
                           <span className="text-sm font-medium dark:text-white">{tx.descricao}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-6 py-4 text-center whitespace-nowrap">
                         <span className="text-xs font-semibold px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                           {tx.nomePersonalizado || tx.nomeCartao || '—'}
                         </span>
@@ -344,9 +344,10 @@ interface StatCardProps {
   icon: React.ReactNode;
   color: 'indigo' | 'emerald' | 'amber' | 'rose';
   subText?: string;
+  badgeText?: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, subText }) => {
+const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, subText, badgeText }) => {
   const gradients: Record<StatCardProps['color'], string> = {
     indigo: 'from-indigo-500 to-indigo-600',
     emerald: 'from-emerald-500 to-emerald-600',
@@ -372,16 +373,18 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, subText 
         <div className={`p-2.5 rounded-xl bg-gradient-to-br ${gradients[color]} shadow-md ${shadows[color]}`}>
           <div className="text-white [&>svg]:w-5 [&>svg]:h-5">{icon}</div>
         </div>
-        <div className={`text-xs font-bold px-2 py-1 rounded-full ${lightBg[color]}`}>
-          <span className={`
-            ${color === 'indigo' ? 'text-indigo-600 dark:text-indigo-400' :
-              color === 'emerald' ? 'text-emerald-600 dark:text-emerald-400' :
-                color === 'amber' ? 'text-amber-600 dark:text-amber-400' :
-                  'text-rose-600 dark:text-rose-400'}
-          `}>
-            ↑ Ativo
-          </span>
-        </div>
+        {badgeText && (
+          <div className={`text-xs font-bold px-2 py-1 rounded-full ${lightBg[color]}`}>
+            <span className={`
+              ${color === 'indigo' ? 'text-indigo-600 dark:text-indigo-400' :
+                color === 'emerald' ? 'text-emerald-600 dark:text-emerald-400' :
+                  color === 'amber' ? 'text-amber-600 dark:text-amber-400' :
+                    'text-rose-600 dark:text-rose-400'}
+            `}>
+              {badgeText}
+            </span>
+          </div>
+        )}
       </div>
       <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold uppercase tracking-wider">{title}</p>
       <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1 tracking-tight">{value}</h3>

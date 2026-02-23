@@ -12,21 +12,14 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
-import api, { getPontosPendentes, getPontosExpirando, getProgramas } from '../../services/api';
-import { LoyaltyProgram, ResumoPendentesResponse } from '../../types/types';
+import { getPontosPendentes, getPontosExpirando } from '../../services/api';
+import { movimentacaoService, MovimentacaoParams } from '../../services/movimentacaoService';
+import { programaService } from '../../services/programaService';
+import { cartaoService } from '../../services/cartaoService';
+import { LoyaltyProgram, ResumoPendentesResponse, Transaction } from '../../types/types';
 import { useToast } from '../../components/ToastContext';
 
-interface Transaction {
-  id: number;
-  tipo: 'ACUMULO' | 'USO' | 'BONUS' | 'EXPIRACAO' | 'AJUSTE' | 'TRANSFERENCIA_ENTRADA' | 'TRANSFERENCIA_SAIDA';
-  quantidadePontos: number;
-  dataMovimentacao: string;
-  descricao: string;
-  nomePrograma: string;
-  nomeCartao?: string;
-  nomePersonalizado?: string;
-  status?: string;
-}
+// Types imported from types.ts
 
 const HistoryPage: React.FC = () => {
   const { isDarkMode } = useTheme();
@@ -34,11 +27,12 @@ const HistoryPage: React.FC = () => {
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [programsList, setProgramsList] = useState<LoyaltyProgram[]>([]);
+  const [cardsList, setCardsList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
 
-  const [typeFilter, setTypeFilter] = useState('ALL');
+  const [cardFilter, setCardFilter] = useState('ALL');
   const [programFilter, setProgramFilter] = useState('ALL');
 
   const [resumoPendentes, setResumoPendentes] = useState<ResumoPendentesResponse>({
@@ -48,15 +42,19 @@ const HistoryPage: React.FC = () => {
   const [pontosExpirando, setPontosExpirando] = useState(0);
 
   useEffect(() => {
-    const fetchPrograms = async () => {
+    const fetchFiltersData = async () => {
       try {
-        const data = await getProgramas();
-        setProgramsList(data);
+        const [programsData, cardsData] = await Promise.all([
+          programaService.listarProgramas(),
+          cartaoService.listarCartoes()
+        ]);
+        setProgramsList(programsData);
+        setCardsList(cardsData);
       } catch (error) {
-        console.error("Erro ao buscar programas para o filtro", error);
+        console.error("Erro ao buscar dados de filtros", error);
       }
     };
-    fetchPrograms();
+    fetchFiltersData();
   }, []);
 
   useEffect(() => {
@@ -66,7 +64,7 @@ const HistoryPage: React.FC = () => {
 
         const [year, month] = selectedMonth.split('-').map(Number);
 
-        const params: any = {
+        const params: MovimentacaoParams = {
           mes: month,
           ano: year
         };
@@ -75,15 +73,12 @@ const HistoryPage: React.FC = () => {
           params.programa = programFilter;
         }
 
-        if (typeFilter !== 'ALL') {
-          params.tipo = typeFilter;
+        if (cardFilter !== 'ALL') {
+          params.cartaoId = cardFilter;
         }
 
-        const response = await api.get('/movimentacoes', { params });
-
-        // Correção: Extração de array paginado ou compatibilidade com array direto
-        const dados = response.data?.content || (Array.isArray(response.data) ? response.data : []);
-        setTransactions(dados);
+        const dados = await movimentacaoService.listarMovimentacoes(params);
+        setTransactions(dados as Transaction[]);
 
         const pendentes = await getPontosPendentes();
         setResumoPendentes(pendentes);
@@ -107,7 +102,7 @@ const HistoryPage: React.FC = () => {
 
     return () => clearTimeout(delayDebounceFn);
 
-  }, [selectedMonth, programFilter, typeFilter]);
+  }, [selectedMonth, programFilter, cardFilter]);
 
   const acumuladoMes = useMemo(() => {
     return transactions
@@ -117,14 +112,15 @@ const HistoryPage: React.FC = () => {
 
   const handleExportPdf = async () => {
     try {
-      const response = await api.get('/relatorios/movimentacoes/pdf', { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const blob = await movimentacaoService.exportarPdf();
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', 'extrato_milhas.pdf');
       document.body.appendChild(link);
       link.click();
       link.remove();
+      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Erro ao baixar PDF", error);
       addToast({ type: 'error', title: 'Erro ao exportar', description: 'Não foi possível gerar o relatório PDF.' });
@@ -133,14 +129,15 @@ const HistoryPage: React.FC = () => {
 
   const handleExportExcel = async () => {
     try {
-      const response = await api.get('/relatorios/movimentacoes/csv', { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const blob = await movimentacaoService.exportarCsv();
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', 'extrato_milhas.csv');
       document.body.appendChild(link);
       link.click();
       link.remove();
+      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Erro ao baixar Excel", error);
       addToast({ type: 'error', title: 'Erro ao exportar', description: 'Não foi possível gerar a planilha Excel.' });
@@ -249,6 +246,18 @@ const HistoryPage: React.FC = () => {
         </div>
 
         <div className="flex flex-col md:flex-row w-full md:w-auto gap-3">
+          {/* Select de Cartão */}
+          <select
+            value={cardFilter}
+            onChange={(e) => setCardFilter(e.target.value)}
+            className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm font-medium dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+          >
+            <option value="ALL">Todos os Cartões</option>
+            {cardsList.map(card => (
+              <option key={card.id} value={card.id}>{card.nomePersonalizado || card.nomeCartao}</option>
+            ))}
+          </select>
+
           {/* Select de Programas */}
           <select
             value={programFilter}
@@ -320,9 +329,9 @@ const HistoryPage: React.FC = () => {
                       </td>
 
                       {/* CARTÃO */}
-                      <td className="px-6 py-5 text-center">
+                      <td className="px-6 py-5 text-center whitespace-nowrap">
                         <span className="text-xs font-semibold px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                          {tx.nomePersonalizado || tx.nomeCartao || '—'}
+                          {(tx as any).nomePersonalizado || (tx as any).nomeCartao || '—'}
                         </span>
                       </td>
 
@@ -343,17 +352,17 @@ const HistoryPage: React.FC = () => {
 
                       {/* STATUS */}
                       <td className="px-6 py-5 text-center">
-                        {tx.status === 'CREDITADO' || tx.status === 'FINALIZADA' ? (
+                        {(tx.status as string) === 'CREDITADO' || (tx.status as string) === 'FINALIZADA' ? (
                           <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tight bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30">
                             <CheckCircle2 size={10} />
                             Processado
                           </span>
-                        ) : tx.status === 'PENDENTE' || tx.status === 'AGENDADA' ? (
+                        ) : (tx.status as string) === 'PENDENTE' || (tx.status as string) === 'AGENDADA' ? (
                           <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tight bg-amber-50 text-amber-600 dark:bg-amber-900/30">
                             <Clock size={10} />
                             Aguardando
                           </span>
-                        ) : tx.status === 'EXPIRADA' || tx.status === 'CANCELADA' ? (
+                        ) : (tx.status as string) === 'EXPIRADA' || (tx.status as string) === 'CANCELADA' ? (
                           <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tight bg-rose-50 text-rose-600 dark:bg-rose-900/30">
                             <AlertTriangle size={10} />
                             Expirado
@@ -369,7 +378,7 @@ const HistoryPage: React.FC = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={5} className="px-6 py-20 text-center">
+                  <td colSpan={6} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center">
                       <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-300 dark:text-slate-700 mb-4">
                         <Filter size={32} />

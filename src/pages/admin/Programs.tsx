@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Globe, Plus, Trash2, ExternalLink, X, Check, Loader2, Link as LinkIcon, TrendingUp, ArrowLeft } from 'lucide-react';
-import { getProgramas, createPrograma, deletePrograma } from '../../services/api';
+import { Globe, Plus, ArrowLeft } from 'lucide-react';
+import { programaService } from '../../services/programaService';
 import { LoyaltyProgram } from '../../types/types';
+import { isAxiosError } from 'axios';
 import { useToast } from '../../components/ToastContext';
 import { ConfirmModal } from '../../components/ConfirmModal';
+import { ProgramForm } from './Programs/ProgramForm';
+import { ProgramList } from './Programs/ProgramList';
 
 /* Paleta de cores para os avatares dos programas */
 const CARD_COLORS = [
@@ -37,8 +40,9 @@ const AdminPrograms: React.FC = () => {
   const loadPrograms = async () => {
     try {
       setLoading(true);
-      const data = await getProgramas();
-      setPrograms(data || []);
+      const data = await programaService.listarProgramas();
+      // map explicitly based on expected types
+      setPrograms(data as LoyaltyProgram[] || []);
     } catch (e) {
       addToast({ type: 'error', title: 'Erro ao carregar', description: 'Não foi possível listar os programas.' });
     } finally {
@@ -52,13 +56,14 @@ const AdminPrograms: React.FC = () => {
     e.preventDefault();
     try {
       setIsSubmitting(true);
-      await createPrograma(formData);
+      await programaService.criarPrograma({ nome: formData.nome, url: formData.url });
       addToast({ type: 'success', title: 'Programa criado', description: 'Programa de fidelidade adicionado com sucesso!' });
       setShowForm(false);
       setFormData({ nome: '', url: '' });
       loadPrograms();
-    } catch (error) {
-      addToast({ type: 'error', title: 'Erro ao criar', description: 'Não foi possível criar o programa.' });
+    } catch (error: unknown) {
+      const msg = isAxiosError(error) ? error.response?.data?.message || 'Não foi possível criar o programa.' : 'Não foi possível criar o programa.';
+      addToast({ type: 'error', title: 'Erro ao criar', description: msg });
     } finally {
       setIsSubmitting(false);
     }
@@ -73,11 +78,12 @@ const AdminPrograms: React.FC = () => {
     if (!programToDelete) return;
     try {
       setIsDeleting(true);
-      await deletePrograma(programToDelete);
+      await programaService.deletarPrograma(programToDelete);
       setPrograms(programs.filter(p => p.id !== programToDelete));
       addToast({ type: 'success', title: 'Programa removido', description: 'O programa foi excluído com sucesso.' });
-    } catch (error) {
-      addToast({ type: 'error', title: 'Erro ao remover', description: 'Não foi possível excluir o programa.' });
+    } catch (error: unknown) {
+      const msg = isAxiosError(error) ? error.response?.data?.message || 'Não foi possível excluir o programa.' : 'Não foi possível excluir o programa.';
+      addToast({ type: 'error', title: 'Erro ao remover', description: msg });
     } finally {
       setIsDeleting(false);
       setDeleteModalOpen(false);
@@ -121,191 +127,24 @@ const AdminPrograms: React.FC = () => {
 
         {/* ── Formulário Embutido ── */}
         {showForm && (
-          <div className="bg-white dark:bg-slate-900 w-full rounded-[32px] shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden grid grid-cols-1 lg:grid-cols-2 animate-scaleIn">
-
-            {/* Esquerda: formulário */}
-            <div className="p-8 md:p-10 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-slate-100 dark:border-slate-800">
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-bold dark:text-white flex items-center gap-2">
-                  <Plus className="text-indigo-600" />
-                  Novo Programa
-                </h2>
-                <button onClick={() => setShowForm(false)} className="lg:hidden p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-50 dark:bg-slate-800 rounded-full">
-                  <X size={20} />
-                </button>
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Nome do Programa</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={formData.nome}
-                      onChange={e => setFormData({ ...formData, nome: e.target.value })}
-                      className="w-full px-5 py-4 pl-12 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-base"
-                      placeholder="Ex: Livelo"
-                      required
-                    />
-                    <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">URL do Site Oficial</label>
-                  <div className="relative">
-                    <input
-                      type="url"
-                      value={formData.url}
-                      onChange={e => setFormData({ ...formData, url: e.target.value })}
-                      className="w-full px-5 py-4 pl-12 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-base"
-                      placeholder="https://www.livelo.com.br"
-                      required
-                    />
-                    <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                  </div>
-                </div>
-
-                <div className="pt-4 flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowForm(false)}
-                    className="w-1/3 py-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-2xl transition-all"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-2/3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-indigo-200 dark:shadow-none flex items-center justify-center gap-2 disabled:opacity-70"
-                  >
-                    {isSubmitting ? <Loader2 className="animate-spin" /> : <Check size={20} />}
-                    Cadastrar Programa
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            {/* Direita: preview */}
-            <div className="bg-slate-50 dark:bg-slate-950 p-8 md:p-10 flex flex-col items-center justify-center relative overflow-hidden">
-              <div
-                className="absolute inset-0 opacity-10"
-                style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, gray 1px, transparent 0)', backgroundSize: '24px 24px' }}
-              />
-
-              <div className="relative w-full max-w-xs text-center z-10">
-                <h4 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-8">Como aparecerá no App</h4>
-
-                {/* Mini card preview */}
-                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-xl overflow-hidden transform hover:scale-105 transition-transform duration-300 text-left">
-                  <div className="h-1 bg-gradient-to-r from-indigo-500 to-violet-500" />
-                  <div className="p-5">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-lg shadow mb-3 transition-colors">
-                      {formData.nome ? formData.nome.charAt(0).toUpperCase() : '?'}
-                    </div>
-                    <p className="font-bold text-slate-800 dark:text-white truncate">{formData.nome || 'Nome do Programa'}</p>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Total na Plataforma</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="text-2xl font-black text-slate-900 dark:text-white">0M</span>
-                      <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded-full">
-                        <TrendingUp size={10} />+8%
-                      </span>
-                    </div>
-                  </div>
-                  <div className="border-t border-slate-100 dark:border-slate-800 px-4 py-2.5 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Ações</span>
-                    <div className="flex gap-1">
-                      <div className="p-1.5 text-slate-300 dark:text-slate-600 rounded-lg"><ExternalLink size={14} /></div>
-                      <div className="p-1.5 text-slate-300 dark:text-slate-600 rounded-lg"><Trash2 size={14} /></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
+          <ProgramForm
+            formData={formData}
+            setFormData={setFormData}
+            isSubmitting={isSubmitting}
+            onClose={() => setShowForm(false)}
+            onSubmit={handleSubmit}
+          />
         )}
 
         {/* ── Grid de Programas (Oculto se formulário estiver aberto) ── */}
         {!showForm && (
-          loading ? (
-            <div className="flex justify-center py-24">
-              <Loader2 className="animate-spin text-indigo-600" size={32} />
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-
-              {programs.map((program, index) => {
-                const color = getCardColor(index);
-                const initial = program.nome.charAt(0).toUpperCase();
-
-                return (
-                  <div
-                    key={program.id}
-                    className={`group bg-white dark:bg-slate-900 rounded-2xl border-t-2 ${color.border} border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 flex flex-col overflow-hidden`}
-                  >
-                    {/* Corpo */}
-                    <div className="p-4 flex-1">
-                      {/* Avatar */}
-                      <div className={`w-10 h-10 rounded-xl ${color.bg} flex items-center justify-center text-white font-black text-lg shadow-md mb-3`}>
-                        {initial}
-                      </div>
-                      {/* Nome */}
-                      <p className="font-bold text-slate-800 dark:text-white text-base leading-tight truncate" title={program.nome}>{program.nome}</p>
-                      <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">
-                        Total na Plataforma
-                      </p>
-                      {/* Stat */}
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className="text-2xl font-black text-slate-900 dark:text-white">0M</span>
-                        <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400 px-1.5 py-0.5 rounded-full">
-                          <TrendingUp size={10} />
-                          +8%
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Rodapé */}
-                    <div className="border-t border-slate-100 dark:border-slate-800 px-4 py-2.5 flex items-center justify-between">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Ações</span>
-                      <div className="flex items-center gap-1">
-                        <a
-                          href={program.url || '#'}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all"
-                          title="Visitar site"
-                        >
-                          <ExternalLink size={14} />
-                        </a>
-                        <button
-                          onClick={() => handleDelete(program.id)}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-all"
-                          title="Excluir"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-
-              {/* Card Adicionar */}
-              <button
-                onClick={() => setShowForm(true)}
-                className="group bg-white dark:bg-slate-900 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 transition-all duration-300 flex flex-col items-center justify-center gap-3 min-h-[160px] p-6"
-              >
-                <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/30 flex items-center justify-center transition-colors">
-                  <Plus size={22} className="text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" />
-                </div>
-                <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 uppercase tracking-widest transition-colors">
-                  Adicionar Parceiro
-                </span>
-              </button>
-
-            </div>
-          )
+          <ProgramList
+            programs={programs}
+            loading={loading}
+            onOpenCreateForm={() => setShowForm(true)}
+            onDelete={handleDelete}
+            getCardColor={getCardColor}
+          />
         )}
       </div>
 

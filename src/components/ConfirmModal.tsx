@@ -37,17 +37,18 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 animate-fadeIn">
       {/* Overlay com Blur */}
-      <div 
-        className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm transition-opacity" 
-        onClick={!isLoading ? onClose : undefined} 
+      <div
+        className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm transition-opacity"
+        onClick={!isLoading ? onClose : undefined}
       />
 
       <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl shadow-2xl z-10 overflow-hidden transform transition-all scale-100 relative border border-slate-100 dark:border-slate-800">
-        
+
         {/* Botão Fechar */}
-        <button 
-          onClick={onClose} 
+        <button
+          onClick={onClose}
           disabled={isLoading}
+          aria-label="Fechar Modal de Confirmação"
           className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors disabled:opacity-50"
         >
           <X size={20} />
@@ -62,7 +63,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
             {title}
           </h3>
-          
+
           <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-8">
             {description}
           </p>
@@ -75,7 +76,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             >
               {cancelText}
             </button>
-            
+
             <button
               onClick={onConfirm}
               disabled={isLoading}
