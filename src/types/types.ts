@@ -35,6 +35,7 @@ export interface Transaction {
   tipo: 'ACUMULO' | 'USO' | 'BONUS' | 'EXPIRACAO' | 'AJUSTE' | 'TRANSFERENCIA_ENTRADA' | 'TRANSFERENCIA_SAIDA';
   status: 'PENDENTE' | 'CREDITADO' | 'EXPIRADO';
   nomePrograma: string;
+  nomePersonalizado?: string;
 }
 
 export interface Promotion {

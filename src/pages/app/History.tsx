@@ -24,6 +24,7 @@ interface Transaction {
   descricao: string;
   nomePrograma: string;
   nomeCartao?: string;
+  nomePersonalizado?: string;
   status?: string;
 }
 
@@ -321,7 +322,7 @@ const HistoryPage: React.FC = () => {
                       {/* CARTÃO */}
                       <td className="px-6 py-5 text-center">
                         <span className="text-xs font-semibold px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                          {tx.nomeCartao || '—'}
+                          {tx.nomePersonalizado || tx.nomeCartao || '—'}
                         </span>
                       </td>
 
