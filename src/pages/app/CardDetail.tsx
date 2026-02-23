@@ -23,12 +23,12 @@ interface Cartao {
 
 interface Compra {
     id: number;
-    estabelecimento: string;
+    descricao: string; // Corrigido de 'estabelecimento' para 'descricao'
     categoria?: string;
-    valor: number;
-    pontosGerados?: number;
+    valorGasto: number; // Corrigido de 'valor' para 'valorGasto'
+    pontosCalculados?: number; // Corrigido de 'pontosGerados' para 'pontosCalculados'
     dataCompra: string;
-    status?: 'PENDENTE' | 'CREDITADO' | 'CANCELADO';
+    status?: 'PENDENTE' | 'CREDITADO' | 'CANCELADO' | string;
 }
 
 /* ─── Helpers ────────────────────────────────────────────────── */
@@ -55,15 +55,18 @@ const getCategoryColor = (categoria?: string) => {
     return { bg: 'bg-indigo-100 dark:bg-indigo-900/30', text: 'text-indigo-600 dark:text-indigo-400' };
 };
 
-const formatCurrency = (v: number) =>
-    v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+// CORREÇÃO: Adicionado fallback (v || 0) para evitar o erro de 'undefined' no toLocaleString
+const formatCurrency = (v?: number) =>
+    (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 const formatDate = (iso: string) => {
+    if (!iso) return '';
     const d = new Date(iso);
     return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
 const formatTime = (iso: string) => {
+    if (!iso) return '';
     const d = new Date(iso);
     return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 };
@@ -78,6 +81,7 @@ const groupByDate = (compras: Compra[]): Record<string, Compra[]> => {
 };
 
 const humanDate = (dateStr: string) => {
+    if (!dateStr) return '';
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
@@ -115,7 +119,11 @@ const CardDetailPage: React.FC = () => {
                     api.get(`/compras?cartaoId=${id}`)
                 ]);
                 setCartao(cartaoRes.data);
-                setCompras(comprasRes.data || []);
+
+                // Mapeamento de página
+                const listaCompras = comprasRes.data?.content || (Array.isArray(comprasRes.data) ? comprasRes.data : []);
+                setCompras(listaCompras);
+
             } catch (err: any) {
                 if (err.response?.status === 404) {
                     addToast({ type: 'error', title: 'Cartão não encontrado', description: 'Este cartão não existe ou foi removido.' });
@@ -130,26 +138,27 @@ const CardDetailPage: React.FC = () => {
         load();
     }, [id]);
 
-    /* KPIs calculados */
+    /* KPIs calculados ajustados para os novos nomes */
     const totalPontos = useMemo(() =>
-        compras.filter(c => c.status === 'CREDITADO').reduce((s, c) => s + (c.pontosGerados || 0), 0), [compras]);
+        compras.filter(c => c.status === 'CREDITADO').reduce((s, c) => s + (c.pontosCalculados || 0), 0), [compras]);
 
     const gastoMensal = useMemo(() => {
         const now = new Date();
         return compras
             .filter(c => {
+                if (!c.dataCompra) return false;
                 const d = new Date(c.dataCompra);
                 return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
             })
-            .reduce((s, c) => s + c.valor, 0);
+            .reduce((s, c) => s + (c.valorGasto || 0), 0);
     }, [compras]);
 
-    /* Filtragem */
+    /* Filtragem ajustada */
     const comprasFiltradas = useMemo(() => {
         return compras.filter(c => {
             const matchSearch =
                 !search ||
-                c.estabelecimento.toLowerCase().includes(search.toLowerCase()) ||
+                (c.descricao || '').toLowerCase().includes(search.toLowerCase()) ||
                 (c.categoria || '').toLowerCase().includes(search.toLowerCase());
             const matchStatus = filterStatus === 'TODOS' || c.status === filterStatus;
             return matchSearch && matchStatus;
@@ -327,7 +336,7 @@ const CardDetailPage: React.FC = () => {
                         type="text"
                         value={search}
                         onChange={e => setSearch(e.target.value)}
-                        placeholder="Buscar estabelecimentos ou valores..."
+                        placeholder="Buscar estabelecimentos..."
                         className="w-full pl-10 pr-4 py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm"
                     />
                 </div>
@@ -401,7 +410,7 @@ const CardDetailPage: React.FC = () => {
 
                                             {/* Info */}
                                             <div className="flex-1 min-w-0">
-                                                <p className="font-bold text-slate-900 dark:text-white text-sm truncate">{compra.estabelecimento}</p>
+                                                <p className="font-bold text-slate-900 dark:text-white text-sm truncate">{compra.descricao || 'Compra Registrada'}</p>
                                                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
                                                     {compra.categoria || 'Compra'} • {formatTime(compra.dataCompra)}
                                                 </p>
@@ -410,7 +419,7 @@ const CardDetailPage: React.FC = () => {
                                             {/* Valor + Pontos + Status */}
                                             <div className="text-right shrink-0">
                                                 <p className="font-bold text-slate-900 dark:text-white text-sm">
-                                                    {formatCurrency(compra.valor)}
+                                                    {formatCurrency(compra.valorGasto)}
                                                 </p>
                                                 <div className="flex items-center justify-end gap-2 mt-0.5">
                                                     {compra.status === 'PENDENTE' && (
@@ -419,9 +428,9 @@ const CardDetailPage: React.FC = () => {
                                                     {compra.status === 'CANCELADO' && (
                                                         <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-full">Cancelado</span>
                                                     )}
-                                                    {compra.pontosGerados !== undefined && compra.pontosGerados > 0 && compra.status !== 'CANCELADO' && (
+                                                    {compra.pontosCalculados !== undefined && compra.pontosCalculados > 0 && compra.status !== 'CANCELADO' && (
                                                         <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded-full">
-                                                            +{compra.pontosGerados} pts
+                                                            +{compra.pontosCalculados.toLocaleString('pt-BR')} pts
                                                         </span>
                                                     )}
                                                 </div>
@@ -438,7 +447,7 @@ const CardDetailPage: React.FC = () => {
                                 to="/history"
                                 className="text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors flex items-center gap-1"
                             >
-                                Ver todas as movimentações
+                                Ver extrato completo
                                 <ChevronRight size={14} />
                             </Link>
                         </div>
@@ -451,7 +460,6 @@ const CardDetailPage: React.FC = () => {
                 className="relative rounded-3xl p-8 overflow-hidden text-white"
                 style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 60%, #a855f7 100%)' }}
             >
-                {/* Decorativos */}
                 <div className="absolute right-0 top-0 w-64 h-full opacity-20 pointer-events-none">
                     <div className="absolute right-8 top-1/2 -translate-y-1/2 w-32 h-32 rounded-full bg-white/40" />
                     <div className="absolute right-20 top-1/4 w-16 h-16 rounded-full bg-white/20" />

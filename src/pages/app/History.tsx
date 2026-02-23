@@ -23,6 +23,7 @@ interface Transaction {
   dataMovimentacao: string;
   descricao: string;
   nomePrograma: string;
+  nomeCartao?: string;
   status?: string;
 }
 
@@ -276,12 +277,13 @@ const HistoryPage: React.FC = () => {
 
       {/* Tabela de Transações */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+        <div className="overflow-x-auto max-h-[460px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+          <table className="w-full relative">
+            <thead className="bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10 border-b border-slate-100 dark:border-slate-800">
               <tr>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Data</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Descrição</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Cartão</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Programa</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Pontos</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Status</th>
@@ -314,6 +316,13 @@ const HistoryPage: React.FC = () => {
                           </div>
                           <span className="text-sm font-medium dark:text-white">{tx.descricao}</span>
                         </div>
+                      </td>
+
+                      {/* CARTÃO */}
+                      <td className="px-6 py-5 text-center">
+                        <span className="text-xs font-semibold px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                          {tx.nomeCartao || '—'}
+                        </span>
                       </td>
 
                       {/* PROGRAMA */}

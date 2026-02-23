@@ -44,6 +44,7 @@ interface MovimentacaoDTO {
   dataMovimentacao: string;
   descricao: string;
   nomePrograma: string;
+  nomeCartao?: string;
 }
 
 interface DashboardResponseDTO {
@@ -281,11 +282,12 @@ const Dashboard: React.FC = () => {
         <div className="p-6 border-b border-slate-100 dark:border-slate-800">
           <h3 className="text-lg font-bold dark:text-white">Últimas Movimentações</h3>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-slate-50 dark:bg-slate-800/50">
+        <div className="overflow-x-auto max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+          <table className="w-full text-left relative">
+            <thead className="bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10">
               <tr>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Descrição</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase text-center">Cartão</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Programa</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Pontos</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Data</th>
@@ -305,6 +307,11 @@ const Dashboard: React.FC = () => {
                           <span className="text-sm font-medium dark:text-white">{tx.descricao}</span>
                         </div>
                       </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className="text-xs font-semibold px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                          {tx.nomeCartao || '—'}
+                        </span>
+                      </td>
                       <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{tx.nomePrograma}</td>
                       <td className={`px-6 py-4 text-sm font-bold ${!isNegative ? 'text-indigo-600' : 'text-rose-500'}`}>
                         {!isNegative ? '+' : ''}{tx.quantidadePontos.toLocaleString()} pts
@@ -317,7 +324,7 @@ const Dashboard: React.FC = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-slate-500">
+                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
                     Nenhuma movimentação recente encontrada.
                   </td>
                 </tr>
