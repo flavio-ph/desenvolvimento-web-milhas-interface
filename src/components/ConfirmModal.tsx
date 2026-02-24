@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom'; // <-- IMPORTAÇÃO DO PORTAL
 import { AlertTriangle, X, Loader2 } from 'lucide-react';
 
 interface ConfirmModalProps {
@@ -10,7 +11,7 @@ interface ConfirmModalProps {
   confirmText?: string;
   cancelText?: string;
   isLoading?: boolean;
-  variant?: 'danger' | 'warning' | 'info'; // Para mudar a cor do ícone/botão se quiser reutilizar para outras coisas
+  variant?: 'danger' | 'warning' | 'info';
 }
 
 export const ConfirmModal: React.FC<ConfirmModalProps> = ({
@@ -34,11 +35,13 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
   const style = colors[variant];
 
-  return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 animate-fadeIn">
+  // Conteúdo do Modal
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 animate-fadeIn">
+
       {/* Overlay com Blur */}
       <div
-        className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm transition-opacity"
         onClick={!isLoading ? onClose : undefined}
       />
 
@@ -48,7 +51,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
         <button
           onClick={onClose}
           disabled={isLoading}
-          aria-label="Fechar Modal de Confirmação"
+          aria-label="Fechar confirmação"
           className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors disabled:opacity-50"
         >
           <X size={20} />
@@ -89,4 +92,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       </div>
     </div>
   );
+
+  // createPortal injeta o modal diretamente na raiz do <body>, burlando qualquer CSS que corte a tela
+  return createPortal(modalContent, document.body);
 };

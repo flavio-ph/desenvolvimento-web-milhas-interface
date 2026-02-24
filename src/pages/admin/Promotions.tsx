@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Tag, Plus, Trash2, Loader2, Pencil, Zap, AlertCircle
+  Tag, Plus, Trash2, Loader2, Pencil, Zap, AlertCircle, ArrowLeft
 } from 'lucide-react';
 import { getPromocoes, getProgramas, createPromocao, deletePromocao, updatePromocao } from '../../services/api';
 import { Promotion, LoyaltyProgram } from '../../types/types';
@@ -168,38 +168,38 @@ const AdminPromotions: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-fadeIn max-w-7xl mx-auto py-4">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full mb-2">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-            <Tag className="text-indigo-600" />
+            <Tag className="text-indigo-600 dark:text-indigo-400" />
             Gestão de Promoções
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Cadastre e gerencie as ofertas disponíveis no app.</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">
+            Cadastre e gerencie as ofertas disponíveis no app.
+          </p>
         </div>
+
+        {activeTab === 'gerenciar' ? (
+          <button
+            onClick={() => setActiveTab('cadastrar')}
+            className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-none w-full sm:w-auto justify-center sm:justify-start shrink-0"
+          >
+            <Plus size={20} />
+            Cadastrar Nova
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              if (editingId) handleCancelEdit();
+              setActiveTab('gerenciar');
+            }}
+            className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm w-full sm:w-auto justify-center sm:justify-start shrink-0"
+          >
+            <ArrowLeft size={20} /> Voltar à Lista
+          </button>
+        )}
       </div>
 
-      {/* Abas de Navegação */}
-      <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-fit">
-        <button
-          onClick={() => { if (editingId) handleCancelEdit(); setActiveTab('gerenciar'); }}
-          className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'gerenciar'
-            ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm'
-            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
-            }`}
-        >
-          Gerenciar Ativas
-        </button>
-        <button
-          onClick={() => { if (editingId) handleCancelEdit(); setActiveTab('cadastrar'); }}
-          className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'cadastrar'
-            ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm'
-            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
-            }`}
-        >
-          {editingId ? 'Editando Promoção' : 'Cadastrar Nova'}
-        </button>
-      </div>
 
       {activeTab === 'gerenciar' ? (
         // TABELA

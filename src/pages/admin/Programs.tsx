@@ -30,6 +30,7 @@ const AdminPrograms: React.FC = () => {
   const [programs, setPrograms] = useState<LoyaltyProgram[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [programToDelete, setProgramToDelete] = useState<number | null>(null);
@@ -56,10 +57,16 @@ const AdminPrograms: React.FC = () => {
     e.preventDefault();
     try {
       setIsSubmitting(true);
-      await programaService.criarPrograma({ nome: formData.nome, url: formData.url });
-      addToast({ type: 'success', title: 'Programa criado', description: 'Programa de fidelidade adicionado com sucesso!' });
+      if (editingId) {
+        await programaService.atualizarPrograma(editingId, { nome: formData.nome, url: formData.url });
+        addToast({ type: 'success', title: 'Programa atualizado', description: 'Programa de fidelidade atualizado com sucesso!' });
+      } else {
+        await programaService.criarPrograma({ nome: formData.nome, url: formData.url });
+        addToast({ type: 'success', title: 'Programa criado', description: 'Programa de fidelidade adicionado com sucesso!' });
+      }
       setShowForm(false);
       setFormData({ nome: '', url: '' });
+      setEditingId(null);
       loadPrograms();
     } catch (error: unknown) {
       const msg = isAxiosError(error) ? error.response?.data?.message || 'Não foi possível criar o programa.' : 'Não foi possível criar o programa.';
@@ -67,6 +74,18 @@ const AdminPrograms: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleEdit = (program: LoyaltyProgram) => {
+    setEditingId(program.id);
+    setFormData({ nome: program.nome, url: (program as any).url || '' });
+    setShowForm(true);
+  };
+
+  const handleNew = () => {
+    setEditingId(null);
+    setFormData({ nome: '', url: '' });
+    setShowForm(true);
   };
 
   const handleDelete = (id: number) => {
@@ -96,7 +115,7 @@ const AdminPrograms: React.FC = () => {
       <div className="space-y-8 animate-fadeIn pb-10 max-w-7xl mx-auto py-4">
 
         {/* ── Header ── */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
           <div>
             <h1 className="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
               <Globe className="text-indigo-600 dark:text-indigo-400" />
@@ -109,8 +128,8 @@ const AdminPrograms: React.FC = () => {
 
           {!showForm ? (
             <button
-              onClick={() => setShowForm(true)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-none w-fit"
+              onClick={handleNew}
+              className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-none w-full sm:w-auto justify-center sm:justify-start shrink-0"
             >
               <Plus size={20} />
               Novo Programa
@@ -118,7 +137,7 @@ const AdminPrograms: React.FC = () => {
           ) : (
             <button
               onClick={() => setShowForm(false)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm w-fit"
+              className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm w-full sm:w-auto justify-center sm:justify-start shrink-0"
             >
               <ArrowLeft size={20} /> Voltar à Lista
             </button>
@@ -131,6 +150,7 @@ const AdminPrograms: React.FC = () => {
             formData={formData}
             setFormData={setFormData}
             isSubmitting={isSubmitting}
+            editingId={editingId}
             onClose={() => setShowForm(false)}
             onSubmit={handleSubmit}
           />
@@ -141,7 +161,8 @@ const AdminPrograms: React.FC = () => {
           <ProgramList
             programs={programs}
             loading={loading}
-            onOpenCreateForm={() => setShowForm(true)}
+            onOpenCreateForm={handleNew}
+            onEdit={handleEdit}
             onDelete={handleDelete}
             getCardColor={getCardColor}
           />

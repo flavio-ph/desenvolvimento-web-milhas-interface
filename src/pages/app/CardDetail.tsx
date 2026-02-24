@@ -23,11 +23,11 @@ interface Cartao {
 
 interface Compra {
     id: number;
-    descricao: string; // Corrigido de 'estabelecimento' para 'descricao'
+    descricao: string;
     categoria?: string;
-    valorGasto: number; // Corrigido de 'valor' para 'valorGasto'
-    pontosCalculados?: number; // Corrigido de 'pontosGerados' para 'pontosCalculados'
-    dataCompra: string;
+    valorGasto: number;
+    pontosCalculados?: number;
+    dataCompra: any;
     status?: 'PENDENTE' | 'CREDITADO' | 'CANCELADO' | string;
 }
 
@@ -55,25 +55,52 @@ const getCategoryColor = (categoria?: string) => {
     return { bg: 'bg-indigo-100 dark:bg-indigo-900/30', text: 'text-indigo-600 dark:text-indigo-400' };
 };
 
-// CORREÇÃO: Adicionado fallback (v || 0) para evitar o erro de 'undefined' no toLocaleString
 const formatCurrency = (v?: number) =>
     (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-const formatDate = (iso: string) => {
-    if (!iso) return '';
-    const d = new Date(iso);
-    return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+// Parser universal de datas
+const parseSafeDate = (data: any): Date | null => {
+    if (!data) return null;
+
+    // 1. Se o Spring Boot enviar como Array: [2024, 2, 23]
+    if (Array.isArray(data)) {
+        const [ano, mes, dia, hora = 0, minuto = 0, segundo = 0] = data;
+        return new Date(ano, mes - 1, dia, hora, minuto, segundo);
+    }
+
+    // 2. Se for String
+    if (typeof data === 'string') {
+        if (data.includes('/')) {
+            const parts = data.split(/[\sT]+/);
+            const [d, m, y] = parts[0].split('/');
+            const timeParts = parts[1] ? parts[1].split(':') : [0, 0, 0];
+            return new Date(Number(y), Number(m) - 1, Number(d), Number(timeParts[0]), Number(timeParts[1]));
+        }
+
+        if (data.length === 10 && data.includes('-')) {
+            const [y, m, d] = data.split('-');
+            return new Date(Number(y), Number(m) - 1, Number(d), 12, 0, 0);
+        }
+    }
+
+    // 3. Fallback
+    const parsed = new Date(data);
+    if (isNaN(parsed.getTime())) {
+        console.warn("⚠️ O Frontend não conseguiu ler esta data:", data);
+        return null;
+    }
+    return parsed;
 };
 
-const formatTime = (iso: string) => {
-    if (!iso) return '';
-    const d = new Date(iso);
-    return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+const formatDate = (data: any) => {
+    const d = parseSafeDate(data);
+    if (!d) return '—';
+    return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
 const groupByDate = (compras: Compra[]): Record<string, Compra[]> => {
     return compras.reduce((acc, c) => {
-        const key = formatDate(c.dataCompra);
+        const key = formatDate(c.dataCompra) !== '—' ? formatDate(c.dataCompra) : 'Data Desconhecida';
         if (!acc[key]) acc[key] = [];
         acc[key].push(c);
         return acc;
@@ -81,7 +108,8 @@ const groupByDate = (compras: Compra[]): Record<string, Compra[]> => {
 };
 
 const humanDate = (dateStr: string) => {
-    if (!dateStr) return '';
+    if (!dateStr || dateStr === '—' || dateStr === 'Data Desconhecida') return 'Data Desconhecida';
+
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
@@ -93,7 +121,7 @@ const humanDate = (dateStr: string) => {
     if (dateStr === yesterdayStr) return 'ONTEM';
 
     const [d, m, y] = dateStr.split('/');
-    const date = new Date(`${y}-${m}-${d}`);
+    const date = new Date(Number(y), Number(m) - 1, Number(d));
     return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' }).toUpperCase();
 };
 
@@ -120,7 +148,6 @@ const CardDetailPage: React.FC = () => {
                 ]);
                 setCartao(cartaoRes.data);
 
-                // Mapeamento de página
                 const listaCompras = comprasRes.data?.content || (Array.isArray(comprasRes.data) ? comprasRes.data : []);
                 setCompras(listaCompras);
 
@@ -138,7 +165,6 @@ const CardDetailPage: React.FC = () => {
         load();
     }, [id]);
 
-    /* KPIs calculados ajustados para os novos nomes */
     const totalPontos = useMemo(() =>
         compras.filter(c => c.status === 'CREDITADO').reduce((s, c) => s + (c.pontosCalculados || 0), 0), [compras]);
 
@@ -146,14 +172,13 @@ const CardDetailPage: React.FC = () => {
         const now = new Date();
         return compras
             .filter(c => {
-                if (!c.dataCompra) return false;
-                const d = new Date(c.dataCompra);
+                const d = parseSafeDate(c.dataCompra);
+                if (!d) return false;
                 return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
             })
             .reduce((s, c) => s + (c.valorGasto || 0), 0);
     }, [compras]);
 
-    /* Filtragem ajustada */
     const comprasFiltradas = useMemo(() => {
         return compras.filter(c => {
             const matchSearch =
@@ -167,16 +192,16 @@ const CardDetailPage: React.FC = () => {
 
     const grouped = useMemo(() => groupByDate(comprasFiltradas), [comprasFiltradas]);
     const dateKeys = Object.keys(grouped).sort((a, b) => {
+        if (a === 'Data Desconhecida') return 1;
+        if (b === 'Data Desconhecida') return -1;
         const parse = (s: string) => { const [d, m, y] = s.split('/'); return new Date(`${y}-${m}-${d}`).getTime(); };
         return parse(b) - parse(a);
     });
 
-    /* Estilo do cartão */
     const cardStyle = cartao?.cor ? {
         background: `linear-gradient(135deg, ${cartao.cor} 0%, ${adjustColor(cartao.cor, -40)} 100%)`
     } : { background: 'linear-gradient(135deg, #6366f1 0%, #7c3aed 100%)' };
 
-    /* ── Loading ── */
     if (loading) {
         return (
             <div className="flex h-[60vh] items-center justify-center">
@@ -222,18 +247,15 @@ const CardDetailPage: React.FC = () => {
                     className="relative rounded-3xl p-6 text-white shadow-2xl overflow-hidden col-span-1"
                     style={cardStyle}
                 >
-                    {/* Círculos decorativos */}
                     <div className="absolute -right-12 -top-12 w-44 h-44 rounded-full bg-white/10 pointer-events-none" />
                     <div className="absolute -right-4 -bottom-10 w-32 h-32 rounded-full bg-white/10 pointer-events-none" />
 
-                    {/* Status badge */}
                     <div className="flex justify-between items-start mb-6 relative z-10">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${isAtivo ? 'bg-emerald-500/25 text-emerald-100' : 'bg-white/20 text-white/70'}`}>
                             {isAtivo ? <CheckCircle2 size={10} /> : <XCircle size={10} />}
                             {isAtivo ? 'Ativo' : 'Inativo'}
                         </span>
 
-                        {/* Chip SVG */}
                         <svg width="36" height="26" viewBox="0 0 36 26" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-sm">
                             <rect width="36" height="26" rx="4" fill="#D4A017" />
                             <rect x="1" y="1" width="34" height="24" rx="3" fill="#F2BF2B" />
@@ -243,14 +265,12 @@ const CardDetailPage: React.FC = () => {
                         </svg>
                     </div>
 
-                    {/* Número */}
                     <div className="relative z-10 mb-6">
                         <div className="font-mono text-lg tracking-widest text-white/90">
                             •••• •••• •••• {cartao.ultimosDigitos}
                         </div>
                     </div>
 
-                    {/* Footer do cartão */}
                     <div className="relative z-10 flex justify-between items-end">
                         <div>
                             <p className="text-[10px] text-white/60 uppercase font-bold mb-0.5">Titular</p>
@@ -412,7 +432,7 @@ const CardDetailPage: React.FC = () => {
                                             <div className="flex-1 min-w-0">
                                                 <p className="font-bold text-slate-900 dark:text-white text-sm truncate">{compra.descricao || 'Compra Registrada'}</p>
                                                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                                                    {compra.categoria || 'Compra'} • {formatTime(compra.dataCompra)}
+                                                    {compra.categoria || 'Compra'}
                                                 </p>
                                             </div>
 

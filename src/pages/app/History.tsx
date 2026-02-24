@@ -12,14 +12,27 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
-import { getPontosPendentes, getPontosExpirando } from '../../services/api';
-import { movimentacaoService, MovimentacaoParams } from '../../services/movimentacaoService';
-import { programaService } from '../../services/programaService';
-import { cartaoService } from '../../services/cartaoService';
-import { LoyaltyProgram, ResumoPendentesResponse, Transaction } from '../../types/types';
+import api, { getPontosPendentes, getPontosExpirando, getProgramas } from '../../services/api';
+import { LoyaltyProgram, ResumoPendentesResponse } from '../../types/types';
 import { useToast } from '../../components/ToastContext';
 
-// Types imported from types.ts
+interface Transaction {
+  id: number;
+  tipo: 'ACUMULO' | 'USO' | 'BONUS' | 'EXPIRACAO' | 'AJUSTE' | 'TRANSFERENCIA_ENTRADA' | 'TRANSFERENCIA_SAIDA';
+  quantidadePontos: number;
+  dataMovimentacao: string;
+  descricao: string;
+  nomePrograma: string;
+  nomeCartao?: string;
+  nomePersonalizado?: string;
+  status?: string;
+}
+
+interface Cartao {
+  id: number;
+  nomePersonalizado: string;
+  ultimosDigitos: string;
+}
 
 const HistoryPage: React.FC = () => {
   const { isDarkMode } = useTheme();
@@ -27,13 +40,14 @@ const HistoryPage: React.FC = () => {
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [programsList, setProgramsList] = useState<LoyaltyProgram[]>([]);
-  const [cardsList, setCardsList] = useState<any[]>([]);
+  const [cardsList, setCardsList] = useState<Cartao[]>([]); // Estado para os cartões
   const [loading, setLoading] = useState(true);
 
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
 
-  const [cardFilter, setCardFilter] = useState('ALL');
+  const [typeFilter, setTypeFilter] = useState('ALL');
   const [programFilter, setProgramFilter] = useState('ALL');
+  const [cardFilter, setCardFilter] = useState('ALL'); // Estado do filtro de cartão
 
   const [resumoPendentes, setResumoPendentes] = useState<ResumoPendentesResponse>({
     totalPontos: 0,
@@ -41,20 +55,21 @@ const HistoryPage: React.FC = () => {
   });
   const [pontosExpirando, setPontosExpirando] = useState(0);
 
+  // Busca os filtros (Programas e Cartões) ao montar a tela
   useEffect(() => {
-    const fetchFiltersData = async () => {
+    const fetchFilters = async () => {
       try {
-        const [programsData, cardsData] = await Promise.all([
-          programaService.listarProgramas(),
-          cartaoService.listarCartoes()
+        const [progData, cardsData] = await Promise.all([
+          getProgramas(),
+          api.get('/cartoes')
         ]);
-        setProgramsList(programsData);
-        setCardsList(cardsData);
+        setProgramsList(progData || []);
+        setCardsList(cardsData.data || []);
       } catch (error) {
-        console.error("Erro ao buscar dados de filtros", error);
+        console.error("Erro ao buscar dados para os filtros", error);
       }
     };
-    fetchFiltersData();
+    fetchFilters();
   }, []);
 
   useEffect(() => {
@@ -64,21 +79,30 @@ const HistoryPage: React.FC = () => {
 
         const [year, month] = selectedMonth.split('-').map(Number);
 
-        const params: MovimentacaoParams = {
+        // Objeto de parâmetros dinâmico
+        const params: any = {
           mes: month,
           ano: year
         };
 
+        // Só envia os parâmetros se não forem "ALL"
         if (programFilter !== 'ALL') {
           params.programa = programFilter;
         }
 
+        if (typeFilter !== 'ALL') {
+          params.tipo = typeFilter;
+        }
+
+        // CORREÇÃO AQUI: Garante que "ALL" não é enviado para o backend como string
         if (cardFilter !== 'ALL') {
           params.cartaoId = cardFilter;
         }
 
-        const dados = await movimentacaoService.listarMovimentacoes(params);
-        setTransactions(dados as Transaction[]);
+        const response = await api.get('/movimentacoes', { params });
+
+        const dados = response.data?.content || (Array.isArray(response.data) ? response.data : []);
+        setTransactions(dados);
 
         const pendentes = await getPontosPendentes();
         setResumoPendentes(pendentes);
@@ -102,7 +126,7 @@ const HistoryPage: React.FC = () => {
 
     return () => clearTimeout(delayDebounceFn);
 
-  }, [selectedMonth, programFilter, cardFilter]);
+  }, [selectedMonth, programFilter, typeFilter, cardFilter]); // Reage às mudanças de cardFilter
 
   const acumuladoMes = useMemo(() => {
     return transactions
@@ -112,15 +136,14 @@ const HistoryPage: React.FC = () => {
 
   const handleExportPdf = async () => {
     try {
-      const blob = await movimentacaoService.exportarPdf();
-      const url = window.URL.createObjectURL(blob);
+      const response = await api.get('/relatorios/movimentacoes/pdf', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', 'extrato_milhas.pdf');
       document.body.appendChild(link);
       link.click();
       link.remove();
-      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Erro ao baixar PDF", error);
       addToast({ type: 'error', title: 'Erro ao exportar', description: 'Não foi possível gerar o relatório PDF.' });
@@ -129,15 +152,14 @@ const HistoryPage: React.FC = () => {
 
   const handleExportExcel = async () => {
     try {
-      const blob = await movimentacaoService.exportarCsv();
-      const url = window.URL.createObjectURL(blob);
+      const response = await api.get('/relatorios/movimentacoes/csv', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', 'extrato_milhas.csv');
       document.body.appendChild(link);
       link.click();
       link.remove();
-      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Erro ao baixar Excel", error);
       addToast({ type: 'error', title: 'Erro ao exportar', description: 'Não foi possível gerar a planilha Excel.' });
@@ -153,7 +175,7 @@ const HistoryPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="space-y-8 animate-fadeIn pb-10">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
@@ -237,24 +259,27 @@ const HistoryPage: React.FC = () => {
       </div>
 
       {/* Barra de Filtros */}
-      <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col xl:flex-row items-center justify-between gap-4">
 
         {/* Label Visual */}
-        <div className="hidden md:flex items-center gap-2 text-slate-500">
+        <div className="hidden xl:flex items-center gap-2 text-slate-500 shrink-0">
           <Filter size={20} />
           <span className="font-medium text-sm">Filtros</span>
         </div>
 
-        <div className="flex flex-col md:flex-row w-full md:w-auto gap-3">
-          {/* Select de Cartão */}
+        <div className="flex flex-col sm:flex-row w-full gap-3">
+
+          {/* Select de Cartões */}
           <select
             value={cardFilter}
             onChange={(e) => setCardFilter(e.target.value)}
-            className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm font-medium dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm font-medium dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
           >
             <option value="ALL">Todos os Cartões</option>
             {cardsList.map(card => (
-              <option key={card.id} value={card.id}>{card.nomePersonalizado || card.nomeCartao}</option>
+              <option key={card.id} value={card.id}>
+                {card.nomePersonalizado} (•••• {card.ultimosDigitos})
+              </option>
             ))}
           </select>
 
@@ -262,7 +287,7 @@ const HistoryPage: React.FC = () => {
           <select
             value={programFilter}
             onChange={(e) => setProgramFilter(e.target.value)}
-            className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm font-medium dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm font-medium dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
           >
             <option value="ALL">Todos os Programas</option>
             {programsList.map(prog => (
@@ -271,7 +296,7 @@ const HistoryPage: React.FC = () => {
           </select>
 
           {/* Seletor de Data */}
-          <div className="relative">
+          <div className="relative shrink-0 w-full sm:w-auto">
             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-600 dark:text-indigo-400 pointer-events-none">
               <CalendarIcon size={18} />
             </div>
@@ -279,7 +304,7 @@ const HistoryPage: React.FC = () => {
               type="month"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="w-full md:w-auto pl-10 pr-4 py-2.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-colors border-none outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+              className="w-full pl-10 pr-4 py-2.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-colors border-none outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
             />
           </div>
         </div>
@@ -329,9 +354,9 @@ const HistoryPage: React.FC = () => {
                       </td>
 
                       {/* CARTÃO */}
-                      <td className="px-6 py-5 text-center whitespace-nowrap">
+                      <td className="px-6 py-5 text-center">
                         <span className="text-xs font-semibold px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                          {(tx as any).nomePersonalizado || (tx as any).nomeCartao || '—'}
+                          {tx.nomePersonalizado || tx.nomeCartao || '—'}
                         </span>
                       </td>
 
@@ -352,17 +377,17 @@ const HistoryPage: React.FC = () => {
 
                       {/* STATUS */}
                       <td className="px-6 py-5 text-center">
-                        {(tx.status as string) === 'CREDITADO' || (tx.status as string) === 'FINALIZADA' ? (
+                        {tx.status === 'CREDITADO' || tx.status === 'FINALIZADA' ? (
                           <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tight bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30">
                             <CheckCircle2 size={10} />
                             Processado
                           </span>
-                        ) : (tx.status as string) === 'PENDENTE' || (tx.status as string) === 'AGENDADA' ? (
+                        ) : tx.status === 'PENDENTE' || tx.status === 'AGENDADA' ? (
                           <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tight bg-amber-50 text-amber-600 dark:bg-amber-900/30">
                             <Clock size={10} />
                             Aguardando
                           </span>
-                        ) : (tx.status as string) === 'EXPIRADA' || (tx.status as string) === 'CANCELADA' ? (
+                        ) : tx.status === 'EXPIRADA' || tx.status === 'CANCELADA' ? (
                           <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tight bg-rose-50 text-rose-600 dark:bg-rose-900/30">
                             <AlertTriangle size={10} />
                             Expirado
@@ -384,7 +409,7 @@ const HistoryPage: React.FC = () => {
                         <Filter size={32} />
                       </div>
                       <p className="text-slate-500 dark:text-slate-400 font-medium">
-                        Nenhuma transação encontrada em <span className="font-bold text-slate-700 dark:text-white">{selectedMonth.split('-').reverse().join('/')}</span>.
+                        Nenhuma transação encontrada para os filtros aplicados.
                       </p>
                     </div>
                   </td>
@@ -397,7 +422,6 @@ const HistoryPage: React.FC = () => {
         {/* Footer da Tabela */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <p className="text-xs text-slate-500">Mostrando {transactions.length} movimentações</p>
-          <div className="flex gap-2"></div>
         </div>
       </div>
     </div>

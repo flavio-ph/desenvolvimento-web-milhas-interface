@@ -44,6 +44,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const toggleCollapse = () => setIsCollapsed(!isCollapsed);
 
   const getPageTitle = (path: string) => {
+    if (path.startsWith('/cards/')) return 'Detalhes do Cartão';
     switch (path) {
       case '/': return 'Visão Geral';
       case '/cards': return 'Carteira de Cartões';
@@ -208,8 +209,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-7 bg-indigo-600 dark:bg-indigo-400 rounded-r-full" />
                   )}
                   <div className={`shrink-0 ${isActive
-                      ? 'text-indigo-600 dark:text-indigo-400'
-                      : 'group-hover:scale-110 transition-transform duration-200'
+                    ? 'text-indigo-600 dark:text-indigo-400'
+                    : 'group-hover:scale-110 transition-transform duration-200'
                     }`}>
                     {item.icon}
                   </div>
@@ -254,8 +255,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-7 bg-emerald-600 dark:bg-emerald-400 rounded-r-full" />
                       )}
                       <div className={`shrink-0 ${isActive
-                          ? 'text-emerald-600 dark:text-emerald-400'
-                          : 'group-hover:scale-110 transition-transform duration-200'
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'group-hover:scale-110 transition-transform duration-200'
                         }`}>
                         {item.icon}
                       </div>

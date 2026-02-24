@@ -8,6 +8,7 @@ interface ProgramFormProps {
     };
     setFormData: React.Dispatch<React.SetStateAction<{ nome: string; url: string }>>;
     isSubmitting: boolean;
+    editingId?: number | null;
     onClose: () => void;
     onSubmit: (e: React.FormEvent) => void;
 }
@@ -16,6 +17,7 @@ export const ProgramForm: React.FC<ProgramFormProps> = ({
     formData,
     setFormData,
     isSubmitting,
+    editingId,
     onClose,
     onSubmit
 }) => {
@@ -26,7 +28,7 @@ export const ProgramForm: React.FC<ProgramFormProps> = ({
                 <div className="flex items-center justify-between mb-8">
                     <h2 className="text-2xl font-bold dark:text-white flex items-center gap-2">
                         <Plus className="text-indigo-600" />
-                        Novo Programa
+                        {editingId ? 'Editar Programa' : 'Novo Programa'}
                     </h2>
                     <button onClick={onClose} aria-label="Fechar formulário" className="lg:hidden p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-50 dark:bg-slate-800 rounded-full">
                         <X size={20} />
@@ -78,7 +80,7 @@ export const ProgramForm: React.FC<ProgramFormProps> = ({
                             className="w-2/3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-indigo-200 dark:shadow-none flex items-center justify-center gap-2 disabled:opacity-70"
                         >
                             {isSubmitting ? <Loader2 className="animate-spin" /> : <Check size={20} />}
-                            Cadastrar Programa
+                            {editingId ? 'Salvar Alterações' : 'Cadastrar Programa'}
                         </button>
                     </div>
                 </form>

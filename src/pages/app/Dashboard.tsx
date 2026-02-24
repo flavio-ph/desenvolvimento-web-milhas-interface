@@ -179,7 +179,7 @@ const Dashboard: React.FC = () => {
         />
         <StatCard
           title="Prazo Médio"
-          value={`${prazoMedio} dias`}
+          value={`${prazoMedio.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} dias`}
           icon={<Clock />}
           color="emerald"
         />
@@ -271,7 +271,7 @@ const Dashboard: React.FC = () => {
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
                   <span className="text-slate-600 dark:text-slate-400">{item.name}</span>
                 </div>
-                <span className="font-semibold dark:text-white">{item.value.toLocaleString()}</span>
+                <span className="font-semibold dark:text-white">{item.value.toLocaleString('pt-BR')}</span>
               </div>
             ))}
           </div>
@@ -315,7 +315,7 @@ const Dashboard: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{tx.nomePrograma}</td>
                       <td className={`px-6 py-4 text-sm font-bold ${!isNegative ? 'text-indigo-600' : 'text-rose-500'}`}>
-                        {!isNegative ? '+' : ''}{tx.quantidadePontos.toLocaleString()} pts
+                        {!isNegative ? '+' : ''}{tx.quantidadePontos.toLocaleString('pt-BR')} pts
                       </td>
                       <td className="px-6 py-4 text-sm text-slate-500">
                         {new Date(tx.dataMovimentacao).toLocaleDateString('pt-BR')}
