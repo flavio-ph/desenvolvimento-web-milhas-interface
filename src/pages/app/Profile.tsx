@@ -122,7 +122,7 @@ const ProfilePage: React.FC = () => {
   });
 
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [passwordForm, setPasswordForm] = useState({ nova: '', confirmacao: '' });
+  const [passwordForm, setPasswordForm] = useState({ atual: '', nova: '', confirmacao: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
 
@@ -266,11 +266,11 @@ const ProfilePage: React.FC = () => {
   };
 
   const handleUpdatePassword = async () => {
-    if (!passwordForm.nova || !passwordForm.confirmacao) {
+    if (!passwordForm.atual || !passwordForm.nova || !passwordForm.confirmacao) {
       addToast({
         type: 'warning',
         title: 'Campos vazios',
-        description: 'Preencha todos os campos de senha.'
+        description: 'Preencha todos os campos da senha.'
       });
       return;
     }
@@ -282,10 +282,22 @@ const ProfilePage: React.FC = () => {
       });
       return;
     }
+
+    const strength = getPasswordStrength(passwordForm.nova);
+    if (strength.score < 3) {
+      addToast({
+        type: 'warning',
+        title: 'Senha fraca',
+        description: 'A nova senha não atende aos requisitos mínimos de segurança (Maiúsculas, minúsculas, números e caracteres especiais).'
+      });
+      return;
+    }
+
     setPasswordLoading(true);
     try {
       await api.put('/usuarios/me', {
         nome: formData.nome,
+        senhaAtual: passwordForm.atual,
         senha: passwordForm.nova
       });
 
@@ -296,7 +308,7 @@ const ProfilePage: React.FC = () => {
       });
 
       setShowPasswordModal(false);
-      setPasswordForm({ nova: '', confirmacao: '' });
+      setPasswordForm({ atual: '', nova: '', confirmacao: '' });
     } catch (error: any) {
       console.error(error);
       const msg = error.response?.data?.message || "Erro ao alterar senha.";
@@ -651,6 +663,26 @@ const ProfilePage: React.FC = () => {
             </div>
 
             <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Senha Atual</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={passwordForm.atual}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, atual: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white"
+                    placeholder="Sua senha atual"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Nova Senha</label>
                 <div className="relative">

@@ -9,7 +9,10 @@ import {
   AlertTriangle,
   Loader2,
   Calendar as CalendarIcon,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Paperclip,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import api, { getPontosPendentes, getPontosExpirando, getProgramas } from '../../services/api';
@@ -26,6 +29,7 @@ interface Transaction {
   nomeCartao?: string;
   nomePersonalizado?: string;
   status?: string;
+  compraId?: number;
 }
 
 interface Cartao {
@@ -54,6 +58,11 @@ const HistoryPage: React.FC = () => {
     diasParaProximoCredito: null
   });
   const [pontosExpirando, setPontosExpirando] = useState(0);
+
+  // Pagination states
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Busca os filtros (Programas e Cartões) ao montar a tela
   useEffect(() => {
@@ -99,10 +108,20 @@ const HistoryPage: React.FC = () => {
           params.cartaoId = cardFilter;
         }
 
+        // Parâmetros de paginação
+        params.page = page;
+        params.size = pageSize;
+
         const response = await api.get('/movimentacoes', { params });
 
         const dados = response.data?.content || (Array.isArray(response.data) ? response.data : []);
         setTransactions(dados);
+
+        if (response.data && response.data.totalPages !== undefined) {
+          setTotalPages(response.data.totalPages);
+        } else {
+          setTotalPages(1);
+        }
 
         const pendentes = await getPontosPendentes();
         setResumoPendentes(pendentes);
@@ -126,7 +145,12 @@ const HistoryPage: React.FC = () => {
 
     return () => clearTimeout(delayDebounceFn);
 
-  }, [selectedMonth, programFilter, typeFilter, cardFilter]); // Reage às mudanças de cardFilter
+  }, [selectedMonth, programFilter, typeFilter, cardFilter, page, pageSize]); // Reage às mudanças de filtros e paginação
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(0);
+  }, [selectedMonth, programFilter, typeFilter, cardFilter]);
 
   const acumuladoMes = useMemo(() => {
     return transactions
@@ -163,6 +187,22 @@ const HistoryPage: React.FC = () => {
     } catch (error) {
       console.error("Erro ao baixar Excel", error);
       addToast({ type: 'error', title: 'Erro ao exportar', description: 'Não foi possível gerar a planilha Excel.' });
+    }
+  };
+
+  const handleDownloadReceipt = async (compraId: number) => {
+    try {
+      const response = await api.get(`/compras/${compraId}/comprovante`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `comprovante_${compraId}.pdf`); // Pode ser pdf ou img, daremos uma extensão genérica ou a correta se soubermos
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Erro ao baixar comprovante", error);
+      addToast({ type: 'error', title: 'Erro', description: 'Comprovante não encontrado ou erro no servidor.' });
     }
   };
 
@@ -322,6 +362,7 @@ const HistoryPage: React.FC = () => {
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Programa</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Pontos</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Status</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Comprovante</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -398,12 +439,27 @@ const HistoryPage: React.FC = () => {
                           </span>
                         )}
                       </td>
+
+                      {/* COMPROVANTE */}
+                      <td className="px-6 py-5 text-center">
+                        {tx.compraId ? (
+                          <button
+                            onClick={() => handleDownloadReceipt(tx.compraId!)}
+                            className="inline-flex items-center justify-center p-2 rounded-full bg-slate-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400 transition-colors"
+                            title="Baixar Comprovante"
+                          >
+                            <Paperclip size={16} />
+                          </button>
+                        ) : (
+                          <span className="text-slate-300 dark:text-slate-600">—</span>
+                        )}
+                      </td>
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-6 py-20 text-center">
+                  <td colSpan={7} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center">
                       <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-300 dark:text-slate-700 mb-4">
                         <Filter size={32} />
@@ -419,9 +475,25 @@ const HistoryPage: React.FC = () => {
           </table>
         </div>
 
-        {/* Footer da Tabela */}
+        {/* Footer da Tabela com Paginação */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-          <p className="text-xs text-slate-500">Mostrando {transactions.length} movimentações</p>
+          <p className="text-xs text-slate-500">Mostrando {transactions.length} movimentações (Página {page + 1} de {totalPages})</p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(0, p - 1))}
+              disabled={page === 0}
+              className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+              disabled={page >= totalPages - 1}
+              className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
         </div>
       </div>
     </div>

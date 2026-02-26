@@ -36,6 +36,7 @@ export interface Transaction {
   status: 'PENDENTE' | 'CREDITADO' | 'EXPIRADO';
   nomePrograma: string;
   nomePersonalizado?: string;
+  compraId?: number;
 }
 
 export interface Promotion {

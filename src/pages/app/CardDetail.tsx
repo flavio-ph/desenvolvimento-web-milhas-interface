@@ -4,7 +4,7 @@ import {
     ArrowLeft, Search, Download, Loader2,
     ShoppingBag, Utensils, Car, Tv, Plane, ShoppingCart,
     TrendingUp, Coins, Zap, Star, CheckCircle2, XCircle,
-    Filter, ChevronRight
+    Filter, ChevronRight, ChevronLeft
 } from 'lucide-react';
 import api from '../../services/api';
 import { useToast } from '../../components/ToastContext';
@@ -137,19 +137,40 @@ const CardDetailPage: React.FC = () => {
     const [search, setSearch] = useState('');
     const [filterStatus, setFilterStatus] = useState<string>('TODOS');
 
+    // Pagination states
+    const [page, setPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+
+    // Reset pagination when search or filter change
+    useEffect(() => {
+        setPage(0);
+    }, [search, filterStatus]);
+
     useEffect(() => {
         if (!id) return;
         const load = async () => {
             try {
                 setLoading(true);
+                const queryParams: any = { page, size: pageSize };
+
+                if (filterStatus !== 'TODOS') queryParams.status = filterStatus;
+                if (search) queryParams.descricao = search; // Se o backend aceitar filtro por descrição. Caso não, teremos um fallback, mas vou enviar.
+
                 const [cartaoRes, comprasRes] = await Promise.all([
                     api.get(`/cartoes/${id}`),
-                    api.get(`/compras?cartaoId=${id}`)
+                    api.get(`/compras?cartaoId=${id}`, { params: queryParams })
                 ]);
                 setCartao(cartaoRes.data);
 
                 const listaCompras = comprasRes.data?.content || (Array.isArray(comprasRes.data) ? comprasRes.data : []);
                 setCompras(listaCompras);
+
+                if (comprasRes.data && comprasRes.data.totalPages !== undefined) {
+                    setTotalPages(comprasRes.data.totalPages);
+                } else {
+                    setTotalPages(1);
+                }
 
             } catch (err: any) {
                 if (err.response?.status === 404) {
@@ -162,8 +183,13 @@ const CardDetailPage: React.FC = () => {
                 setLoading(false);
             }
         };
-        load();
-    }, [id]);
+
+        const debounceFn = setTimeout(() => {
+            load();
+        }, 500);
+
+        return () => clearTimeout(debounceFn);
+    }, [id, page, pageSize, search, filterStatus]);
 
     const totalPontos = useMemo(() =>
         compras.filter(c => c.status === 'CREDITADO').reduce((s, c) => s + (c.pontosCalculados || 0), 0), [compras]);
@@ -461,15 +487,27 @@ const CardDetailPage: React.FC = () => {
                             </div>
                         ))}
 
-                        {/* Ver todas as movimentações */}
-                        <div className="border-t border-slate-100 dark:border-slate-800 px-6 py-4 flex justify-center">
-                            <Link
-                                to="/history"
-                                className="text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors flex items-center gap-1"
-                            >
-                                Ver extrato completo
-                                <ChevronRight size={14} />
-                            </Link>
+                        {/* Paginação */}
+                        <div className="border-t border-slate-100 dark:border-slate-800 px-6 py-4 flex items-center justify-between">
+                            <p className="text-xs text-slate-500">
+                                Página {page + 1} de {totalPages}
+                            </p>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setPage(p => Math.max(0, p - 1))}
+                                    disabled={page === 0}
+                                    className="p-2 bg-slate-50 hover:bg-slate-100 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    <ChevronLeft size={18} />
+                                </button>
+                                <button
+                                    onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                                    disabled={page >= totalPages - 1}
+                                    className="p-2 bg-slate-50 hover:bg-slate-100 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    <ChevronRight size={18} />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
