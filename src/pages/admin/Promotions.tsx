@@ -253,14 +253,19 @@ const AdminPromotions: React.FC = () => {
 
                         {/* COLUNA: EXPIRAÇÃO (Centralizada) */}
                         <td className="px-6 py-5 whitespace-nowrap text-center">
-                          <div className="flex flex-col items-center">
-                            <span className="text-sm font-bold text-slate-700 dark:text-white capitalize">
-                              {new Date(promo.dataFim).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
-                            </span>
-                            <span className="text-[10px] text-slate-400 uppercase font-bold">
-                              {new Date(promo.dataFim).getFullYear()}
-                            </span>
-                          </div>
+                          {(() => {
+                            const isExpired = promo.dataFim ? new Date(promo.dataFim).getTime() < new Date().getTime() : false;
+                            return (
+                              <div className="flex flex-col items-center">
+                                <span className={`text-sm font-bold capitalize ${isExpired ? 'text-rose-500' : 'text-slate-700 dark:text-white'}`}>
+                                  {new Date(promo.dataFim).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                                </span>
+                                <span className={`text-[10px] uppercase font-bold mt-0.5 px-2 rounded-full ${isExpired ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400' : 'text-slate-400'}`}>
+                                  {isExpired ? 'Expirada' : new Date(promo.dataFim).getFullYear()}
+                                </span>
+                              </div>
+                            );
+                          })()}
                         </td>
 
                         {/* COLUNA: AÇÕES (Centralizada e Sempre Visível) */}

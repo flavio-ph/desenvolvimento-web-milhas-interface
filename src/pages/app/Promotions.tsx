@@ -155,16 +155,18 @@ const PromotionsPage: React.FC = () => {
         {activePromotions.length > 0 ? (
           activePromotions.map((promo) => {
             const daysLeft = getDaysRemaining(promo.dataFim);
-            const isUrgent = daysLeft <= 2;
+            const isExpired = promo.dataFim ? new Date(promo.dataFim).getTime() < new Date().getTime() : false;
+            const isUrgent = daysLeft <= 2 && !isExpired;
             const isHighBonus = promo.bonusPorcentagem >= 100;
 
             return (
-              <div key={promo.id} className="group bg-white dark:bg-slate-900 rounded-[28px] border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 flex flex-col sm:flex-row">
+              <div key={promo.id} className={`group bg-white dark:bg-slate-900 rounded-[28px] border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm transition-all duration-500 flex flex-col sm:flex-row ${isExpired ? 'opacity-70 grayscale-[0.5]' : 'hover:shadow-2xl hover:-translate-y-1'}`}>
 
                 {/* Visual Badge Area */}
-                <div className={`sm:w-44 p-6 sm:p-8 flex flex-col items-center justify-center text-white relative overflow-hidden transition-colors duration-500 ${isHighBonus
-                  ? 'bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700'
-                  : 'bg-gradient-to-br from-emerald-500 to-teal-600'
+                <div className={`sm:w-44 p-6 sm:p-8 flex flex-col items-center justify-center text-white relative overflow-hidden transition-colors duration-500 ${isExpired ? 'bg-slate-400 dark:bg-slate-700' :
+                    isHighBonus
+                      ? 'bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700'
+                      : 'bg-gradient-to-br from-emerald-500 to-teal-600'
                   }`}>
                   {/* Textura */}
                   <div className="absolute inset-0 opacity-10" style={{
@@ -197,24 +199,29 @@ const PromotionsPage: React.FC = () => {
                   </div>
 
                   <div className="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-slate-800">
-                    <div className="flex items-center gap-2 text-slate-400">
+                    <div className={`flex items-center gap-2 ${isExpired ? 'text-rose-500' : 'text-slate-400'}`}>
                       <Clock size={16} />
                       <span className="text-xs font-bold uppercase tracking-wider">
-                        {promo.dataFim ? `Expira em ${new Date(promo.dataFim).toLocaleDateString('pt-BR')}` : 'Sem validade'}
+                        {isExpired ? `Expirou em ${new Date(promo.dataFim).toLocaleDateString('pt-BR')}` : promo.dataFim ? `Expira em ${new Date(promo.dataFim).toLocaleDateString('pt-BR')}` : 'Sem validade'}
                       </span>
                     </div>
 
                     {/* BOTÃO PARTICIPAR */}
                     <button
                       onClick={() => handleParticipate(promo)}
-                      disabled={activatingId === promo.id}
-                      className="flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl text-sm font-black hover:bg-indigo-600 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={activatingId === promo.id || isExpired}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black transition-all disabled:opacity-50 disabled:cursor-not-allowed ${isExpired
+                          ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                          : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white'
+                        }`}
                     >
                       {activatingId === promo.id ? (
                         <>
                           <Loader2 size={16} className="animate-spin" />
                           Ativando...
                         </>
+                      ) : isExpired ? (
+                        'Expirada'
                       ) : (
                         <>
                           Participar
