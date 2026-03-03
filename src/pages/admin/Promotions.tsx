@@ -202,104 +202,115 @@ const AdminPromotions: React.FC = () => {
 
 
       {activeTab === 'gerenciar' ? (
-        // TABELA
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden transition-colors">
+        // CARDS (Antiga Tabela)
+        <div className="animate-fadeIn">
           {loading ? (
-            <div className="p-20 flex justify-center"><Loader2 className="animate-spin text-indigo-600 dark:text-indigo-400" /></div>
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-20 flex justify-center border border-slate-100 dark:border-slate-800">
+              <Loader2 className="animate-spin text-indigo-600 dark:text-indigo-400" size={32} />
+            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
-                  <tr>
-                    {/* CABEÇALHOS CENTRALIZADOS */}
-                    <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Promoção</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Bônus</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Expiração</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">Ações</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {promotions.length > 0 ? (
-                    promotions.map((promo: any) => (
-                      <tr key={promo.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+            <>
+              {promotions.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {promotions.map((promo: any) => {
+                    const isExpired = promo.dataFim ? new Date(promo.dataFim).getTime() < new Date().getTime() : false;
+                    const isHighBonus = promo.bonusPorcentagem >= 100;
 
-                        {/* COLUNA: PROMOÇÃO (Centralizada) */}
-                        <td className="px-6 py-5">
-                          <div className="flex flex-col items-center">
-                            <span className="text-[10px] uppercase font-bold text-indigo-500 dark:text-indigo-400 tracking-wide mb-1">
+                    return (
+                      <div
+                        key={promo.id}
+                        className="group bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/80 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col relative"
+                      >
+                        {/* DECORAÇÃO DE TOPO */}
+                        <div className={`h-2 w-full ${isHighBonus ? 'bg-gradient-to-r from-purple-500 to-indigo-600' : 'bg-gradient-to-r from-emerald-400 to-teal-500'}`} />
+
+                        {/* CONTEÚDO */}
+                        <div className="p-6 flex flex-col flex-1">
+
+                          {/* Top Row: Programa & Status */}
+                          <div className="flex justify-between items-start mb-4">
+                            <span className="text-[10px] uppercase font-black tracking-widest text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 dark:text-indigo-400 px-2.5 py-1 rounded-md">
                               {promo.nomeProgramaPontos}
                             </span>
-                            <span className="text-sm font-bold text-slate-800 dark:text-white leading-tight">
-                              {promo.titulo}
-                            </span>
-                            <span className="text-xs text-slate-400 dark:text-slate-500 mt-1 line-clamp-1 max-w-[200px] text-center">
-                              {promo.descricao || 'Sem descrição.'}
+                            <span className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded-full ${isExpired ? 'bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400 border border-rose-100 dark:border-rose-800/50' : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/50'}`}>
+                              {isExpired ? 'Expirada' : 'Ativa'}
                             </span>
                           </div>
-                        </td>
 
-                        {/* COLUNA: BÔNUS (Centralizada) */}
-                        <td className="px-6 py-5 text-center">
-                          <div className="flex justify-center">
-                            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold ${promo.bonusPorcentagem >= 100
-                              ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
-                              : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
-                              }`}>
-                              <Zap size={14} className="fill-current" />
-                              {promo.bonusPorcentagem}%
-                            </span>
-                          </div>
-                        </td>
+                          {/* Título & Descrição */}
+                          <h3 className="text-lg font-bold text-slate-800 dark:text-white leading-tight mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                            {promo.titulo}
+                          </h3>
+                          <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-6 flex-1">
+                            {promo.descricao || 'Sem descrição cadastrada.'}
+                          </p>
 
-                        {/* COLUNA: EXPIRAÇÃO (Centralizada) */}
-                        <td className="px-6 py-5 whitespace-nowrap text-center">
-                          {(() => {
-                            const isExpired = promo.dataFim ? new Date(promo.dataFim).getTime() < new Date().getTime() : false;
-                            return (
-                              <div className="flex flex-col items-center">
-                                <span className={`text-sm font-bold capitalize ${isExpired ? 'text-rose-500' : 'text-slate-700 dark:text-white'}`}>
-                                  {new Date(promo.dataFim).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
-                                </span>
-                                <span className={`text-[10px] uppercase font-bold mt-0.5 px-2 rounded-full ${isExpired ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400' : 'text-slate-400'}`}>
-                                  {isExpired ? 'Expirada' : new Date(promo.dataFim).getFullYear()}
+                          {/* Footer do Card: Bonus & Expiração */}
+                          <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50 dark:border-slate-800/50">
+
+                            {/* Bonus */}
+                            <div className="flex items-center gap-1.5">
+                              <div className={`p-1.5 rounded-lg ${isHighBonus ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-400' : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400'}`}>
+                                <Zap size={14} className="fill-current" />
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">Bônus</span>
+                                <span className={`text-sm font-black ${isHighBonus ? 'text-purple-600 dark:text-purple-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                                  {promo.bonusPorcentagem}%
                                 </span>
                               </div>
-                            );
-                          })()}
-                        </td>
+                            </div>
 
-                        {/* COLUNA: AÇÕES (Centralizada e Sempre Visível) */}
-                        <td className="px-6 py-5 text-center">
-                          {/* CORREÇÃO: justify-center e removida a opacidade */}
-                          <div className="flex justify-center gap-2">
+                            {/* Expiração */}
+                            <div className="flex flex-col text-right">
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">Expira em</span>
+                              <span className={`text-sm font-bold ${isExpired ? 'text-rose-500' : 'text-slate-700 dark:text-slate-300'}`}>
+                                {promo.dataFim ? new Date(promo.dataFim).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : 'Indeterminado'}
+                              </span>
+                            </div>
+
+                          </div>
+                        </div>
+
+                        {/* OVERLAY DE AÇÕES NO HOVER (Desktop) / Visível em Mobile */}
+                        <div className="absolute inset-x-0 bottom-0 top-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-4 translate-y-4 group-hover:translate-y-0 z-10 pointer-events-none group-hover:pointer-events-auto sm:opacity-0 opacity-100 sm:translate-y-4 sm:flex-row flex-col">
+                          <div className="flex gap-3 px-4">
                             <button
                               onClick={() => handleEdit(promo)}
-                              className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:text-indigo-400 dark:hover:bg-indigo-900/30 rounded-lg transition-all"
-                              title="Editar"
+                              className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white dark:bg-indigo-900/40 dark:text-indigo-400 dark:hover:bg-indigo-600 dark:hover:text-white rounded-xl transition-colors font-bold text-sm shadow-sm"
                             >
-                              <Pencil size={18} />
+                              <Pencil size={16} /> Editar
                             </button>
                             <button
                               onClick={() => handleDelete(promo.id)}
-                              className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:text-rose-400 dark:hover:bg-rose-900/30 rounded-lg transition-all"
-                              title="Excluir"
+                              className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white dark:bg-rose-900/30 dark:text-rose-400 dark:hover:bg-rose-600 dark:hover:text-white rounded-xl transition-colors font-bold text-sm shadow-sm"
                             >
-                              <Trash2 size={18} />
+                              <Trash2 size={16} /> Excluir
                             </button>
                           </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={4} className="px-6 py-20 text-center text-slate-500 dark:text-slate-400">
-                        Nenhuma promoção cadastrada.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-16 flex flex-col items-center justify-center text-center">
+                  <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                    <Tag size={32} className="text-slate-400 dark:text-slate-500" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2">Nenhuma promoção encontrada</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mb-6">
+                    Você ainda não cadastrou nenhuma oferta. Clique no botão acima para criar a primeira promoção.
+                  </p>
+                  <button
+                    onClick={() => setActiveTab('cadastrar')}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 rounded-xl font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
+                  >
+                    <Plus size={18} /> Criar Promoção
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       ) : (
@@ -386,35 +397,66 @@ const AdminPromotions: React.FC = () => {
           </form>
 
           {/* Preview */}
-          <div className="w-full lg:w-[350px] flex flex-col items-center">
-            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-6 text-center">Preview no App</h4>
-            <div className="bg-white dark:bg-slate-950 rounded-[2rem] shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800 w-full transition-colors relative group">
-              <div className={`p-8 text-white flex flex-col items-center transition-all duration-500 ${(parseInt(formData.bonusPorcentagem) || 0) >= 100
-                ? 'bg-gradient-to-br from-indigo-600 to-violet-700'
-                : 'bg-gradient-to-br from-emerald-500 to-teal-600'
-                }`}>
-                <span className="text-[10px] font-black uppercase opacity-60 mb-1">Bônus de</span>
-                <h4 className="text-5xl font-black">{formData.bonusPorcentagem || '0'}%</h4>
-                <Zap className="mt-4 opacity-30" size={24} />
-              </div>
+          <div className="w-full lg:w-[380px] flex flex-col items-center shrink-0">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-6 text-center">Preview do Card</h4>
 
-              <div className="p-6 space-y-3 bg-white dark:bg-slate-950 transition-colors">
-                <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 dark:text-indigo-400 px-2.5 py-1 rounded-md">
-                  {getProgramName(formData.programaPontosId)}
-                </span>
-                <h3 className="text-lg font-black text-slate-800 dark:text-white leading-tight">
+            <div className="w-full group bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/80 shadow-md flex flex-col relative overflow-hidden text-left">
+              {/* DECORAÇÃO DE TOPO */}
+              <div className={`h-2 w-full ${(parseFloat(formData.bonusPorcentagem) || 0) >= 100 ? 'bg-gradient-to-r from-purple-500 to-indigo-600' : 'bg-gradient-to-r from-emerald-400 to-teal-500'}`} />
+
+              {/* CONTEÚDO */}
+              <div className="p-6 flex flex-col flex-1">
+
+                {/* Top Row: Programa & Status */}
+                <div className="flex justify-between items-start mb-4">
+                  <span className="text-[10px] uppercase font-black tracking-widest text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 dark:text-indigo-400 px-2.5 py-1 rounded-md truncate max-w-[140px]">
+                    {getProgramName(formData.programaPontosId)}
+                  </span>
+                  <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/50">
+                    Ativa
+                  </span>
+                </div>
+
+                {/* Título & Descrição */}
+                <h3 className="text-lg font-bold text-slate-800 dark:text-white leading-tight mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                   {formData.titulo || 'Título da Promoção'}
                 </h3>
-                <p className="text-xs text-slate-400 dark:text-slate-400 leading-relaxed line-clamp-3">
-                  {formData.descricao || 'As regras aparecerão aqui...'}
+                <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-6 flex-1 min-h-[40px]">
+                  {formData.descricao || 'A descrição detalhada da promoção aparecerá aqui...'}
                 </p>
+
+                {/* Footer do Card: Bonus & Expiração */}
+                <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50 dark:border-slate-800/50">
+
+                  {/* Bonus */}
+                  <div className="flex items-center gap-1.5">
+                    <div className={`p-1.5 rounded-lg ${(parseFloat(formData.bonusPorcentagem) || 0) >= 100 ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-400' : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400'}`}>
+                      <Zap size={14} className="fill-current" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">Bônus</span>
+                      <span className={`text-sm font-black ${(parseFloat(formData.bonusPorcentagem) || 0) >= 100 ? 'text-purple-600 dark:text-purple-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                        {formData.bonusPorcentagem || '0'}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Expiração */}
+                  <div className="flex flex-col text-right">
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">Expira em</span>
+                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                      {formData.dataValidade ? new Date(formData.dataValidade).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : 'Indeterminado'}
+                    </span>
+                  </div>
+
+                </div>
               </div>
             </div>
 
-            <div className="mt-6 flex gap-3 p-4 bg-yellow-50 dark:bg-yellow-900/10 rounded-2xl border border-yellow-100 dark:border-yellow-900/30 w-full">
-              <AlertCircle className="text-yellow-600 dark:text-yellow-500 shrink-0" size={18} />
-              <p className="text-[10px] text-yellow-700 dark:text-yellow-400 leading-relaxed font-medium">
-                <strong>Nota:</strong> Promoções acima de 100% ganham destaque roxo automaticamente no app.
+            <div className="mt-6 flex gap-3 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl border border-indigo-100 dark:border-indigo-800/30 w-full">
+              <Zap className="text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" size={16} />
+              <p className="text-[11px] text-indigo-700 dark:text-indigo-300 leading-relaxed font-medium">
+                Promoções com <strong>bônus de 100% ou mais</strong> recebem destaque premium (roxo) automaticamente.
               </p>
             </div>
           </div>

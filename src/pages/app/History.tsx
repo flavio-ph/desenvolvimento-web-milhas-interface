@@ -336,15 +336,24 @@ const HistoryPage: React.FC = () => {
           </select>
 
           {/* Seletor de Data */}
-          <div className="relative shrink-0 w-full sm:w-auto">
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-600 dark:text-indigo-400 pointer-events-none">
+          <div className="relative shrink-0 w-full sm:w-auto overflow-hidden rounded-xl">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-600 dark:text-indigo-400 pointer-events-none z-10">
               <CalendarIcon size={18} />
             </div>
             <input
               type="month"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-colors border-none outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+              onClick={(e) => {
+                try {
+                  if ('showPicker' in e.currentTarget) {
+                    e.currentTarget.showPicker();
+                  }
+                } catch (err) {
+                  // Fallback silencioso
+                }
+              }}
+              className="w-full pl-10 pr-4 py-2.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-sm font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors border-none outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer dark:[color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-0 relative"
             />
           </div>
         </div>
@@ -371,14 +380,14 @@ const HistoryPage: React.FC = () => {
                   const isNegative = ['USO', 'EXPIRACAO', 'TRANSFERENCIA_SAIDA'].includes(tx.tipo);
 
                   return (
-                    <tr key={tx.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-default">
+                    <tr key={tx.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors duration-200 cursor-default">
                       {/* DATA */}
                       <td className="px-6 py-5 whitespace-nowrap">
                         <div className="flex flex-col items-center">
-                          <span className="text-sm font-semibold dark:text-white">
+                          <span className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                             {new Date(tx.dataMovimentacao).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
                           </span>
-                          <span className="text-[10px] text-slate-400 uppercase">
+                          <span className="text-[10px] text-slate-400 font-medium uppercase tracking-widest mt-0.5 group-hover:text-indigo-400/70 transition-colors">
                             {new Date(tx.dataMovimentacao).getFullYear()}
                           </span>
                         </div>
@@ -387,16 +396,16 @@ const HistoryPage: React.FC = () => {
                       {/* DESCRIÇÃO */}
                       <td className="px-6 py-5">
                         <div className="flex items-center justify-center gap-3">
-                          <div className={`p-2 rounded-lg ${!isNegative ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600'}`}>
+                          <div className={`p-2 rounded-xl transition-transform duration-300 group-hover:scale-110 ${!isNegative ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400'}`}>
                             {!isNegative ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
                           </div>
-                          <span className="text-sm font-medium dark:text-white">{tx.descricao}</span>
+                          <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{tx.descricao}</span>
                         </div>
                       </td>
 
                       {/* CARTÃO */}
                       <td className="px-6 py-5 text-center">
-                        <span className="text-xs font-semibold px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                        <span className="text-[11px] font-bold tracking-wide px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 border border-slate-200/50 dark:border-slate-700/50">
                           {tx.nomePersonalizado || tx.nomeCartao || '—'}
                         </span>
                       </td>
@@ -404,37 +413,37 @@ const HistoryPage: React.FC = () => {
                       {/* PROGRAMA */}
                       <td className="px-6 py-5">
                         <div className="flex items-center justify-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
-                          <span className="text-sm text-slate-600 dark:text-slate-400">{tx.nomePrograma}</span>
+                          <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-500 shadow-sm"></div>
+                          <span className="text-sm font-medium text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">{tx.nomePrograma}</span>
                         </div>
                       </td>
 
                       {/* PONTOS */}
                       <td className="px-6 py-5 text-center">
-                        <span className={`text-sm font-bold ${!isNegative ? 'text-indigo-600 dark:text-indigo-400' : 'text-rose-500'}`}>
-                          {!isNegative ? '+' : ''}{tx.quantidadePontos.toLocaleString('pt-BR')} pts
+                        <span className={`text-sm font-black tracking-tight ${!isNegative ? 'text-indigo-600 dark:text-indigo-400' : 'text-rose-500 dark:text-rose-400'}`}>
+                          {!isNegative ? '+' : ''}{tx.quantidadePontos.toLocaleString('pt-BR')} <span className="text-[10px] uppercase font-bold text-slate-400 ml-0.5">pts</span>
                         </span>
                       </td>
 
                       {/* STATUS */}
                       <td className="px-6 py-5 text-center">
                         {tx.status === 'CREDITADO' || tx.status === 'FINALIZADA' ? (
-                          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tight bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30">
-                            <CheckCircle2 size={10} />
+                          <span className="inline-flex items-center gap-1.5 text-[10px] font-black px-2.5 py-1.5 rounded-md uppercase tracking-wider bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/50">
+                            <CheckCircle2 size={12} />
                             Processado
                           </span>
                         ) : tx.status === 'PENDENTE' || tx.status === 'AGENDADA' ? (
-                          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tight bg-amber-50 text-amber-600 dark:bg-amber-900/30">
-                            <Clock size={10} />
+                          <span className="inline-flex items-center gap-1.5 text-[10px] font-black px-2.5 py-1.5 rounded-md uppercase tracking-wider bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/50">
+                            <Clock size={12} />
                             Aguardando
                           </span>
                         ) : tx.status === 'EXPIRADA' || tx.status === 'CANCELADA' ? (
-                          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tight bg-rose-50 text-rose-600 dark:bg-rose-900/30">
-                            <AlertTriangle size={10} />
+                          <span className="inline-flex items-center gap-1.5 text-[10px] font-black px-2.5 py-1.5 rounded-md uppercase tracking-wider bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400 border border-rose-200/50 dark:border-rose-800/50">
+                            <AlertTriangle size={12} />
                             Expirado
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tight bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                          <span className="inline-flex items-center gap-1.5 text-[10px] font-black px-2.5 py-1.5 rounded-md uppercase tracking-wider bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200/50 dark:border-slate-700/50">
                             {tx.status || 'Processando'}
                           </span>
                         )}
@@ -460,12 +469,15 @@ const HistoryPage: React.FC = () => {
               ) : (
                 <tr>
                   <td colSpan={7} className="px-6 py-20 text-center">
-                    <div className="flex flex-col items-center">
-                      <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-300 dark:text-slate-700 mb-4">
-                        <Filter size={32} />
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800/80 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-600 mb-5 shadow-sm border border-slate-100 dark:border-slate-700/50">
+                        <Filter size={36} />
                       </div>
-                      <p className="text-slate-500 dark:text-slate-400 font-medium">
-                        Nenhuma transação encontrada para os filtros aplicados.
+                      <p className="text-lg font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Nenhum resultado encontrado
+                      </p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm">
+                        Não encontramos movimentações que correspondam aos filtros em {selectedMonth.split('-').reverse().join('/')}. Tente alterar os critérios acima.
                       </p>
                     </div>
                   </td>

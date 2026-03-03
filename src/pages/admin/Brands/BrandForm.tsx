@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Pencil, X, Check, CreditCard, Eye } from 'lucide-react';
+import { Plus, Pencil, X, Check, CreditCard, Eye, Trash2 } from 'lucide-react';
 
 interface ColorObj {
     name: string;
@@ -125,37 +125,62 @@ export const BrandForm: React.FC<BrandFormProps> = ({
             <div className="bg-slate-50 dark:bg-slate-950 p-8 md:p-10 flex flex-col items-center justify-center gap-8 border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-slate-800 relative">
                 <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, gray 1px, transparent 0)', backgroundSize: '24px 24px' }} />
 
-                <div className="flex flex-col items-center gap-2 text-slate-400 uppercase text-xs font-bold z-10">
-                    <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow flex items-center justify-center">
+                <div className="flex flex-col items-center gap-2 text-slate-400 uppercase text-[10px] font-black tracking-widest z-10 mb-2">
+                    <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow flex items-center justify-center text-slate-400">
                         <Eye size={18} />
                     </div>
-                    Visualização
+                    Preview do Card
                 </div>
 
-                {/* Card preview */}
-                <div className={`w-full max-w-sm h-48 rounded-2xl shadow-xl ${newBrand.colorObj.class} p-6 text-white flex flex-col justify-between transform transition-all duration-300 z-10`}>
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-                            <CreditCard size={16} />
+                {/* Card preview simulando o Grid */}
+                <div className="w-full max-w-[280px] group bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl overflow-hidden flex flex-col relative text-left z-10 transition-transform duration-300 hover:scale-[1.02]">
+                    {/* Header / Color Strip */}
+                    <div className={`h-16 w-full ${newBrand.colorObj.class} opacity-90 relative overflow-hidden flex items-center justify-center`}>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                        <span className="text-white/20 text-5xl font-black absolute -bottom-4 right-0 select-none">
+                            {newBrand.nome ? newBrand.nome.substring(0, 3).toUpperCase() : 'BND'}
+                        </span>
+                    </div>
+
+                    {/* Status Badge */}
+                    <div className="absolute top-4 left-4 z-10">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase shadow-sm ${newBrand.status === 'ACTIVE'
+                            ? 'bg-emerald-500 text-white'
+                            : 'bg-slate-500 text-white'
+                            }`}>
+                            {newBrand.status === 'ACTIVE' ? <Check size={10} strokeWidth={3} /> : <X size={10} strokeWidth={3} />}
+                            {newBrand.status === 'ACTIVE' ? 'Ativa' : 'Inativa'}
+                        </span>
+                    </div>
+
+                    {/* Content Area */}
+                    <div className="p-6 flex flex-col items-center text-center flex-1">
+                        <h3 className="font-black text-xl text-slate-800 dark:text-white mb-6 line-clamp-1">
+                            {newBrand.nome || 'Bandeira'}
+                        </h3>
+
+                        {/* Metrics Box */}
+                        <div className="w-full bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 mb-6 border border-slate-100 dark:border-slate-700/50 flex flex-col items-center justify-center">
+                            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full mb-2">
+                                <CreditCard size={20} />
+                            </div>
+                            <span className="text-2xl font-black text-slate-800 dark:text-white leading-none mb-1">
+                                0
+                            </span>
+                            <p className="text-[10px] uppercase font-bold tracking-widest text-slate-400">
+                                Cartões Vinculados
+                            </p>
                         </div>
-                        <span className="text-sm font-bold tracking-wide uppercase">{newBrand.nome || 'Bandeira'}</span>
-                    </div>
-                    <div className="flex flex-col gap-3">
-                        <div className="w-10 h-6 rounded-md bg-yellow-400/90 shadow-sm" />
-                        <div className="w-full h-2 rounded-full bg-white/30" />
-                    </div>
-                </div>
 
-                {/* Preview mini-card */}
-                <div className="bg-white dark:bg-slate-900 px-6 py-4 rounded-xl shadow-lg border border-slate-100 dark:border-slate-800 w-full max-w-sm z-10">
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mb-3 uppercase font-bold">Preview na Tabela</p>
-                    <div className="flex items-center gap-3">
-                        <span className={`w-12 h-7 rounded ${newBrand.colorObj.class} flex items-center justify-center text-[9px] text-white font-bold shadow-sm shrink-0 transition-colors`}>
-                            {newBrand.nome ? newBrand.nome.substring(0, 4).toUpperCase() : 'NOME'}
-                        </span>
-                        <span className="font-bold text-slate-900 dark:text-white text-sm">
-                            {newBrand.nome || 'Nome da Bandeira'}
-                        </span>
+                        {/* Fake Action Buttons Row */}
+                        <div className="w-full flex justify-center gap-3 mt-auto">
+                            <div className="flex-1 max-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-50 text-slate-400 dark:bg-slate-800 rounded-xl shadow-sm text-xs font-bold">
+                                <Pencil size={16} /> Editar
+                            </div>
+                            <div className="w-10 h-10 flex items-center justify-center bg-slate-50 text-slate-400 dark:bg-slate-800 rounded-xl shadow-sm shrink-0">
+                                <Trash2 size={18} />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

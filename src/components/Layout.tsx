@@ -270,8 +270,25 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             )}
           </nav>
 
-          {/* Footer Sidebar (Logout) */}
-          <div className="p-3 mt-auto border-t border-slate-100 dark:border-slate-800/60">
+          {/* Footer Sidebar (Theme Toggle, Logout) */}
+          <div className="p-3 mt-auto border-t border-slate-100 dark:border-slate-800/60 flex flex-col gap-2">
+
+            {/* Theme Toggle - Above Logout */}
+            <button
+              onClick={toggleDarkMode}
+              className={`
+                flex items-center gap-3 w-full px-3 py-2.5 text-slate-500 dark:text-slate-400
+                hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-indigo-600 dark:hover:text-indigo-400
+                rounded-xl transition-all duration-200 group font-medium text-sm
+                ${isCollapsed ? 'justify-center' : ''}
+              `}
+              title={isDarkMode ? 'Ativar modo claro' : 'Ativar modo escuro'}
+            >
+              {isDarkMode ? <Sun size={18} className="text-amber-400 fill-amber-400 shrink-0" /> : <Moon size={18} className="shrink-0" />}
+              {!isCollapsed && <span>{isDarkMode ? 'Modo Claro' : 'Modo Escuro'}</span>}
+            </button>
+
+            {/* Logout Button */}
             <button
               onClick={() => {
                 localStorage.removeItem('token');
@@ -284,14 +301,22 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               }}
               title={isCollapsed ? 'Sair da conta' : ''}
               className={`
-                flex items-center gap-3 w-full px-3 py-2.5 text-slate-500 dark:text-slate-500
+                flex items-center gap-3 w-full px-3 py-2 text-slate-500 dark:text-slate-500
                 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 dark:hover:text-red-400
                 rounded-xl transition-all duration-200 group font-medium text-sm
                 ${isCollapsed ? 'justify-center' : ''}
               `}
             >
+              <div className="relative shrink-0">
+                <UserAvatar
+                  imageUrl={getAvatarUrl()}
+                  initials={getUserInitials()}
+                  size="sm"
+                  className="ring-2 ring-transparent group-hover:ring-red-200 dark:group-hover:ring-red-900/30 transition-all opacity-80 group-hover:opacity-100"
+                />
+              </div>
+              {!isCollapsed && <span className="flex-1 text-left font-semibold">Sair da conta</span>}
               <LogOut size={18} className="group-hover:-translate-x-1 transition-transform shrink-0" />
-              {!isCollapsed && <span>Sair da conta</span>}
             </button>
           </div>
         </div>
@@ -329,14 +354,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
 
           <div className="flex items-center gap-3 lg:gap-6">
-            <button
-              onClick={toggleDarkMode}
-              className="p-2.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all hover:scale-105 active:scale-95 focus:outline-none"
-              title={isDarkMode ? 'Ativar modo claro' : 'Ativar modo escuro'}
-            >
-              {isDarkMode ? <Sun size={20} className="text-amber-400 fill-amber-400" /> : <Moon size={20} />}
-            </button>
-
             {/* SINO COM DROPDOWN */}
             <div className="relative" ref={notifRef}>
               <button

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, X, Globe, Link as LinkIcon, Loader2, Check, TrendingUp, ExternalLink, Trash2 } from 'lucide-react';
+import { Plus, X, Globe, Link as LinkIcon, Loader2, Check, TrendingUp, ExternalLink, Trash2, Pencil } from 'lucide-react';
 
 interface ProgramFormProps {
     formData: {
@@ -94,29 +94,59 @@ export const ProgramForm: React.FC<ProgramFormProps> = ({
                 />
 
                 <div className="relative w-full max-w-xs text-center z-10">
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-8">Como aparecerá no App</h4>
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-6 text-center">Preview no App</h4>
 
-                    {/* Mini card preview */}
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-xl overflow-hidden transform hover:scale-105 transition-transform duration-300 text-left">
-                        <div className="h-1 bg-gradient-to-r from-indigo-500 to-violet-500" />
-                        <div className="p-5">
-                            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-lg shadow mb-3 transition-colors">
+                    {/* Card Preview */}
+                    <div className="group bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl overflow-hidden flex flex-col relative text-left transition-transform duration-300 hover:scale-[1.02]">
+                        {/* Top Area with Colored Gradient Background */}
+                        <div className="h-24 w-full bg-indigo-600 opacity-90 relative overflow-hidden flex items-center justify-center">
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                            <span className="text-white/20 text-7xl font-black absolute -top-2 -right-2 select-none">
+                                {formData.nome ? formData.nome.charAt(0).toUpperCase() : '?'}
+                            </span>
+                        </div>
+
+                        {/* Avatar overlapping the split */}
+                        <div className="flex justify-center -mt-10 relative z-10">
+                            <div className="w-20 h-20 rounded-2xl bg-indigo-600 flex items-center justify-center text-3xl text-white font-black shadow-lg shadow-indigo-600/40 ring-4 ring-white dark:ring-slate-900 rotate-3 group-hover:rotate-0 transition-transform duration-300">
                                 {formData.nome ? formData.nome.charAt(0).toUpperCase() : '?'}
                             </div>
-                            <p className="font-bold text-slate-800 dark:text-white truncate">{formData.nome || 'Nome do Programa'}</p>
-                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Total na Plataforma</p>
-                            <div className="flex items-center gap-2 mt-2">
-                                <span className="text-2xl font-black text-slate-900 dark:text-white">0M</span>
-                                <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded-full">
-                                    <TrendingUp size={10} />+8%
-                                </span>
-                            </div>
                         </div>
-                        <div className="border-t border-slate-100 dark:border-slate-800 px-4 py-2.5 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Ações</span>
-                            <div className="flex gap-1">
-                                <div className="p-1.5 text-slate-300 dark:text-slate-600 rounded-lg"><ExternalLink size={14} /></div>
-                                <div className="p-1.5 text-slate-300 dark:text-slate-600 rounded-lg"><Trash2 size={14} /></div>
+
+                        {/* Content Area */}
+                        <div className="p-6 pt-5 flex flex-col items-center text-center flex-1">
+                            <h3 className="font-black text-xl text-slate-800 dark:text-white mb-4 line-clamp-1 group-hover:text-indigo-600 transition-colors">
+                                {formData.nome || 'Nome do Programa'}
+                            </h3>
+
+                            {/* Metrics Box */}
+                            <div className="w-full bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 mb-4 border border-slate-100 dark:border-slate-700/50">
+                                <p className="text-[10px] uppercase font-bold tracking-widest text-slate-400 mb-1">
+                                    Saldo Global
+                                </p>
+                                <div className="flex items-center justify-center gap-2">
+                                    <span className="text-2xl font-black text-slate-800 dark:text-white">
+                                        0
+                                    </span>
+                                </div>
+                                <div className="mt-2 flex justify-center">
+                                    <span className="inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400">
+                                        <TrendingUp size={12} /> Novo Parceiro
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Action Buttons Row */}
+                            <div className="w-full flex justify-center gap-3 mt-auto pt-2">
+                                <button className="w-10 h-10 flex items-center justify-center bg-slate-50 text-slate-400 dark:bg-slate-800 rounded-xl shadow-sm">
+                                    <ExternalLink size={18} />
+                                </button>
+                                <button className="w-10 h-10 flex items-center justify-center bg-slate-50 text-slate-400 dark:bg-slate-800 rounded-xl shadow-sm">
+                                    <Pencil size={18} />
+                                </button>
+                                <button className="w-10 h-10 flex items-center justify-center bg-slate-50 text-slate-400 dark:bg-slate-800 rounded-xl shadow-sm">
+                                    <Trash2 size={18} />
+                                </button>
                             </div>
                         </div>
                     </div>

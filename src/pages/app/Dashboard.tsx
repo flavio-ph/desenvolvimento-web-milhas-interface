@@ -171,12 +171,24 @@ const Dashboard: React.FC = () => {
 
       {/* Cards Superiores */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Total Acumulado"
-          value={totalPontos.toLocaleString('pt-BR')}
-          icon={<Wallet />}
-          color="indigo"
-        />
+        {/* Card Principal: Total Acumulado (Destacado) */}
+        <div className="relative group overflow-hidden bg-gradient-to-br from-indigo-600 via-indigo-700 to-indigo-900 rounded-2xl p-6 shadow-xl shadow-indigo-200 dark:shadow-indigo-900/20 hover:-translate-y-0.5 transition-all duration-300">
+          {/* Efeitos de Fundo Abstratos */}
+          <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all duration-500"></div>
+          <div className="absolute right-10 -bottom-10 w-24 h-24 bg-indigo-400/20 rounded-full blur-xl group-hover:scale-150 transition-all duration-700"></div>
+
+          <div className="relative z-10 flex justify-between items-start mb-4">
+            <div className="p-2.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 shadow-inner">
+              <Wallet className="w-5 h-5 text-indigo-50" />
+            </div>
+            <div className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-indigo-500/30 text-indigo-100 border border-indigo-400/30 backdrop-blur-sm shadow-sm">
+              Métrica Principal
+            </div>
+          </div>
+          <p className="relative z-10 text-indigo-100/80 text-xs font-semibold uppercase tracking-widest mb-1">Total Acumulado</p>
+          <h3 className="relative z-10 text-3xl font-black text-white tracking-tight drop-shadow-sm">{totalPontos.toLocaleString('pt-BR')} <span className="text-lg font-bold text-indigo-200/50 mix-blend-overlay">pts</span></h3>
+        </div>
+
         <StatCard
           title="Prazo Médio"
           value={`${prazoMedio.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} dias`}
@@ -195,6 +207,7 @@ const Dashboard: React.FC = () => {
           icon={<TrendingUp />}
           color="rose"
           subText={expirando > 0 ? "Atenção necessária" : undefined}
+          badgeText={expirando > 0 ? "Urgente" : undefined}
         />
       </div>
 
@@ -207,22 +220,41 @@ const Dashboard: React.FC = () => {
             {areaData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={areaData}> {/* LineChart */}
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDarkMode ? '#1e293b' : '#e2e8f0'} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDarkMode ? '#1e293b' : '#f1f5f9'} />
                   <XAxis
                     dataKey="month"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: '#94a3b8', fontSize: 12 }}
+                    tick={{ fill: isDarkMode ? '#64748b' : '#94a3b8', fontSize: 12, fontWeight: 500 }}
+                    dy={10}
                   />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
-                  <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: isDarkMode ? '#64748b' : '#94a3b8', fontSize: 12, fontWeight: 500 }}
+                    dx={-10}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: '16px',
+                      border: isDarkMode ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)',
+                      boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+                      backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                      backdropFilter: 'blur(8px)',
+                      color: isDarkMode ? '#f8fafc' : '#0f172a',
+                      fontWeight: 'bold',
+                      padding: '12px 16px'
+                    }}
+                    itemStyle={{ color: isDarkMode ? '#818cf8' : '#4f46e5', fontWeight: 900 }}
+                    cursor={{ stroke: isDarkMode ? '#334155' : '#e2e8f0', strokeWidth: 1, strokeDasharray: '4 4' }}
+                  />
                   <Line
                     type="monotone"
                     dataKey="points"
-                    stroke="#4f46e5"
-                    strokeWidth={3}
-                    dot={{ r: 4, fill: '#f14714', strokeWidth: 2, stroke: '#e9da0d' }}
-                    activeDot={{ r: 6, strokeWidth: 0 }}
+                    stroke={isDarkMode ? '#818cf8' : '#4f46e5'}
+                    strokeWidth={4}
+                    dot={{ r: 4, fill: isDarkMode ? '#1e293b' : '#ffffff', strokeWidth: 2, stroke: isDarkMode ? '#818cf8' : '#4f46e5' }}
+                    activeDot={{ r: 8, strokeWidth: 0, fill: isDarkMode ? '#a5b4fc' : '#4338ca', style: { filter: 'drop-shadow(0px 4px 6px rgba(79, 70, 229, 0.4))' } }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -287,11 +319,11 @@ const Dashboard: React.FC = () => {
           <table className="w-full text-left relative">
             <thead className="bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10">
               <tr>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Descrição</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase text-center">Descrição</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase text-center">Cartão</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Programa</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Pontos</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Data</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase text-center">Programa</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase text-center">Pontos</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase text-center">Data</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -299,25 +331,25 @@ const Dashboard: React.FC = () => {
                 data.ultimasMovimentacoes.map((tx) => {
                   const isNegative = ['RESGATE', 'EXPIRACAO'].includes(tx.tipo);
                   return (
-                    <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <tr key={tx.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors duration-200 cursor-default">
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${!isNegative ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                        <div className="flex items-center justify-center gap-3">
+                          <div className={`p-2 rounded-xl transition-transform duration-300 group-hover:scale-110 ${!isNegative ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400'}`}>
                             {!isNegative ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
                           </div>
-                          <span className="text-sm font-medium dark:text-white">{tx.descricao}</span>
+                          <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{tx.descricao}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-center whitespace-nowrap">
-                        <span className="text-xs font-semibold px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                        <span className="text-[11px] font-bold tracking-wide px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 border border-slate-200/50 dark:border-slate-700/50">
                           {tx.nomePersonalizado || tx.nomeCartao || '—'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{tx.nomePrograma}</td>
-                      <td className={`px-6 py-4 text-sm font-bold ${!isNegative ? 'text-indigo-600' : 'text-rose-500'}`}>
-                        {!isNegative ? '+' : ''}{tx.quantidadePontos.toLocaleString('pt-BR')} pts
+                      <td className="px-6 py-4 text-sm text-center font-medium text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">{tx.nomePrograma}</td>
+                      <td className={`px-6 py-4 text-sm text-center font-black ${!isNegative ? 'text-indigo-600 dark:text-indigo-400' : 'text-rose-500 dark:text-rose-400'}`}>
+                        {!isNegative ? '+' : ''}{tx.quantidadePontos.toLocaleString('pt-BR')} <span className="text-[10px] text-slate-400 font-bold ml-0.5 uppercase">pts</span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-500">
+                      <td className="px-6 py-4 text-sm text-center font-medium text-slate-500 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors">
                         {new Date(tx.dataMovimentacao).toLocaleDateString('pt-BR')}
                       </td>
                     </tr>
@@ -325,8 +357,14 @@ const Dashboard: React.FC = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
-                    Nenhuma movimentação recente encontrada.
+                  <td colSpan={5} className="px-6 py-16 text-center">
+                    <div className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
+                      <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800/80 rounded-2xl flex items-center justify-center mb-4 shadow-sm border border-slate-100 dark:border-slate-700/50">
+                        <Wallet size={28} className="text-slate-300 dark:text-slate-600" />
+                      </div>
+                      <p className="text-base font-bold text-slate-700 dark:text-slate-300 mb-1">Nenhuma movimentação</p>
+                      <p className="text-sm max-w-[250px] mx-auto text-slate-500 dark:text-slate-400">Suas últimas atualizações e resgastes aparecerão aqui.</p>
+                    </div>
                   </td>
                 </tr>
               )}

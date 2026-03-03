@@ -416,15 +416,17 @@ const CardDetailPage: React.FC = () => {
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
 
                 {comprasFiltradas.length === 0 ? (
-                    <div className="flex flex-col items-center py-20 text-center">
-                        <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-4">
-                            <ShoppingBag size={28} className="text-slate-300 dark:text-slate-600" />
+                    <div className="flex flex-col items-center justify-center py-20 text-center">
+                        <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800/80 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-600 mb-5 shadow-sm border border-slate-100 dark:border-slate-700/50">
+                            <ShoppingBag size={36} />
                         </div>
-                        <p className="font-bold text-slate-600 dark:text-slate-300 mb-1">Nenhuma movimentação</p>
-                        <p className="text-sm text-slate-400 dark:text-slate-500">
+                        <p className="text-lg font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            Nenhuma movimentação
+                        </p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm">
                             {search || filterStatus !== 'TODOS'
-                                ? 'Nenhum resultado para os filtros aplicados.'
-                                : 'As compras deste cartão aparecerão aqui.'}
+                                ? 'Não encontramos compras para os filtros aplicados neste cartão.'
+                                : 'Suas compras com este cartão aparecerão detalhadas aqui.'}
                         </p>
                     </div>
                 ) : (
@@ -447,36 +449,36 @@ const CardDetailPage: React.FC = () => {
                                     return (
                                         <div
                                             key={compra.id}
-                                            className={`flex items-center gap-4 px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors ${!isLast ? 'border-b border-slate-50 dark:border-slate-800/60' : ''}`}
+                                            className={`group flex items-center gap-4 px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors duration-200 cursor-default ${!isLast ? 'border-b border-slate-50 dark:border-slate-800/60' : ''}`}
                                         >
                                             {/* Ícone categoria */}
-                                            <div className={`w-10 h-10 rounded-xl ${color.bg} flex items-center justify-center shrink-0`}>
+                                            <div className={`w-10 h-10 rounded-xl ${color.bg} flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110`}>
                                                 <Icon size={18} className={color.text} />
                                             </div>
 
                                             {/* Info */}
                                             <div className="flex-1 min-w-0">
-                                                <p className="font-bold text-slate-900 dark:text-white text-sm truncate">{compra.descricao || 'Compra Registrada'}</p>
-                                                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                                                <p className="font-bold text-slate-900 dark:text-white text-sm truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{compra.descricao || 'Compra Registrada'}</p>
+                                                <p className="text-xs font-medium text-slate-400 dark:text-slate-500 mt-0.5 group-hover:text-slate-500 dark:group-hover:text-slate-400 transition-colors">
                                                     {compra.categoria || 'Compra'}
                                                 </p>
                                             </div>
 
                                             {/* Valor + Pontos + Status */}
                                             <div className="text-right shrink-0">
-                                                <p className="font-bold text-slate-900 dark:text-white text-sm">
+                                                <p className="font-bold text-slate-900 dark:text-white text-sm tracking-tight scale-100 group-hover:scale-[1.02] transition-transform origin-right">
                                                     {formatCurrency(compra.valorGasto)}
                                                 </p>
-                                                <div className="flex items-center justify-end gap-2 mt-0.5">
+                                                <div className="flex items-center justify-end gap-2 mt-1">
                                                     {compra.status === 'PENDENTE' && (
-                                                        <span className="text-[10px] font-bold text-amber-500 bg-amber-50 dark:bg-amber-900/20 px-1.5 py-0.5 rounded-full">Pendente</span>
+                                                        <span className="text-[9px] font-black uppercase tracking-wider text-amber-500 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded-full border border-amber-200/50 dark:border-amber-800/50">Pendente</span>
                                                     )}
                                                     {compra.status === 'CANCELADO' && (
-                                                        <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-full">Cancelado</span>
+                                                        <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-full border border-slate-200/50 dark:border-slate-700/50">Cancelado</span>
                                                     )}
                                                     {compra.pontosCalculados !== undefined && compra.pontosCalculados > 0 && compra.status !== 'CANCELADO' && (
-                                                        <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded-full">
-                                                            +{compra.pontosCalculados.toLocaleString('pt-BR')} pts
+                                                        <span className="text-[10px] font-black tracking-tight text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-2.5 py-0.5 rounded-full border border-indigo-200/50 dark:border-indigo-800/50">
+                                                            +{compra.pontosCalculados.toLocaleString('pt-BR')} <span className="text-[8px] uppercase">pts</span>
                                                         </span>
                                                     )}
                                                 </div>
@@ -515,15 +517,15 @@ const CardDetailPage: React.FC = () => {
 
             {/* ─── Banner Acelerador de Pontos ─── */}
             <div
-                className="relative rounded-3xl p-8 overflow-hidden text-white"
+                className="relative rounded-3xl p-8 overflow-hidden text-white group"
                 style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 60%, #a855f7 100%)' }}
             >
                 <div className="absolute right-0 top-0 w-64 h-full opacity-20 pointer-events-none">
-                    <div className="absolute right-8 top-1/2 -translate-y-1/2 w-32 h-32 rounded-full bg-white/40" />
-                    <div className="absolute right-20 top-1/4 w-16 h-16 rounded-full bg-white/20" />
+                    <div className="absolute right-8 top-1/2 -translate-y-1/2 w-40 h-40 rounded-full bg-white/40 blur-3xl animate-pulse" />
+                    <div className="absolute right-24 top-1/4 w-20 h-20 rounded-full bg-white/30 blur-2xl group-hover:scale-150 transition-transform duration-1000" />
                 </div>
-                <div className="absolute right-6 bottom-4 w-16 h-16 rounded-full bg-white/10 flex items-center justify-center pointer-events-none">
-                    <Zap size={28} className="text-white/70" />
+                <div className="absolute right-6 bottom-4 w-16 h-16 rounded-full bg-white/10 flex items-center justify-center pointer-events-none ring-1 ring-white/20 shadow-[0_0_30px_rgba(255,255,255,0.2)]">
+                    <Zap size={28} className="text-white drop-shadow-md" />
                 </div>
 
                 <div className="relative z-10 max-w-lg">
