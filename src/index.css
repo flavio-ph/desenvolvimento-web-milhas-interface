@@ -1,0 +1,129 @@
+@import "tailwindcss";
+
+/* ─── Dark mode via class ─── */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1; /* slate-300 */
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #818cf8; /* indigo-400 */
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+.dark * {
+  scrollbar-color: #334155 transparent; /* slate-700 */
+}
+
+/* ─── Tipografia ─── */
+body {
+  font-family: 'Inter', sans-serif;
+  font-feature-settings: 'cv11', 'ss01';
+}
+
+/* ─── Animações ─── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes shine {
+  0%   { transform: translateX(-100%) skewX(-15deg); }
+  100% { transform: translateX(200%) skewX(-15deg); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+@keyframes slideInCard1 {
+  from { opacity: 0; transform: translateX(-30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideInCard2 {
+  from { opacity: 0; transform: translateX(30px); }
+  to   { opacity: 1; transform: translateX(8px); }
+}
+@keyframes authSlideLeft {
+  from { opacity: 0; transform: translateX(-48px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes authSlideRight {
+  from { opacity: 0; transform: translateX(48px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes shrink {
+  from { width: 100%; }
+  to   { width: 0%; }
+}
+
+.animate-fadeIn       { animation: fadeIn 0.4s ease-out both; }
+.animate-fadeInUp     { animation: fadeInUp 0.5s ease-out both; }
+.animate-slideIn      { animation: slideIn 0.35s ease-out both; }
+.animate-scaleIn      { animation: scaleIn 0.25s ease-out both; }
+.animate-float        { animation: float 4s ease-in-out infinite; }
+.animate-slideInCard1 { animation: slideInCard1 0.6s ease-out 0.3s both; }
+.animate-slideInCard2 { animation: slideInCard2 0.6s ease-out 0.6s both; }
+.animate-authSlideLeft  { animation: authSlideLeft  0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-authSlideRight { animation: authSlideRight 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* ─── Shine (efeito de brilho nos cartões) ─── */
+.card-shine {
+  position: relative;
+  overflow: hidden;
+}
+.card-shine::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 40%;
+  height: 200%;
+  background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%);
+  transform: skewX(-15deg);
+  transition: none;
+}
+.card-shine:hover::after {
+  animation: shine 0.7s ease-in-out;
+}
+
+/* ─── Glassmorphism ─── */
+.glass {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.dark .glass {
+  background: rgba(15,23,42,0.6);
+  border: 1px solid rgba(255,255,255,0.07);
+}
+
+/* ─── Custom Scrollbar classe utilitária ─── */
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 9999px; }
+.dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; }

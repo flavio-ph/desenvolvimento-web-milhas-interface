@@ -204,9 +204,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     }
                   `}
                 >
-                  {/* Indicador ativo — barra lateral */}
+                  {/* Indicador ativo — barra esquerda com radius */}
                   {isActive && !isCollapsed && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-7 bg-indigo-600 dark:bg-indigo-400 rounded-r-full" />
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-7 bg-indigo-600 dark:bg-indigo-500 rounded-[10px]" />
                   )}
                   <div className={`shrink-0 ${isActive
                     ? 'text-indigo-600 dark:text-indigo-400'
@@ -251,8 +251,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         }
                       `}
                     >
+                      {/* Indicador ativo — barra esquerda com radius */}
                       {isActive && !isCollapsed && (
-                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-7 bg-emerald-600 dark:bg-emerald-400 rounded-r-full" />
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-7 bg-emerald-600 dark:bg-emerald-500 rounded-[10px]" />
                       )}
                       <div className={`shrink-0 ${isActive
                         ? 'text-emerald-600 dark:text-emerald-400'
@@ -270,54 +271,95 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             )}
           </nav>
 
-          {/* Footer Sidebar (Theme Toggle, Logout) */}
-          <div className="p-3 mt-auto border-t border-slate-100 dark:border-slate-800/60 flex flex-col gap-2">
+          {/* Footer Sidebar — Perfil + Logout */}
+          <div className="p-3 mt-auto border-t border-slate-100 dark:border-slate-800/60">
+            <div className={`flex items-center gap-3 px-3 py-2.5 rounded-xl ${isCollapsed ? 'justify-center' : ''}`}>
 
-            {/* Theme Toggle - Above Logout */}
-            <button
-              onClick={toggleDarkMode}
-              className={`
-                flex items-center gap-3 w-full px-3 py-2.5 text-slate-500 dark:text-slate-400
-                hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-indigo-600 dark:hover:text-indigo-400
-                rounded-xl transition-all duration-200 group font-medium text-sm
-                ${isCollapsed ? 'justify-center' : ''}
-              `}
-              title={isDarkMode ? 'Ativar modo claro' : 'Ativar modo escuro'}
-            >
-              {isDarkMode ? <Sun size={18} className="text-amber-400 fill-amber-400 shrink-0" /> : <Moon size={18} className="shrink-0" />}
-              {!isCollapsed && <span>{isDarkMode ? 'Modo Claro' : 'Modo Escuro'}</span>}
-            </button>
-
-            {/* Logout Button */}
-            <button
-              onClick={() => {
-                localStorage.removeItem('token');
-                addToast({
-                  type: 'info',
-                  title: 'Logout realizado',
-                  description: 'Você saiu do sistema com segurança.'
-                });
-                navigate('/login');
-              }}
-              title={isCollapsed ? 'Sair da conta' : ''}
-              className={`
-                flex items-center gap-3 w-full px-3 py-2 text-slate-500 dark:text-slate-500
-                hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 dark:hover:text-red-400
-                rounded-xl transition-all duration-200 group font-medium text-sm
-                ${isCollapsed ? 'justify-center' : ''}
-              `}
-            >
-              <div className="relative shrink-0">
+              {/* Avatar clicável → perfil */}
+              <div
+                className="relative shrink-0 cursor-pointer group/avatar"
+                onClick={() => navigate('/profile')}
+                title={isCollapsed ? (user?.nome ?? 'Perfil') : ''}
+              >
                 <UserAvatar
                   imageUrl={getAvatarUrl()}
                   initials={getUserInitials()}
                   size="sm"
-                  className="ring-2 ring-transparent group-hover:ring-red-200 dark:group-hover:ring-red-900/30 transition-all opacity-80 group-hover:opacity-100"
+                  className="ring-2 ring-transparent group-hover/avatar:ring-indigo-200 dark:group-hover/avatar:ring-indigo-800 transition-all"
                 />
+                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
               </div>
-              {!isCollapsed && <span className="flex-1 text-left font-semibold">Sair da conta</span>}
-              <LogOut size={18} className="group-hover:-translate-x-1 transition-transform shrink-0" />
-            </button>
+
+              {/* Nome + Plano */}
+              {!isCollapsed && (
+                <div
+                  className="flex-1 min-w-0 cursor-pointer group/name"
+                  onClick={() => navigate('/profile')}
+                >
+                  <p className="text-sm font-bold text-slate-800 dark:text-white truncate group-hover/name:text-indigo-600 dark:group-hover/name:text-indigo-400 transition-colors">
+                    {user?.nome || '...'}
+                  </p>
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium truncate">
+                    {user?.role === 'ADMIN' ? 'Administrador' : 'Plano Premium'}
+                  </p>
+                </div>
+              )}
+
+              {/* Ícone de Logout */}
+              {!isCollapsed && (
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('token');
+                    addToast({
+                      type: 'info',
+                      title: 'Logout realizado',
+                      description: 'Você saiu do sistema com segurança.'
+                    });
+                    navigate('/login');
+                  }}
+                  title="Sair da conta"
+                  className="p-1.5 text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-all shrink-0"
+                >
+                  <LogOut size={16} />
+                </button>
+              )}
+
+              {/* Collapsed: logout icon abaixo do avatar */}
+              {isCollapsed && (
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('token');
+                    addToast({
+                      type: 'info',
+                      title: 'Logout realizado',
+                      description: 'Você saiu do sistema com segurança.'
+                    });
+                    navigate('/login');
+                  }}
+                  title="Sair da conta"
+                  className="hidden"
+                />
+              )}
+            </div>
+
+            {/* Logout visível quando collapsed */}
+            {isCollapsed && (
+              <button
+                onClick={() => {
+                  localStorage.removeItem('token');
+                  addToast({
+                    type: 'info',
+                    title: 'Logout realizado',
+                    description: 'Você saiu do sistema com segurança.'
+                  });
+                  navigate('/login');
+                }}
+                title="Sair da conta"
+                className="flex items-center justify-center w-full p-2 text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl transition-all mt-1"
+              >
+                <LogOut size={16} />
+              </button>
+            )}
           </div>
         </div>
       </aside>
@@ -353,7 +395,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 lg:gap-6">
+          <div className="flex items-center gap-3 lg:gap-4">
+            {/* Dark Mode Toggle */}
+            <button
+              onClick={toggleDarkMode}
+              className="p-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all hover:scale-105 active:scale-95"
+              title={isDarkMode ? 'Ativar modo claro' : 'Ativar modo escuro'}
+            >
+              {isDarkMode
+                ? <Sun size={20} className="text-amber-400 fill-amber-400" />
+                : <Moon size={20} />}
+            </button>
+
             {/* SINO COM DROPDOWN */}
             <div className="relative" ref={notifRef}>
               <button
@@ -432,28 +485,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               )}
             </div>
 
-            <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 mx-2"></div>
 
-            {/* Avatar + Nome do Usuário */}
-            <div className="flex items-center gap-3 pl-2 cursor-pointer group" onClick={() => navigate('/profile')}>
-              <div className="hidden lg:block text-right">
-                <p className="text-sm font-bold dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                  {user?.nome || '...'}
-                </p>
-                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                  {user?.role === 'ADMIN' ? 'Administrador' : 'Plano Premium'}
-                </p>
-              </div>
-              <div className="relative">
-                <UserAvatar
-                  imageUrl={getAvatarUrl()}
-                  initials={getUserInitials()}
-                  size="md"
-                  className="ring-2 ring-slate-100 dark:ring-slate-800 group-hover:ring-indigo-500 transition-all shadow-sm"
-                />
-                <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full"></div>
-              </div>
-            </div>
           </div>
         </header>
 

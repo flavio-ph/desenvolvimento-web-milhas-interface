@@ -119,7 +119,7 @@ const Login: React.FC = () => {
 
       {/* Form Side */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-slate-50 dark:bg-slate-950">
-        <div className="w-full max-w-md space-y-8 animate-fadeIn">
+        <div className="w-full max-w-md space-y-8 animate-authSlideLeft">
           <div className="text-center lg:text-left">
             {/* LOGO MOBILE */}
             <div className="lg:hidden w-16 h-auto mx-auto mb-6">

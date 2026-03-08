@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   User,
@@ -17,9 +17,37 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import { Logo } from '../../components/Logo';
+import { useToast } from '../../components/ToastContext';
 
+// ─── Utilitário: calcula força da senha ───────────────────────────────────────
+type PasswordStrength = 0 | 1 | 2 | 3 | 4;
+
+interface StrengthInfo {
+  level: PasswordStrength;
+  label: string;
+  color: string;        // cor das barras ativas
+  textColor: string;    // cor do label
+}
+
+function getPasswordStrength(password: string): StrengthInfo {
+  if (!password) return { level: 0, label: '', color: '', textColor: '' };
+
+  let score = 0;
+  if (password.length >= 8) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+
+  if (score <= 1) return { level: 1, label: 'Fraca', color: 'bg-red-500', textColor: 'text-red-500' };
+  if (score === 2) return { level: 2, label: 'Razoável', color: 'bg-orange-400', textColor: 'text-orange-400' };
+  if (score === 3) return { level: 3, label: 'Boa', color: 'bg-yellow-400', textColor: 'text-yellow-500' };
+  return { level: 4, label: 'Forte', color: 'bg-emerald-500', textColor: 'text-emerald-500' };
+}
+
+// ─── Componente ───────────────────────────────────────────────────────────────
 const Register: React.FC = () => {
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -36,6 +64,8 @@ const Register: React.FC = () => {
     cpf: '',
     telefone: ''
   });
+
+  const strength = useMemo(() => getPasswordStrength(formData.senha), [formData.senha]);
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, '');
@@ -71,7 +101,11 @@ const Register: React.FC = () => {
 
       await api.post('/auth/register', payload);
 
-      alert('Conta criada com sucesso! Faça login para continuar.');
+      addToast({
+        type: 'success',
+        title: 'Conta criada com sucesso!',
+        description: 'Faça login para começar a gerir suas milhas.'
+      });
       navigate('/login');
 
     } catch (err: any) {
@@ -97,7 +131,7 @@ const Register: React.FC = () => {
           <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="w-full max-w-md space-y-8 animate-fadeIn relative z-10">
+        <div className="w-full max-w-md space-y-8 animate-authSlideRight relative z-10">
           <div className="text-center lg:text-left">
 
             {/* LOGO MOBILE + NOME */}
@@ -179,25 +213,52 @@ const Register: React.FC = () => {
                 </div>
               </div>
 
-              {/* Senha */}
-              <div className="relative group transition-all duration-300 hover:-translate-y-0.5">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Crie uma senha forte"
-                  value={formData.senha}
-                  onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
-                  className="w-full pl-12 pr-12 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-900 dark:text-white font-medium shadow-sm transition-all group-hover:shadow-md"
-                  required
-                  minLength={6}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors p-1"
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
+              {/* Senha + Indicador de Força */}
+              <div>
+                <div className="relative group transition-all duration-300 hover:-translate-y-0.5">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Crie uma senha forte"
+                    value={formData.senha}
+                    onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
+                    className="w-full pl-12 pr-12 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-900 dark:text-white font-medium shadow-sm transition-all group-hover:shadow-md"
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors p-1"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+
+                {/* Indicador de Força de Senha */}
+                {formData.senha.length > 0 && (
+                  <div className="mt-2.5 px-1 space-y-1.5 animate-fadeIn">
+                    <div className="flex gap-1.5">
+                      {[1, 2, 3, 4].map((bar) => (
+                        <div
+                          key={bar}
+                          className={`
+                            h-1.5 flex-1 rounded-full transition-all duration-300
+                            ${strength.level >= bar ? strength.color : 'bg-slate-200 dark:bg-slate-700'}
+                          `}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className={`text-xs font-bold transition-colors duration-200 ${strength.textColor}`}>
+                        {strength.label}
+                      </p>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                        Use 8+ chars, maiúsculas, números e símbolos
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

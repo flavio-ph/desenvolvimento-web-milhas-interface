@@ -734,7 +734,7 @@ const ProfilePage: React.FC = () => {
               <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <div>
                   <button
-                    onClick={() => alert('Função de cancelamento seria acionada aqui.')}
+                    onClick={() => addToast({ type: 'info', title: 'Cancelamento de Assinatura', description: 'Para cancelar sua assinatura, entre em contato com o suporte.' })}
                     className="inline-flex items-center gap-2 text-rose-500 text-sm font-bold hover:text-rose-600 transition-colors"
                   >
                     <AlertCircle size={16} />
