@@ -22,6 +22,12 @@ const RegisterPurchase: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [shaking, setShaking] = useState(false);
+
+  const triggerShake = () => {
+    setShaking(true);
+    setTimeout(() => setShaking(false), 600);
+  };
 
   useEffect(() => {
     api.get('/cartoes')
@@ -60,6 +66,7 @@ const RegisterPurchase: React.FC = () => {
       if (!selectedCardId) {
         setError("Selecione um cartão para continuar.");
         setIsSubmitting(false);
+        triggerShake();
         return;
       }
 
@@ -100,6 +107,7 @@ const RegisterPurchase: React.FC = () => {
       } else {
         setError("Não foi possível registrar a compra. Tente novamente.");
       }
+      triggerShake();
     } finally {
       setIsSubmitting(false);
     }
@@ -126,7 +134,7 @@ const RegisterPurchase: React.FC = () => {
         <div className="lg:col-span-3">
           <form
             onSubmit={handleSubmit}
-            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-6 space-y-5"
+            className={`bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-6 space-y-5 ${shaking ? 'animate-shake' : ''}`}
           >
             {/* Erro */}
             {error && (

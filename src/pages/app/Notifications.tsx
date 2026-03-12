@@ -8,7 +8,6 @@ import {
   Clock,
   Info,
   Check,
-  Loader2,
   Filter,
   AlertTriangle,
   MailOpen,
@@ -19,6 +18,43 @@ import { Notificacao } from '../../types/types';
 import { useToast } from '../../components/ToastContext';
 
 type FilterType = 'ALL' | 'UNREAD' | 'IMPORTANT';
+
+/* ── Shimmer helper ── */
+const Shimmer = ({ className }: { className?: string }) => (
+  <div className={`animate-pulse bg-slate-200 dark:bg-slate-700 rounded-xl ${className ?? ''}`} />
+);
+
+/* ── Skeleton da página de Notificações ── */
+const NotificationsSkeleton: React.FC = () => (
+  <div className="max-w-4xl mx-auto space-y-8 py-4">
+    {/* Header skeleton */}
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="space-y-2">
+        <Shimmer className="h-8 w-48" />
+        <Shimmer className="h-4 w-72" />
+      </div>
+      <Shimmer className="h-10 w-52 rounded-xl" />
+    </div>
+
+    {/* Tabs skeleton */}
+    <Shimmer className="h-12 w-full md:w-80 rounded-xl" />
+
+    {/* Cards skeleton */}
+    <div className="space-y-4">
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="p-6 rounded-3xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex gap-5">
+          <Shimmer className="w-12 h-12 rounded-2xl shrink-0" />
+          <div className="flex-1 space-y-2">
+            <Shimmer className="h-4 w-3/4" />
+            <Shimmer className="h-3 w-24" />
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+
 
 const NotificationsPage: React.FC = () => {
   const { addToast } = useToast();
@@ -119,11 +155,7 @@ const NotificationsPage: React.FC = () => {
   const unreadCount = notificacoes.filter(n => !n.lida).length;
 
   if (loading) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="animate-spin text-indigo-600" size={48} />
-      </div>
-    );
+    return <NotificationsSkeleton />;
   }
 
   return (

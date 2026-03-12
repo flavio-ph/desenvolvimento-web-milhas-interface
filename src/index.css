@@ -80,6 +80,15 @@ body {
   from { width: 100%; }
   to   { width: 0%; }
 }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  15%      { transform: translateX(-6px); }
+  30%      { transform: translateX(6px); }
+  45%      { transform: translateX(-5px); }
+  60%      { transform: translateX(5px); }
+  75%      { transform: translateX(-3px); }
+  90%      { transform: translateX(3px); }
+}
 
 .animate-fadeIn       { animation: fadeIn 0.4s ease-out both; }
 .animate-fadeInUp     { animation: fadeInUp 0.5s ease-out both; }
@@ -90,6 +99,7 @@ body {
 .animate-slideInCard2 { animation: slideInCard2 0.6s ease-out 0.6s both; }
 .animate-authSlideLeft  { animation: authSlideLeft  0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .animate-authSlideRight { animation: authSlideRight 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-shake        { animation: shake 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
 
 /* ─── Shine (efeito de brilho nos cartões) ─── */
 .card-shine {

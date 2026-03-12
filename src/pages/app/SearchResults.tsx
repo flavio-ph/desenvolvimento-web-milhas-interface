@@ -1,8 +1,51 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Search, CreditCard, ShoppingBag, Tag, ArrowRight, Loader2, Globe } from 'lucide-react';
+import { Search, CreditCard, ShoppingBag, Tag, ArrowRight, Globe } from 'lucide-react';
 import { getCompras, getCartoes, getPromocoes, getProgramas } from '../../services/api';
 import { Transaction, CreditCard as CardType, Promotion, LoyaltyProgram } from '../../types/types';
+
+/* ── Shimmer helper ── */
+const Shimmer = ({ className }: { className?: string }) => (
+  <div className={`animate-pulse bg-slate-200 dark:bg-slate-700 rounded-xl ${className ?? ''}`} />
+);
+
+/* ── Skeleton enquanto carrega ── */
+const SearchSkeleton: React.FC<{ query: string }> = ({ query }) => (
+  <div className="max-w-5xl mx-auto space-y-8 py-4">
+    <div className="space-y-2">
+      <Shimmer className="h-9 w-80" />
+      <Shimmer className="h-4 w-52" />
+    </div>
+    {/* Seção de resultados skeleton */}
+    {[...Array(3)].map((_, s) => (
+      <div key={s} className="space-y-4">
+        <Shimmer className="h-6 w-36" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-3">
+              <Shimmer className="h-4 w-3/4" />
+              <Shimmer className="h-3 w-1/2" />
+            </div>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+/* ── Highlight de termo buscado ── */
+const highlightTerm = (text: string, query: string): React.ReactNode => {
+  if (!query || !text) return text;
+  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  const parts = text.split(regex);
+  return parts.map((part, i) =>
+    regex.test(part)
+      ? <mark key={i} className="bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 rounded px-0.5">{part}</mark>
+      : part
+  );
+};
+
+
 
 const SearchResults: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -68,12 +111,7 @@ const SearchResults: React.FC = () => {
   }, [query]);
 
   if (loading) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center flex-col gap-4">
-        <Loader2 className="animate-spin text-indigo-600" size={48} />
-        <p className="text-slate-500 font-medium">Buscando por "{query}"...</p>
-      </div>
-    );
+    return <SearchSkeleton query={query} />;
   }
 
   const hasResults = results.transactions.length > 0 || results.cards.length > 0 || results.promotions.length > 0 || results.programs.length > 0;
@@ -110,12 +148,12 @@ const SearchResults: React.FC = () => {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {results.programs.map(prog => (
-              <div key={prog.id} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
+              <div key={prog.id} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-default">
                 <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-slate-800 flex items-center justify-center text-indigo-600 font-bold">
                   {prog.nome.charAt(0)}
                 </div>
                 <div>
-                  <p className="font-bold text-slate-800 dark:text-white">{prog.nome}</p>
+                  <p className="font-bold text-slate-800 dark:text-white">{highlightTerm(prog.nome, query)}</p>
                 </div>
               </div>
             ))}
@@ -131,9 +169,9 @@ const SearchResults: React.FC = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {results.cards.map((card: any) => (
-              <div key={card.id} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-                <p className="font-bold text-slate-800 dark:text-white">{card.nomePersonalizado}</p>
-                <p className="text-sm text-slate-500">{card.nomeBandeira} •••• {card.ultimosDigitos}</p>
+              <div key={card.id} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+                <p className="font-bold text-slate-800 dark:text-white">{highlightTerm(card.nomePersonalizado, query)}</p>
+                <p className="text-sm text-slate-500">{highlightTerm(card.nomeBandeira, query)} •••• {card.ultimosDigitos}</p>
               </div>
             ))}
           </div>
@@ -150,7 +188,7 @@ const SearchResults: React.FC = () => {
             {results.transactions.map((t: any, idx) => (
               <div key={t.id} className={`p-4 flex items-center justify-between ${idx !== results.transactions.length - 1 ? 'border-b border-slate-100 dark:border-slate-800' : ''}`}>
                 <div>
-                  <p className="font-bold text-slate-900 dark:text-white">{t.descricao}</p>
+                  <p className="font-bold text-slate-900 dark:text-white">{highlightTerm(t.descricao, query)}</p>
                   <p className="text-xs text-slate-500">{t.dataMovimentacao || t.dataCompra}</p>
                 </div>
                 <span className="font-bold text-indigo-600">R$ {t.valorGasto ? t.valorGasto.toFixed(2) : (t.quantidadePontos ? t.quantidadePontos.toLocaleString('pt-br') : "0")}</span>
@@ -168,8 +206,8 @@ const SearchResults: React.FC = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {results.promotions.map(p => (
-              <div key={p.id} onClick={() => navigate('/promotions')} className="cursor-pointer bg-gradient-to-r from-indigo-500 to-purple-600 p-6 rounded-2xl text-white shadow-lg">
-                <h3 className="font-bold text-lg">{p.titulo}</h3>
+              <div key={p.id} onClick={() => navigate('/promotions')} className="cursor-pointer bg-gradient-to-r from-indigo-500 to-purple-600 p-6 rounded-2xl text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200">
+                <h3 className="font-bold text-lg">{highlightTerm(p.titulo, query)}</h3>
                 <div className="flex items-center gap-2 mt-2 text-indigo-100 text-sm font-medium">
                   Ver detalhes <ArrowRight size={16} />
                 </div>

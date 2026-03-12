@@ -1,10 +1,49 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
-  Tag, Search, Clock, ArrowRight, Zap, Flame, Filter, CheckCircle2, AlertCircle, Loader2
+  Tag, Search, Clock, ArrowRight, Zap, Flame, Filter, CheckCircle2, AlertCircle
 } from 'lucide-react';
 import { getPromocoes, getProgramas, participarPromocao } from '../../services/api';
 import { Promotion, LoyaltyProgram } from '../../types/types';
 import { useToast } from '../../components/ToastContext';
+
+/* ── Shimmer helper ── */
+const Shimmer = ({ className }: { className?: string }) => (
+  <div className={`animate-pulse bg-slate-200 dark:bg-slate-700 rounded-xl ${className ?? ''}`} />
+);
+
+/* ── Skeleton da página de Promoções ── */
+const PromotionsSkeleton: React.FC = () => (
+  <div className="space-y-8 max-w-6xl mx-auto py-4">
+    {/* Hero skeleton */}
+    <Shimmer className="h-52 w-full rounded-[32px]" />
+
+    {/* Filtros skeleton */}
+    <div className="flex flex-col lg:flex-row gap-4">
+      <Shimmer className="h-14 flex-1 rounded-2xl" />
+      <Shimmer className="h-14 w-full lg:w-64 rounded-2xl" />
+    </div>
+
+    {/* Grid de cards skeleton */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="bg-white dark:bg-slate-900 rounded-[28px] border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col sm:flex-row">
+          <Shimmer className="sm:w-44 h-32 sm:h-auto rounded-none" />
+          <div className="flex-1 p-8 space-y-4">
+            <Shimmer className="h-5 w-3/4" />
+            <Shimmer className="h-4 w-full" />
+            <Shimmer className="h-4 w-2/3" />
+            <div className="flex justify-between items-center pt-4">
+              <Shimmer className="h-4 w-28" />
+              <Shimmer className="h-9 w-28 rounded-xl" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+
 
 const PromotionsPage: React.FC = () => {
   const { addToast } = useToast();
@@ -90,12 +129,7 @@ const PromotionsPage: React.FC = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-        <Loader2 className="animate-spin text-indigo-600" size={40} />
-        <p className="text-slate-500 text-sm font-medium">Buscando melhores ofertas...</p>
-      </div>
-    );
+    return <PromotionsSkeleton />;
   }
 
   return (
@@ -217,7 +251,9 @@ const PromotionsPage: React.FC = () => {
                     >
                       {activatingId === promo.id ? (
                         <>
-                          <Loader2 size={16} className="animate-spin" />
+                          <svg className="animate-spin" width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                          </svg>
                           Ativando...
                         </>
                       ) : isExpired ? (
