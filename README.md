@@ -2,7 +2,7 @@
 
 Bem-vindo ao **MilhasPro**, uma aplicação web moderna para gestão de pontos e milhas aéreas. Este projeto foi desenvolvido para ajudar usuários a controlar seus programas de fidelidade, acompanhar saldo de milhas, registrar compras bonificadas e aproveitar as melhores promoções.
 
-## 🚀 Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
 Este projeto foi construído com as seguintes tecnologias principais:
 
@@ -15,7 +15,7 @@ Este projeto foi construído com as seguintes tecnologias principais:
 -   **[Recharts](https://recharts.org/)**: Biblioteca para criação de gráficos e visualização de dados.
 -   **[Axios](https://axios-http.com/)**: Cliente HTTP para requisições à API.
 
-## ✨ Funcionalidades
+##  Funcionalidades
 
 ### Área Pública
 -   **Login e Registro**: Autenticação de usuários.
@@ -36,13 +36,13 @@ Este projeto foi construído com as seguintes tecnologias principais:
 -   **Gestão de Programas**: Controle dos programas de fidelidade disponíveis.
 -   **Cadastro de Promoções**: Criação e edição de promoções para os usuários.
 
-## 📦 Pré-requisitos
+## Pré-requisitos
 
 Antes de começar, certifique-se de ter instalado em sua máquina:
 -   [Node.js](https://nodejs.org/) (versão recomendada: 18 ou superior)
 -   npm (gerenciador de pacotes do Node)
 
-## 🛠️ Instalação
+## Instalação
 
 1.  Clone o repositório (se aplicável) ou navegue até a pasta do projeto:
     ```bash
@@ -54,7 +54,7 @@ Antes de começar, certifique-se de ter instalado em sua máquina:
     npm install
     ```
 
-## ▶️ Executando o Projeto
+## Executando o Projeto
 
 Para iniciar o servidor de desenvolvimento:
 
@@ -64,7 +64,7 @@ npm run dev
 
 A aplicação estará disponível em `http://localhost:5173` (ou outra porta indicada no terminal).
 
-## 🏗️ Scripts Disponíveis
+## Scripts Disponíveis
 
 -   `npm run dev`: Inicia o servidor de desenvolvimento.
 -   `npm run build`: Compila a aplicação para produção.
