@@ -5,6 +5,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './components/ToastContext';
 import { UserProvider } from './context/UserContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import AuthTransition from './components/AuthTransition';
 
 // Lazy loading de todas as páginas para melhor performance
 const Dashboard = lazy(() => import('./pages/app/Dashboard'));
@@ -63,9 +64,9 @@ const App: React.FC = () => {
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   {/* ROTAS PÚBLICAS */}
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/recover" element={<RecoverPassword />} />
+                  <Route path="/login" element={<AuthTransition><Login /></AuthTransition>} />
+                  <Route path="/register" element={<AuthTransition><Register /></AuthTransition>} />
+                  <Route path="/recover" element={<AuthTransition><RecoverPassword /></AuthTransition>} />
 
                   {/* ROTAS PRIVADAS */}
                   <Route path="/" element={

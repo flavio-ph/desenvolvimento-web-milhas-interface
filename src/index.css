@@ -76,6 +76,16 @@ body {
   from { opacity: 0; transform: translateX(48px); }
   to   { opacity: 1; transform: translateX(0); }
 }
+
+/* ─── Page-level transitions (login ↔ register) ─── */
+@keyframes authPageSlideFromRight {
+  from { opacity: 0; transform: translateX(60px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes authPageSlideFromLeft {
+  from { opacity: 0; transform: translateX(-60px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
 @keyframes shrink {
   from { width: 100%; }
   to   { width: 0%; }
@@ -99,6 +109,15 @@ body {
 .animate-slideInCard2 { animation: slideInCard2 0.6s ease-out 0.6s both; }
 .animate-authSlideLeft  { animation: authSlideLeft  0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .animate-authSlideRight { animation: authSlideRight 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+.auth-transition-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  display: block;
+  overflow: hidden;
+}
+.auth-transition-forward  { animation: authPageSlideFromRight 0.42s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.auth-transition-backward { animation: authPageSlideFromLeft  0.42s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .animate-shake        { animation: shake 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
 
 /* ─── Shine (efeito de brilho nos cartões) ─── */
