@@ -69,8 +69,8 @@ const NotificationsPage: React.FC = () => {
   const carregarNotificacoes = async () => {
     try {
       setLoading(true);
-      const data: any = await getNotificacoes();
-      const listaNotificacoes = data?.content || (Array.isArray(data) ? data : []);
+      const data = await getNotificacoes();
+      const listaNotificacoes = Array.isArray(data) ? data : data.content || [];
       setNotificacoes(listaNotificacoes);
     } catch (error) {
       console.error("Erro ao carregar notificações", error);

@@ -8,6 +8,9 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import { useToast } from '../../components/ToastContext';
+import { parseSafeDate, formatDate, humanDate, formatCurrency } from '../../utils/dateUtils';
+import Pagination from '../../components/Pagination';
+import { isAxiosError } from 'axios';
 
 /* ─── Tipos ─────────────────────────────────────────────────── */
 interface Cartao {
@@ -27,7 +30,7 @@ interface Compra {
     categoria?: string;
     valorGasto: number;
     pontosCalculados?: number;
-    dataCompra: any;
+    dataCompra: string | number[];
     status?: 'PENDENTE' | 'CREDITADO' | 'CANCELADO' | string;
 }
 
@@ -55,49 +58,6 @@ const getCategoryColor = (categoria?: string) => {
     return { bg: 'bg-indigo-100 dark:bg-indigo-900/30', text: 'text-indigo-600 dark:text-indigo-400' };
 };
 
-const formatCurrency = (v?: number) =>
-    (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-// Parser universal de datas
-const parseSafeDate = (data: any): Date | null => {
-    if (!data) return null;
-
-    // 1. Se o Spring Boot enviar como Array: [2024, 2, 23]
-    if (Array.isArray(data)) {
-        const [ano, mes, dia, hora = 0, minuto = 0, segundo = 0] = data;
-        return new Date(ano, mes - 1, dia, hora, minuto, segundo);
-    }
-
-    // 2. Se for String
-    if (typeof data === 'string') {
-        if (data.includes('/')) {
-            const parts = data.split(/[\sT]+/);
-            const [d, m, y] = parts[0].split('/');
-            const timeParts = parts[1] ? parts[1].split(':') : [0, 0, 0];
-            return new Date(Number(y), Number(m) - 1, Number(d), Number(timeParts[0]), Number(timeParts[1]));
-        }
-
-        if (data.length === 10 && data.includes('-')) {
-            const [y, m, d] = data.split('-');
-            return new Date(Number(y), Number(m) - 1, Number(d), 12, 0, 0);
-        }
-    }
-
-    // 3. Fallback
-    const parsed = new Date(data);
-    if (isNaN(parsed.getTime())) {
-        console.warn("⚠️ O Frontend não conseguiu ler esta data:", data);
-        return null;
-    }
-    return parsed;
-};
-
-const formatDate = (data: any) => {
-    const d = parseSafeDate(data);
-    if (!d) return '—';
-    return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-};
-
 const groupByDate = (compras: Compra[]): Record<string, Compra[]> => {
     return compras.reduce((acc, c) => {
         const key = formatDate(c.dataCompra) !== '—' ? formatDate(c.dataCompra) : 'Data Desconhecida';
@@ -107,25 +67,7 @@ const groupByDate = (compras: Compra[]): Record<string, Compra[]> => {
     }, {} as Record<string, Compra[]>);
 };
 
-const humanDate = (dateStr: string) => {
-    if (!dateStr || dateStr === '—' || dateStr === 'Data Desconhecida') return 'Data Desconhecida';
-
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-
-    const todayStr = today.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    const yesterdayStr = yesterday.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-
-    if (dateStr === todayStr) return 'HOJE';
-    if (dateStr === yesterdayStr) return 'ONTEM';
-
-    const [d, m, y] = dateStr.split('/');
-    const date = new Date(Number(y), Number(m) - 1, Number(d));
-    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' }).toUpperCase();
-};
-
-/* ─── Componente ─────────────────────────────────────────────── */
+/* ─── Helpers ────────────────────────────────────────────────── */
 const CardDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -137,12 +79,10 @@ const CardDetailPage: React.FC = () => {
     const [search, setSearch] = useState('');
     const [filterStatus, setFilterStatus] = useState<string>('TODOS');
 
-    // Pagination states
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const [pageSize, setPageSize] = useState(10);
 
-    // Reset pagination when search or filter change
     useEffect(() => {
         setPage(0);
     }, [search, filterStatus]);
@@ -152,10 +92,10 @@ const CardDetailPage: React.FC = () => {
         const load = async () => {
             try {
                 setLoading(true);
-                const queryParams: any = { page, size: pageSize };
+                const queryParams: Record<string, string | number> = { page, size: pageSize };
 
                 if (filterStatus !== 'TODOS') queryParams.status = filterStatus;
-                if (search) queryParams.descricao = search; // Se o backend aceitar filtro por descrição. Caso não, teremos um fallback, mas vou enviar.
+                if (search) queryParams.descricao = search;
 
                 const [cartaoRes, comprasRes] = await Promise.all([
                     api.get(`/cartoes/${id}`),
@@ -172,8 +112,8 @@ const CardDetailPage: React.FC = () => {
                     setTotalPages(1);
                 }
 
-            } catch (err: any) {
-                if (err.response?.status === 404) {
+            } catch (err: unknown) {
+                if (isAxiosError(err) && err.response?.status === 404) {
                     addToast({ type: 'error', title: 'Cartão não encontrado', description: 'Este cartão não existe ou foi removido.' });
                     navigate('/cards');
                 } else {
@@ -433,14 +373,12 @@ const CardDetailPage: React.FC = () => {
                     <div>
                         {dateKeys.map((date, di) => (
                             <div key={date}>
-                                {/* Separador de data */}
                                 <div className={`px-6 py-2.5 bg-slate-50 dark:bg-slate-800/50 ${di > 0 ? 'border-t border-slate-100 dark:border-slate-800' : ''}`}>
                                     <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                                         {humanDate(date)}
                                     </span>
                                 </div>
 
-                                {/* Compras do dia */}
                                 {grouped[date].map((compra, i) => {
                                     const Icon = getCategoryIcon(compra.categoria);
                                     const color = getCategoryColor(compra.categoria);
@@ -451,12 +389,10 @@ const CardDetailPage: React.FC = () => {
                                             key={compra.id}
                                             className={`group flex items-center gap-4 px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors duration-200 cursor-default ${!isLast ? 'border-b border-slate-50 dark:border-slate-800/60' : ''}`}
                                         >
-                                            {/* Ícone categoria */}
                                             <div className={`w-10 h-10 rounded-xl ${color.bg} flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110`}>
                                                 <Icon size={18} className={color.text} />
                                             </div>
 
-                                            {/* Info */}
                                             <div className="flex-1 min-w-0">
                                                 <p className="font-bold text-slate-900 dark:text-white text-sm truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{compra.descricao || 'Compra Registrada'}</p>
                                                 <p className="text-xs font-medium text-slate-400 dark:text-slate-500 mt-0.5 group-hover:text-slate-500 dark:group-hover:text-slate-400 transition-colors">
@@ -464,7 +400,6 @@ const CardDetailPage: React.FC = () => {
                                                 </p>
                                             </div>
 
-                                            {/* Valor + Pontos + Status */}
                                             <div className="text-right shrink-0">
                                                 <p className="font-bold text-slate-900 dark:text-white text-sm tracking-tight scale-100 group-hover:scale-[1.02] transition-transform origin-right">
                                                     {formatCurrency(compra.valorGasto)}
@@ -489,28 +424,7 @@ const CardDetailPage: React.FC = () => {
                             </div>
                         ))}
 
-                        {/* Paginação */}
-                        <div className="border-t border-slate-100 dark:border-slate-800 px-6 py-4 flex items-center justify-between">
-                            <p className="text-xs text-slate-500">
-                                Página {page + 1} de {totalPages}
-                            </p>
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => setPage(p => Math.max(0, p - 1))}
-                                    disabled={page === 0}
-                                    className="p-2 bg-slate-50 hover:bg-slate-100 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                >
-                                    <ChevronLeft size={18} />
-                                </button>
-                                <button
-                                    onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-                                    disabled={page >= totalPages - 1}
-                                    className="p-2 bg-slate-50 hover:bg-slate-100 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                >
-                                    <ChevronRight size={18} />
-                                </button>
-                            </div>
-                        </div>
+                        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
                     </div>
                 )}
             </div>

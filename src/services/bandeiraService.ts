@@ -2,6 +2,8 @@ import api from './api';
 
 export interface BandeiraPayload {
     nome: string;
+    status?: string;
+    cor?: string;
     ativa?: boolean;
 }
 
@@ -9,6 +11,12 @@ export interface BandeiraResponse {
     id: number;
     nome: string;
     ativa?: boolean;
+    /** Número de cartões vinculados a esta bandeira (campo opcional do backend). */
+    cards?: number;
+    /** Status textual: 'ACTIVE' | 'INACTIVE' */
+    status?: string;
+    /** Classe CSS de cor (ex: 'bg-indigo-600') */
+    cor?: string;
 }
 
 export const bandeiraService = {

@@ -64,16 +64,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const fetchNotificacoes = async () => {
     try {
-      const data: any = await getNotificacoes();
-      // Correção: acessa a propriedade .content caso seja paginação, senão usa o array direto ou fallback
-      const listaNotificacoes = data?.content || (Array.isArray(data) ? data : []);
+      const data = await getNotificacoes();
+      const listaNotificacoes = Array.isArray(data) ? data : data.content || [];
       setNotificacoes(listaNotificacoes);
     } catch (error) {
-      // Erro silencioso — não atrapalha a navegação
     }
   };
 
-  // Polling de notificações: pausa quando aba está em background
   useEffect(() => {
     fetchNotificacoes();
     let interval = setInterval(fetchNotificacoes, POLLING_INTERVAL_MS);
@@ -94,7 +91,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     };
   }, []);
 
-  // Atualiza notificações ao receber evento personalizado (ex: marcar como lida em outra página)
   useEffect(() => {
     const handleUpdate = () => fetchNotificacoes();
     window.addEventListener('notificationRead', handleUpdate);
@@ -105,7 +101,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     };
   }, []);
 
-  // Fecha dropdown de notificações ao clicar fora
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
@@ -116,7 +111,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fecha sidebar mobile ao navegar
   useEffect(() => {
     setIsMobileOpen(false);
   }, [location.pathname]);
@@ -127,7 +121,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       await marcarNotificacaoComoLida(id);
       setNotificacoes(prev => prev.map(n => n.id === id ? { ...n, lida: true } : n));
     } catch (error) {
-      // Silencioso
     }
   };
 
@@ -166,12 +159,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </div>
             </div>
 
-            {/* Botão Fechar (Mobile) */}
             <button onClick={toggleMobileSidebar} className="lg:hidden text-slate-500 hover:text-indigo-600 transition-colors p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
               <X size={20} />
             </button>
 
-            {/* Botão Colapsar (Desktop) */}
             <button
               onClick={toggleCollapse}
               className={`hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 ${isCollapsed ? 'absolute -right-3.5 top-7 border border-slate-200 dark:border-slate-700 shadow-md bg-white dark:bg-slate-800' : ''}`}
@@ -204,7 +195,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     }
                   `}
                 >
-                  {/* Indicador ativo — barra esquerda com radius */}
                   {isActive && !isCollapsed && (
                     <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-7 bg-indigo-600 dark:bg-indigo-500 rounded-[10px]" />
                   )}
@@ -217,7 +207,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   {!isCollapsed && (
                     <span className="whitespace-nowrap text-sm">{item.label}</span>
                   )}
-                  {/* Badge de ativo no collapsed */}
                   {isActive && isCollapsed && (
                     <span className="absolute right-1 top-1 w-1.5 h-1.5 bg-indigo-500 rounded-full" />
                   )}
@@ -225,7 +214,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               );
             })}
 
-            {/* Menu Administrativo: só visível para ADMIN */}
             {(true || user?.role === 'ADMIN') && (
               <>
                 <div className={`my-3 ${isCollapsed ? 'border-t border-slate-100 dark:border-slate-800/50 w-10 mx-auto' : ''}`} />
@@ -251,7 +239,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         }
                       `}
                     >
-                      {/* Indicador ativo — barra esquerda com radius */}
                       {isActive && !isCollapsed && (
                         <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-7 bg-emerald-600 dark:bg-emerald-500 rounded-[10px]" />
                       )}
@@ -275,7 +262,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="p-3 mt-auto border-t border-slate-100 dark:border-slate-800/60">
             <div className={`flex items-center gap-3 px-3 py-2.5 rounded-xl ${isCollapsed ? 'justify-center' : ''}`}>
 
-              {/* Avatar clicável → perfil */}
               <div
                 className="relative shrink-0 cursor-pointer group/avatar"
                 onClick={() => navigate('/profile')}
@@ -290,7 +276,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
               </div>
 
-              {/* Nome + Plano */}
               {!isCollapsed && (
                 <div
                   className="flex-1 min-w-0 cursor-pointer group/name"
@@ -305,7 +290,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </div>
               )}
 
-              {/* Ícone de Logout */}
               {!isCollapsed && (
                 <button
                   onClick={() => {
@@ -324,7 +308,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </button>
               )}
 
-              {/* Collapsed: logout icon abaixo do avatar */}
               {isCollapsed && (
                 <button
                   onClick={() => {
@@ -342,7 +325,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               )}
             </div>
 
-            {/* Logout visível quando collapsed */}
             {isCollapsed && (
               <button
                 onClick={() => {
@@ -377,7 +359,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {/* HEADER */}
         <header className="h-16 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between px-4 lg:px-8 z-40 relative shadow-sm shadow-slate-100 dark:shadow-none">
           <div className="flex items-center gap-4">
-            {/* Hamburger (Mobile) */}
             <button onClick={toggleMobileSidebar} className="lg:hidden text-slate-500 hover:text-indigo-600 transition-colors p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
               <Menu size={20} />
             </button>
@@ -396,7 +377,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
 
           <div className="flex items-center gap-3 lg:gap-4">
-            {/* Dark Mode Toggle */}
             <button
               onClick={toggleDarkMode}
               className="p-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all hover:scale-105 active:scale-95"
@@ -407,7 +387,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 : <Moon size={20} />}
             </button>
 
-            {/* SINO COM DROPDOWN */}
             <div className="relative" ref={notifRef}>
               <button
                 onClick={() => setIsNotifOpen(!isNotifOpen)}

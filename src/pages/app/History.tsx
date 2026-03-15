@@ -18,6 +18,7 @@ import { useTheme } from '../../context/ThemeContext';
 import api, { getPontosPendentes, getPontosExpirando, getProgramas } from '../../services/api';
 import { LoyaltyProgram, ResumoPendentesResponse } from '../../types/types';
 import { useToast } from '../../components/ToastContext';
+import Pagination from '../../components/Pagination';
 
 interface Transaction {
   id: number;
@@ -44,14 +45,14 @@ const HistoryPage: React.FC = () => {
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [programsList, setProgramsList] = useState<LoyaltyProgram[]>([]);
-  const [cardsList, setCardsList] = useState<Cartao[]>([]); // Estado para os cartões
+  const [cardsList, setCardsList] = useState<Cartao[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
 
   const [typeFilter, setTypeFilter] = useState('ALL');
   const [programFilter, setProgramFilter] = useState('ALL');
-  const [cardFilter, setCardFilter] = useState('ALL'); // Estado do filtro de cartão
+  const [cardFilter, setCardFilter] = useState('ALL');
 
   const [resumoPendentes, setResumoPendentes] = useState<ResumoPendentesResponse>({
     totalPontos: 0,
@@ -59,12 +60,10 @@ const HistoryPage: React.FC = () => {
   });
   const [pontosExpirando, setPontosExpirando] = useState(0);
 
-  // Pagination states
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // Busca os filtros (Programas e Cartões) ao montar a tela
   useEffect(() => {
     const fetchFilters = async () => {
       try {
@@ -88,13 +87,11 @@ const HistoryPage: React.FC = () => {
 
         const [year, month] = selectedMonth.split('-').map(Number);
 
-        // Objeto de parâmetros dinâmico
-        const params: any = {
+        const params: Record<string, string | number> = {
           mes: month,
           ano: year
         };
 
-        // Só envia os parâmetros se não forem "ALL"
         if (programFilter !== 'ALL') {
           params.programa = programFilter;
         }
@@ -103,12 +100,10 @@ const HistoryPage: React.FC = () => {
           params.tipo = typeFilter;
         }
 
-        // CORREÇÃO AQUI: Garante que "ALL" não é enviado para o backend como string
         if (cardFilter !== 'ALL') {
           params.cartaoId = cardFilter;
         }
 
-        // Parâmetros de paginação
         params.page = page;
         params.size = pageSize;
 
@@ -145,9 +140,8 @@ const HistoryPage: React.FC = () => {
 
     return () => clearTimeout(delayDebounceFn);
 
-  }, [selectedMonth, programFilter, typeFilter, cardFilter, page, pageSize]); // Reage às mudanças de filtros e paginação
+  }, [selectedMonth, programFilter, typeFilter, cardFilter, page, pageSize]);
 
-  // Reset page when filters change
   useEffect(() => {
     setPage(0);
   }, [selectedMonth, programFilter, typeFilter, cardFilter]);
@@ -196,7 +190,7 @@ const HistoryPage: React.FC = () => {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `comprovante_${compraId}.pdf`); // Pode ser pdf ou img, daremos uma extensão genérica ou a correta se soubermos
+      link.setAttribute('download', `comprovante_${compraId}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -309,7 +303,6 @@ const HistoryPage: React.FC = () => {
 
         <div className="flex flex-col sm:flex-row w-full gap-3">
 
-          {/* Select de Cartões */}
           <select
             value={cardFilter}
             onChange={(e) => setCardFilter(e.target.value)}
@@ -323,7 +316,6 @@ const HistoryPage: React.FC = () => {
             ))}
           </select>
 
-          {/* Select de Programas */}
           <select
             value={programFilter}
             onChange={(e) => setProgramFilter(e.target.value)}
@@ -350,7 +342,6 @@ const HistoryPage: React.FC = () => {
                     e.currentTarget.showPicker();
                   }
                 } catch (err) {
-                  // Fallback silencioso
                 }
               }}
               className="w-full pl-10 pr-4 py-2.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-sm font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors border-none outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer dark:[color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-0 relative"
@@ -381,7 +372,6 @@ const HistoryPage: React.FC = () => {
 
                   return (
                     <tr key={tx.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors duration-200 cursor-default">
-                      {/* DATA */}
                       <td className="px-6 py-5 whitespace-nowrap">
                         <div className="flex flex-col items-center">
                           <span className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
@@ -393,7 +383,6 @@ const HistoryPage: React.FC = () => {
                         </div>
                       </td>
 
-                      {/* DESCRIÇÃO */}
                       <td className="px-6 py-5">
                         <div className="flex items-center justify-center gap-3">
                           <div className={`p-2 rounded-xl transition-transform duration-300 group-hover:scale-110 ${!isNegative ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400'}`}>
@@ -403,14 +392,12 @@ const HistoryPage: React.FC = () => {
                         </div>
                       </td>
 
-                      {/* CARTÃO */}
                       <td className="px-6 py-5 text-center">
                         <span className="text-[11px] font-bold tracking-wide px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 border border-slate-200/50 dark:border-slate-700/50">
                           {tx.nomePersonalizado || tx.nomeCartao || '—'}
                         </span>
                       </td>
 
-                      {/* PROGRAMA */}
                       <td className="px-6 py-5">
                         <div className="flex items-center justify-center gap-2">
                           <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-500 shadow-sm"></div>
@@ -418,14 +405,12 @@ const HistoryPage: React.FC = () => {
                         </div>
                       </td>
 
-                      {/* PONTOS */}
                       <td className="px-6 py-5 text-center">
                         <span className={`text-sm font-black tracking-tight ${!isNegative ? 'text-indigo-600 dark:text-indigo-400' : 'text-rose-500 dark:text-rose-400'}`}>
                           {!isNegative ? '+' : ''}{tx.quantidadePontos.toLocaleString('pt-BR')} <span className="text-[10px] uppercase font-bold text-slate-400 ml-0.5">pts</span>
                         </span>
                       </td>
 
-                      {/* STATUS */}
                       <td className="px-6 py-5 text-center">
                         {tx.status === 'CREDITADO' || tx.status === 'FINALIZADA' ? (
                           <span className="inline-flex items-center gap-1.5 text-[10px] font-black px-2.5 py-1.5 rounded-md uppercase tracking-wider bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/50">
@@ -449,7 +434,6 @@ const HistoryPage: React.FC = () => {
                         )}
                       </td>
 
-                      {/* COMPROVANTE */}
                       <td className="px-6 py-5 text-center">
                         {tx.compraId ? (
                           <button
@@ -487,26 +471,13 @@ const HistoryPage: React.FC = () => {
           </table>
         </div>
 
-        {/* Footer da Tabela com Paginação */}
-        <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-          <p className="text-xs text-slate-500">Mostrando {transactions.length} movimentações (Página {page + 1} de {totalPages})</p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setPage(p => Math.max(0, p - 1))}
-              disabled={page === 0}
-              className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronLeft size={18} />
-            </button>
-            <button
-              onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-              disabled={page >= totalPages - 1}
-              className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronRight size={18} />
-            </button>
-          </div>
-        </div>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalItems={transactions.length}
+          itemLabel="movimentações"
+          onPageChange={setPage}
+        />
       </div>
     </div>
   );

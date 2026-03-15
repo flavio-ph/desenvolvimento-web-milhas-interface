@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Plus, ArrowLeft } from 'lucide-react';
 import { useToast } from '../../components/ToastContext';
 import { ConfirmModal } from '../../components/ConfirmModal';
-import { bandeiraService, BandeiraResponse } from '../../services/bandeiraService';
+import { bandeiraService, BandeiraResponse, BandeiraPayload } from '../../services/bandeiraService';
 import { isAxiosError } from 'axios';
 import { BrandForm } from './Brands/BrandForm';
 import { BrandList } from './Brands/BrandList';
@@ -48,7 +48,7 @@ const AdminBrands: React.FC = () => {
     try {
       setIsLoading(true);
       const response = await bandeiraService.listarTodas();
-      const dadosMapeados = response.map(b => ({ ...b, cards: (b as any).cards || 0, status: (b as any).status || 'ACTIVE', cor: (b as any).cor || PRESET_COLORS[0].class }));
+      const dadosMapeados = response.map(b => ({ ...b, cards: b.cards || 0, status: b.status || 'ACTIVE', cor: b.cor || PRESET_COLORS[0].class }));
       setBrands(dadosMapeados);
     } catch (error) {
       addToast({ type: 'error', title: 'Erro ao carregar', description: 'Não foi possível buscar as bandeiras.' });
@@ -95,9 +95,7 @@ const AdminBrands: React.FC = () => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Nota: o payload de bandeira está sendo castado temporariamente com 'any' porque a API antiga usava mais campos
-      // que a interface do DTO em Java. Em uma refatoração de Backend isso deveria ser padronizado.
-      const payload: any = { nome: newBrand.nome, status: newBrand.status, cor: newBrand.colorObj.class, ativa: newBrand.status === 'ACTIVE' };
+      const payload: BandeiraPayload = { nome: newBrand.nome, status: newBrand.status, cor: newBrand.colorObj.class, ativa: newBrand.status === 'ACTIVE' };
       if (editingId) {
         await bandeiraService.atualizarBandeira(editingId, payload);
         addToast({ type: 'success', title: 'Sucesso', description: 'Bandeira atualizada com sucesso.' });

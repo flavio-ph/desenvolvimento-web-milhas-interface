@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { UserUpdateData, Promotion, PromotionPayload, LoyaltyProgram, Notificacao, Transaction, CreditCard, ResumoPendentesResponse } from '../types/types';
+import { UserUpdateData, Promotion, PromotionPayload, LoyaltyProgram, Notificacao, Transaction, CreditCard, ResumoPendentesResponse, PaginatedResponse } from '../types/types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
@@ -79,7 +79,7 @@ export const deletePrograma = async (id: number) => {
 };
 
 export const getNotificacoes = async () => {
-  const response = await api.get<Notificacao[]>('/notificacoes');
+  const response = await api.get<PaginatedResponse<Notificacao> | Notificacao[]>('/notificacoes');
   return response.data;
 };
 

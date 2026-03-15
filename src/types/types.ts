@@ -1,3 +1,13 @@
+export interface PaginatedResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  empty?: boolean;
+  first?: boolean;
+  last?: boolean;
+}
 
 export enum CardBrand {
   VISA = 'Visa',
