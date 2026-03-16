@@ -187,17 +187,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   to={item.path}
                   title={isCollapsed ? item.label : ''}
                   className={`
-                    flex items-center gap-3 py-2.5 rounded-xl transition-all duration-200 group font-medium relative
+                    flex items-center gap-3 py-2.5 rounded-r-xl transition-all duration-200 group font-medium relative
                     ${isCollapsed ? 'justify-center px-3 mx-1' : 'px-3 mx-1'}
                     ${isActive
-                      ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-indigo-600 dark:hover:text-indigo-400'
+                      ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-l-[3px] border-indigo-600 dark:border-indigo-400 rounded-l-lg'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-indigo-600 dark:hover:text-indigo-400 border-l-[3px] border-transparent rounded-l-lg'
                     }
                   `}
                 >
-                  {isActive && !isCollapsed && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-7 bg-indigo-600 dark:bg-indigo-500 rounded-[10px]" />
-                  )}
                   <div className={`shrink-0 ${isActive
                     ? 'text-indigo-600 dark:text-indigo-400'
                     : 'group-hover:scale-110 transition-transform duration-200'
@@ -231,17 +228,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                       to={item.path}
                       title={isCollapsed ? item.label : ''}
                       className={`
-                        flex items-center gap-3 py-2.5 rounded-xl transition-all duration-200 group font-medium relative
+                        flex items-center gap-3 py-2.5 rounded-r-xl transition-all duration-200 group font-medium relative
                         ${isCollapsed ? 'justify-center px-3 mx-1' : 'px-3 mx-1'}
                         ${isActive
-                          ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
-                          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-emerald-600 dark:hover:text-emerald-400'
+                          ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-l-[3px] border-emerald-600 dark:border-emerald-400 rounded-l-lg'
+                          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-emerald-600 dark:hover:text-emerald-400 border-l-[3px] border-transparent rounded-l-lg'
                         }
                       `}
                     >
-                      {isActive && !isCollapsed && (
-                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-7 bg-emerald-600 dark:bg-emerald-500 rounded-[10px]" />
-                      )}
                       <div className={`shrink-0 ${isActive
                         ? 'text-emerald-600 dark:text-emerald-400'
                         : 'group-hover:scale-110 transition-transform duration-200'
