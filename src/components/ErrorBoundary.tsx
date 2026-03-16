@@ -10,10 +10,7 @@ interface ErrorBoundaryProps {
     children: ReactNode;
 }
 
-/**
- * ErrorBoundary global — captura erros de renderização em qualquer filho
- * e exibe uma tela amigável ao invés de uma tela branca.
- */
+
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     constructor(props: ErrorBoundaryProps) {
         super(props);

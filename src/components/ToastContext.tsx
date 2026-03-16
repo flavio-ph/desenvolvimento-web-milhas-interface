@@ -27,7 +27,6 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const toast = { id, type, title, description };
 
     setMessages((state) => {
-      // Remove o mais antigo se já atingiu o limite
       const trimmed = state.length >= MAX_TOASTS ? state.slice(1) : state;
       return [...trimmed, toast];
     });

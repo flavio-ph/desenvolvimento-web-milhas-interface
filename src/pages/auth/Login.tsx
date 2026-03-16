@@ -14,9 +14,11 @@ import {
 import api from '../../services/api';
 import { Logo } from '../../components/Logo';
 import { useToast } from '../../components/ToastContext';
+import { useUser } from '../../context/UserContext';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
+  const { refetchUser } = useUser();
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -46,6 +48,8 @@ const Login: React.FC = () => {
 
       const { token } = response.data;
       localStorage.setItem('token', token);
+      
+      await refetchUser();
 
       navigate('/');
     } catch (err: any) {

@@ -130,7 +130,7 @@ const RegisterPurchase: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
-        {/* ────────────────── Formulário (esquerda) ────────────────── */}
+        {/* ─── Formulário (esquerda) ────*/}
         <div className="lg:col-span-3">
           <form
             onSubmit={handleSubmit}
@@ -267,7 +267,7 @@ const RegisterPurchase: React.FC = () => {
           </form>
         </div>
 
-        {/* ────────────────── Painel direito ────────────────── */}
+        {/* ─── Painel direito ─── */}
         <div className="lg:col-span-2 flex flex-col gap-4">
 
           {/* Card Estimativa de Pontos */}

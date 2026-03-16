@@ -42,7 +42,6 @@ const AdminPrograms: React.FC = () => {
     try {
       setLoading(true);
       const data = await programaService.listarProgramas();
-      // map explicitly based on expected types
       setPrograms(data as LoyaltyProgram[] || []);
     } catch (e) {
       addToast({ type: 'error', title: 'Erro ao carregar', description: 'Não foi possível listar os programas.' });

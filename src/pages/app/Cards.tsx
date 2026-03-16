@@ -9,7 +9,6 @@ import { isAxiosError } from 'axios';
 import { CardForm } from './Cards/CardForm';
 import { CardList } from './Cards/CardList';
 
-// Interfaces substituted by services domain models
 
 const CARD_COLORS = [
   '#820AD1',

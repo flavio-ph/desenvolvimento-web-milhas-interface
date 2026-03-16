@@ -7,7 +7,6 @@ import { UserProvider } from './context/UserContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import AuthTransition from './components/AuthTransition';
 
-// Lazy loading de todas as páginas para melhor performance
 const Dashboard = lazy(() => import('./pages/app/Dashboard'));
 const Login = lazy(() => import('./pages/auth/Login'));
 const Register = lazy(() => import('./pages/auth/Register'));
@@ -25,11 +24,9 @@ const AdminPromotions = lazy(() => import('./pages/admin/Promotions'));
 const SearchResults = lazy(() => import('./pages/app/SearchResults'));
 const NotFoundPage = lazy(() => import('./pages/NotFound'));
 
-// Decodifica o payload do JWT para checar expiração
 const isTokenValid = (token: string): boolean => {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
-    // exp está em segundos, Date.now() em milissegundos
     return payload.exp * 1000 > Date.now();
   } catch {
     return false;
@@ -47,7 +44,6 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Fallback de carregamento reutilizável
 const PageLoader = () => (
   <div className="flex h-screen w-full items-center justify-center bg-slate-50 dark:bg-slate-950">
     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600" />

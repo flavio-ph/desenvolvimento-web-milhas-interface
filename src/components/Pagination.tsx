@@ -9,10 +9,7 @@ interface PaginationProps {
   itemLabel?: string;
 }
 
-/**
- * Componente reutilizável de paginação.
- * Utilizado em History e CardDetail.
- */
+
 const Pagination: React.FC<PaginationProps> = ({
   page,
   totalPages,

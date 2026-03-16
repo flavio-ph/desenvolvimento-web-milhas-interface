@@ -15,7 +15,6 @@ const AdminPromotions: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'gerenciar' | 'cadastrar'>('gerenciar');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Estados para o Modal de Exclusão
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [promoToDelete, setPromoToDelete] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);

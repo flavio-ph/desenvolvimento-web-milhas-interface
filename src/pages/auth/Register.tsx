@@ -19,7 +19,7 @@ import api from '../../services/api';
 import { Logo } from '../../components/Logo';
 import { useToast } from '../../components/ToastContext';
 
-// ─── Utilitário: calcula força da senha ───────────────────────────────────────
+// ─── Utilitário: calcula força da senha ───
 type PasswordStrength = 0 | 1 | 2 | 3 | 4;
 
 interface StrengthInfo {
@@ -44,7 +44,7 @@ function getPasswordStrength(password: string): StrengthInfo {
   return { level: 4, label: 'Forte', color: 'bg-emerald-500', textColor: 'text-emerald-500' };
 }
 
-// ─── Componente ───────────────────────────────────────────────────────────────
+// ─── Componente ───
 const Register: React.FC = () => {
   const navigate = useNavigate();
   const { addToast } = useToast();

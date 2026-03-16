@@ -37,7 +37,7 @@ interface UserProfile {
   dataCadastro?: string;
 }
 
-// ── Helpers de máscara ───────────────────────────────────────────────
+// ── Helpers de máscara ──
 const maskCPF = (v: string) =>
   v.replace(/\D/g, '')
     .replace(/(\d{3})(\d)/, '$1.$2')
@@ -52,7 +52,7 @@ const maskPhone = (v: string) => {
   return d.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
 };
 
-// ── Indicador de força de senha ───────────────────────────────────
+// ── Indicador de força de senha ──
 const getPasswordStrength = (password: string): { score: number; label: string; color: string } => {
   if (!password) return { score: 0, label: '', color: '' };
   let score = 0;
@@ -141,7 +141,7 @@ const ProfilePage: React.FC = () => {
     if (showPlans && plansRef.current) {
       setTimeout(() => {
         plansRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 50); // Pequeno delay para garantir que o DOM já renderizou
+      }, 50);
     }
   }, [showPlans]);
 
@@ -177,7 +177,6 @@ const ProfilePage: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Usa dados já carregados pelo UserContext quando disponíveis
         if (contextUser) {
           setUser(contextUser);
           setFormData({
@@ -191,7 +190,6 @@ const ProfilePage: React.FC = () => {
             setPreviewUrl(`${API_BASE_URL}/uploads/${contextUser.fotoPerfil}`);
           }
         } else {
-          // Fallback: busca direto da API se o contexto ainda não carregou
           const userRes = await api.get('/usuarios/me');
           const userData = userRes.data;
           setUser(userData);
@@ -206,7 +204,6 @@ const ProfilePage: React.FC = () => {
           }
         }
 
-        // Busca total de pontos separadamente
         try {
           const dashRes = await api.get('/dashboard');
           if (dashRes.data?.pontosPorCartao) {
@@ -214,7 +211,6 @@ const ProfilePage: React.FC = () => {
             setTotalPontos(total);
           }
         } catch {
-          // Saldo indisponível — não bloqueia a página
         }
 
       } catch (error) {

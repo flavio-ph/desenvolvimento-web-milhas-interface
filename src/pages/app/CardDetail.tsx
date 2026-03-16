@@ -12,7 +12,7 @@ import { parseSafeDate, formatDate, humanDate, formatCurrency } from '../../util
 import Pagination from '../../components/Pagination';
 import { isAxiosError } from 'axios';
 
-/* ─── Tipos ─────────────────────────────────────────────────── */
+/* ─── Tipos ───*/
 interface Cartao {
     id: number;
     nomePersonalizado: string;
@@ -34,7 +34,7 @@ interface Compra {
     status?: 'PENDENTE' | 'CREDITADO' | 'CANCELADO' | string;
 }
 
-/* ─── Helpers ────────────────────────────────────────────────── */
+/* ─── Helpers ───*/
 const adjustColor = (color: string, amount: number) =>
     '#' + color.replace(/^#/, '').replace(/../g, (c) =>
         ('0' + Math.min(255, Math.max(0, parseInt(c, 16) + amount)).toString(16)).slice(-2));
@@ -67,7 +67,7 @@ const groupByDate = (compras: Compra[]): Record<string, Compra[]> => {
     }, {} as Record<string, Compra[]>);
 };
 
-/* ─── Helpers ────────────────────────────────────────────────── */
+/* ─── Helpers ────*/
 const CardDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();

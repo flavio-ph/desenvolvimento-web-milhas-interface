@@ -1,11 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
-/**
- * Ordem das rotas de autenticação.
- * Navegação para uma rota de índice maior → slide para a esquerda (forward).
- * Navegação para uma rota de índice menor → slide para a direita (backward).
- */
+
 const AUTH_ROUTE_ORDER: Record<string, number> = {
   '/login': 0,
   '/register': 1,

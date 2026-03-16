@@ -43,23 +43,13 @@ const NotFound: React.FC = () => {
 
         {/* Botão de volta */}
         <button
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate('/')}
           className="inline-flex items-center gap-2.5 px-7 py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-2xl font-bold text-base hover:from-indigo-500 hover:to-violet-500 transition-all shadow-lg shadow-indigo-300/40 dark:shadow-indigo-900/40 hover:-translate-y-0.5 active:scale-[0.97]"
         >
           <ArrowLeft size={20} />
           Voltar ao Dashboard
         </button>
 
-        {/* Link alternativo */}
-        <p className="mt-6 text-sm text-slate-400 dark:text-slate-600">
-          ou{' '}
-          <button
-            onClick={() => navigate(-1)}
-            className="text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300 font-semibold transition-colors hover:underline"
-          >
-            voltar à página anterior
-          </button>
-        </p>
       </div>
     </div>
   );
